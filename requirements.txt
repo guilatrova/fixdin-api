@@ -5,3 +5,4 @@ django-filter  # Filtering support.
 requests
 djangorestframework-expiring-authtoken
 gunicorn
+dj-database-url
