@@ -4,3 +4,4 @@ markdown #Markdown support for the browsable API.
 django-filter  # Filtering support.
 requests
 djangorestframework-expiring-authtoken
+gunicorn
