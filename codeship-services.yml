@@ -1,0 +1,7 @@
+# codeship-services.yml
+
+postgres:
+    image: "postgres:9.4"
+    environment:
+        POSTGRES_DB: codeship
+        POSTGRES_PASSWORD: mysecretpassword
