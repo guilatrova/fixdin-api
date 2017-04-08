@@ -1,8 +1,10 @@
 django
 djangorestframework
 markdown #Markdown support for the browsable API.
-django-filter  # Filtering support.
-requests
 djangorestframework-expiring-authtoken
+
+#For production
 gunicorn
 dj-database-url
+psycopg2
+django-cors-headers
