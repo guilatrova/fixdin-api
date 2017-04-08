@@ -1,1 +1,1 @@
-web: gunicorn prototype.wsgi --log-file -
+web: gunicorn fixdin.wsgi --log-file -
