@@ -22,6 +22,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
+    #'corsheaders',
+    #MY APPs
+    'transactions'
 ]
 
 MIDDLEWARE = [
@@ -38,6 +43,12 @@ ROOT_URLCONF = 'fixdin.urls'
 
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%d-%m-%YT%H:%M:%S.%fZ",
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
 }
 
 
