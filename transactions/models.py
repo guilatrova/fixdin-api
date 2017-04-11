@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Category(models.Model):
+    class Meta:
+        unique_together = ('user', 'name')
+
     EXPENSE_KIND = 0
     INCOME_KIND = 1
         

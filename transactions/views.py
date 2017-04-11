@@ -9,6 +9,7 @@ class CategoryCRUDView(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         return {
+            "user_id": self.request.user.id,
             "kind": self.kwargs['kind']
         }
 
