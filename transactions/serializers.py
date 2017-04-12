@@ -9,7 +9,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'kind')
 
     def validate_name(self, value):
-        if Category.objects.filter(name=value,user_id=self.context['user_id']).exists():
+        if Category.objects.filter(name__iexact=value,user_id=self.context['user_id']).exists():
             raise serializers.ValidationError('User already has this category')
 
         return value

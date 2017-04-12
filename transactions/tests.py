@@ -39,3 +39,16 @@ class CategoryTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Category.objects.count(), 1)
+
+    def test_cant_create_category_repeated_name_regardless_character_casing(self):
+        category = Category.objects.create(kind=Category.EXPENSE_KIND, user=self.user, name='eating')
+        category.save()
+
+        category_dto = {
+            'name': 'Eating'
+        }
+
+        response = self.client.post(reverse('expense-categories'), category_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Category.objects.count(), 1)
