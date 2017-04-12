@@ -28,8 +28,7 @@ class CategoryTestCase(APITestCase):
         self.assertEqual(Category.objects.count(), 1)
 
     def test_cant_create_category_repeated_name(self):
-        category = Category.objects.create(kind=Category.EXPENSE_KIND, user=self.user, name='eating')
-        category.save()
+        self.create_category('eating')
 
         category_dto = {
             'name': 'eating'
@@ -41,8 +40,7 @@ class CategoryTestCase(APITestCase):
         self.assertEqual(Category.objects.count(), 1)
 
     def test_cant_create_category_repeated_name_regardless_character_casing(self):
-        category = Category.objects.create(kind=Category.EXPENSE_KIND, user=self.user, name='eating')
-        category.save()
+        self.create_category('eating')
 
         category_dto = {
             'name': 'Eating'
@@ -52,3 +50,23 @@ class CategoryTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Category.objects.count(), 1)
+
+    def test_cant_rename_category_same_other_name(self):
+        self.create_category('eating')
+        category = self.create_category('car')
+
+        category_dto = {
+            'id': category.id,
+            'name': 'eating' #changed name
+        }
+
+        url = reverse('retrieve-expense-categories', kwargs={'pk':category_dto['id']})
+        response = self.client.put(url, category_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Category.objects.count(), 2)
+
+    def create_category(self, name):
+        category = Category.objects.create(kind=Category.EXPENSE_KIND, user=self.user, name=name)
+        category.save()
+        return category
