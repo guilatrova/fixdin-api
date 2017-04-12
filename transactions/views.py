@@ -4,11 +4,11 @@ from transactions.models import Category
 from transactions.serializers import CategorySerializer
 
 class CategoryCRUDViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all() #TODO: filter by user and kind
     serializer_class = CategorySerializer
 
-    # def get_queryset(self):
-    #     return Profile.objects.filter(pk=self.request.user.profile.id)
+    def get_queryset(self):
+        return Category.objects.filter(kind=self.kwargs['kind'], user_id=self.request.user.id)
+        return Profile.objects.filter(pk=self.request.user.profile.id)
 
     def get_serializer_context(self):
         return {

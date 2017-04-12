@@ -77,6 +77,19 @@ class CategoryTestCase(APITestCase):
         response = other_client.post(reverse('expense-categories'), category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_list_user_categories(self):
+        self.create_category('eating')
+        self.create_category('market')
+        self.create_category('travel')
+        self.create_category('car')
+
+        other_user = self.create_user('other', email='other_user@email.com', password='123456')[0]
+        self.create_category('', user=other_user)
+
+        response = self.client.get(reverse('expense-categories'), format='json')
+        self.assertEqual(len(response.data), 4) #ignore others categories
+
+
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(kwargs)
         user.save()
@@ -85,7 +98,10 @@ class CategoryTestCase(APITestCase):
 
         return user, token
 
-    def create_category(self, name):
-        category = Category.objects.create(kind=Category.EXPENSE_KIND, user=self.user, name=name)
+    def create_category(self, name, user=None):
+        if user is None:
+            user = self.user
+
+        category = Category.objects.create(kind=Category.EXPENSE_KIND, user=user, name=name)
         category.save()
         return category
