@@ -1,3 +1,4 @@
+from unittest import skip
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -57,7 +58,7 @@ class CategoryTestCase(APITestCase):
             'name': 'eating' #changed name
         }
 
-        url = reverse('retrieve-expense-categories', kwargs={'pk':category_dto['id']})
+        url = reverse('expense-category', kwargs={'pk':category_dto['id']})
         response = self.client.put(url, category_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -87,8 +88,31 @@ class CategoryTestCase(APITestCase):
         self.create_category('', user=other_user)
 
         response = self.client.get(reverse('expense-categories'), format='json')
-        self.assertEqual(len(response.data), 4) #ignore others categories
+        self.assertEqual(len(response.data), 4)
 
+    @skip('No transactions module yet')
+    def test_cant_delete_category_in_use(self):
+        self.fail('No transactions module yet')
+
+    def test_can_delete_category_not_in_use(self):
+        category = self.create_category('eating')
+
+        url = reverse('expense-category', kwargs={'pk':category.id})
+        response = self.client.delete(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Category.objects.count(), 0)
+
+    def test_categories_by_kind_filter(self):
+        self.create_category('eating', kind=Category.EXPENSE_KIND)
+        self.create_category('salary', kind=Category.INCOME_KIND)
+        self.create_category('freelance', kind=Category.INCOME_KIND)
+
+        response = self.client.get(reverse('expense-categories'), format='json')
+        self.assertEqual(len(response.data), 1)
+
+        response = self.client.get(reverse('income-categories'), format='json')
+        self.assertEqual(len(response.data), 2)
 
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(kwargs)
@@ -98,10 +122,10 @@ class CategoryTestCase(APITestCase):
 
         return user, token
 
-    def create_category(self, name, user=None):
+    def create_category(self, name, user=None, kind=Category.EXPENSE_KIND):
         if user is None:
             user = self.user
 
-        category = Category.objects.create(kind=Category.EXPENSE_KIND, user=user, name=name)
+        category = Category.objects.create(kind=kind, user=user, name=name)
         category.save()
         return category

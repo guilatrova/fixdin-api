@@ -8,7 +8,6 @@ class CategoryCRUDViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Category.objects.filter(kind=self.kwargs['kind'], user_id=self.request.user.id)
-        return Profile.objects.filter(pk=self.request.user.profile.id)
 
     def get_serializer_context(self):
         return {
