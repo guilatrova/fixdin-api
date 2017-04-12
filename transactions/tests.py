@@ -9,10 +9,7 @@ from transactions.models import Category
 class CategoryTestCase(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user('testuser', email='testuser@test.com', password='testing')
-        self.user.save()
-        token = Token.objects.create(user=self.user)
-        token.save()
+        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
 
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
@@ -65,6 +62,28 @@ class CategoryTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Category.objects.count(), 2)
+
+    def test_different_users_can_create_categories_with_same_name(self):
+        other_user, other_token = self.create_user('other_user', email='other_user@hotmail.com', password='pass')
+
+        other_client = APIClient()
+        other_client.credentials(HTTP_AUTHORIZATION='Token ' + other_token.key)
+
+        category_dto = {'name': 'eating'}
+
+        response = self.client.post(reverse('expense-categories'), category_dto, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = other_client.post(reverse('expense-categories'), category_dto, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def create_user(self, name='testuser', **kwargs):
+        user = User.objects.create_user(kwargs)
+        user.save()
+        token = Token.objects.create(user=user)
+        token.save()
+
+        return user, token
 
     def create_category(self, name):
         category = Category.objects.create(kind=Category.EXPENSE_KIND, user=self.user, name=name)
