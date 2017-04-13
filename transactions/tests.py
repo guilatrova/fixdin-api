@@ -114,6 +114,19 @@ class CategoryTestCase(APITestCase):
         response = self.client.get(reverse('income-categories'), format='json')
         self.assertEqual(len(response.data), 2)
 
+    def test_user_cant_handle_category_it_doesnt_own(self):
+        other_user, other_token = self.create_user('other_user', email='other_user@hotmail.com', password='pass')
+        category_from_other_user = self.create_category('other users category', other_user)        
+        
+        category_dto = {'name': 'new name'}
+
+        url = reverse('expense-category', kwargs={'pk':category_from_other_user.id})        
+        response = self.client.put(url, category_dto, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.delete(url, category_dto, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(kwargs)
         user.save()
