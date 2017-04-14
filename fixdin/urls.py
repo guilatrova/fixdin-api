@@ -18,5 +18,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^api/v1/categories/', include('transactions.urls'))
+    url(r'^api/v1/categories/', include('transactions.urls')),
+    url(r'^api/v1/expenses/', include('transactions.urls')),
 ]

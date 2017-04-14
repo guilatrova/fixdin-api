@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from transactions.models import Category
+from transactions.models import Category, Transaction
 
 class CategorySerializer(serializers.ModelSerializer):
     kind = serializers.SerializerMethodField()
@@ -16,3 +16,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def get_kind(self, obj):
         return self.context['kind']
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ('due_date', 'description', 'category', 'value', 'payed', 'details')

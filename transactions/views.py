@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from transactions.models import Category
-from transactions.serializers import CategorySerializer
+from transactions.serializers import CategorySerializer, TransactionSerializer
 
-class CategoryCRUDViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
 
     def get_queryset(self):
@@ -17,3 +17,9 @@ class CategoryCRUDViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, kind=self.kwargs['kind'])
+
+class TransactionViewSet(viewsets.ModelViewSet):
+    serializer_class = TransactionSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

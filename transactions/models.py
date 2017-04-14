@@ -16,3 +16,12 @@ class Category(models.Model):
     name = models.CharField(max_length=30)
     user = models.ForeignKey(User)
     kind = models.PositiveIntegerField(choices=CATEGORY_KINDS)
+
+class Transaction(models.Model):
+    due_date = models.DateField()
+    description = models.CharField(max_length=120)
+    category = models.ForeignKey(Category)
+    value = models.DecimalField(max_digits=19, decimal_places=2)
+    payed = models.BooleanField()
+    details = models.CharField(max_length=500, blank=True)
+    user = models.ForeignKey(User)
