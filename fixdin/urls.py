@@ -15,10 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-from auth.views import AuthView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^api/v1/auth/', AuthView.as_view()),
+    url(r'^api/v1/auth/', include('users.urls')),
     url(r'^api/v1/categories/', include('transactions.urls')),    
 ]

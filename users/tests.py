@@ -1,6 +1,6 @@
 from django.test import TestCase
 from rest_framework.test import APITestCase
-from unittest import mock
+from unittest import mock, skip
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
@@ -10,7 +10,23 @@ from rest_framework.authtoken.models import Token
 
 import datetime
 
-class AuthTests(TestCase):
+class UsersTests(TestCase):
+
+    def test_register_user(self):
+        user_dto = {
+            'username': 'guilherme',
+            'password': 'abc123456',
+            'email': 'guilherme@email.com',
+            'first_name': 'Guilherme',
+            'last_name': 'Latrova'
+        }
+
+        response = self.client.post(reverse('users'), user_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(User.objects.count(), 1)
+
+    @skip('carma')
     def test_should_deny_expired_tokens(self):
         StudentFactory().create_new_student('116755', '220814', student_name='Guilherme Magalhaes Latrova', email='guilhermelatrova@hotmail.com')
         student = Student.objects.get(register_id='116755')

@@ -1,13 +1,27 @@
 from django.shortcuts import render
+from django.conf import settings
 from django.contrib.auth.models import User
-from rest_framework import status
-from rest_framework.views import APIView
+from rest_framework import status, views, viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_expiring_authtoken.models import ExpiringToken
-from auth.serializers import LoginSerializer
+from users.serializers import LoginSerializer, UserSerializer
 
-class AuthView(APIView):
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        return settings.AUTH_USER_MODEL.objects()
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            self.permission_classes = (AllowAny,)
+
+        return super(UserViewSet, self).get_permissions()
+
+
+class AuthAPIView(views.APIView):
     permission_classes = []
 
     def post(self, request, format='json'):

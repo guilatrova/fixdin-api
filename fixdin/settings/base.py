@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'rest_framework_expiring_authtoken',
     #'corsheaders',
     #MY APPs
-    'transactions'
+    'transactions',
+    'users'
 ]
 
 MIDDLEWARE = [
