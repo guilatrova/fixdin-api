@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import datetime
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,9 +22,11 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles',    
     'rest_framework',
+    #Token
     'rest_framework.authtoken',
+    'rest_framework_expiring_authtoken',
     #'corsheaders',
     #MY APPs
     'transactions'
@@ -48,9 +51,11 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
+        'rest_framework_expiring_authtoken.authentication.ExpiringTokenAuthentication'
     )
 }
 
+EXPIRING_TOKEN_LIFESPAN = datetime.timedelta(days=90)
 
 TEMPLATES = [
     {
