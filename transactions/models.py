@@ -17,11 +17,23 @@ class Category(models.Model):
     user = models.ForeignKey(User)
     kind = models.PositiveIntegerField(choices=CATEGORY_KINDS)
 
+class Account(models.Model):
+    user = models.ForeignKey(User)
+    name = models.CharField(max_length=30)
+    current_balance = models.DecimalField(max_digits=19, decimal_places=2)
+
 class Transaction(models.Model):
+    account = models.ForeignKey(Account)
     due_date = models.DateField()
     description = models.CharField(max_length=120)
     category = models.ForeignKey(Category)
     value = models.DecimalField(max_digits=19, decimal_places=2)
     payed = models.BooleanField()
-    details = models.CharField(max_length=500, blank=True)
-    user = models.ForeignKey(User)
+    details = models.CharField(max_length=500, blank=True)    
+
+class Balance(models.Model):
+    account = models.ForeignKey(Account)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    last_updated = models.DateField(auto_now=True)
+    closed_value = models.DecimalField(max_digits=19, decimal_places=2)
