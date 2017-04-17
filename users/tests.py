@@ -1,16 +1,17 @@
-from django.test import TestCase
-from rest_framework.test import APITestCase
 from unittest import mock, skip
 from django.test import TestCase
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, get_resolver
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework_expiring_authtoken.models import ExpiringToken
+from fixdin.settings.base import EXPIRING_TOKEN_LIFESPAN
 
 import datetime
 
-class UsersTests(TestCase):
+class UsersTests(APITestCase):
 
     def test_register_user(self):
         user_dto = {
@@ -26,26 +27,43 @@ class UsersTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.count(), 1)
 
-    @skip('carma')
-    def test_should_deny_expired_tokens(self):
-        StudentFactory().create_new_student('116755', '220814', student_name='Guilherme Magalhaes Latrova', email='guilhermelatrova@hotmail.com')
-        student = Student.objects.get(register_id='116755')
-        payload = {'ra': '116755', 'password': '220814'}
-        expected_response = {'code':1001, 'detail':strings.EXPIRED_TOKEN['detail']}
-        client = APIClient()
+    def test_successful_login_returns_token(self):
+        user = self.create_user(email='gui@latrova.com', password='abc123456')
 
-        #Let's generate the first token
-        response = self.client.post('/api/v1/students/auth', payload)
+        login_dto = {
+            'email': 'gui@latrova.com',
+            'password': 'abc123456'
+        }
+
+        response = self.client.post(reverse('login'), login_dto, format='json')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('token' in response.data)
+
+    def test_token_expires_after_90(self):
+        user = self.create_user(email='guilhermelatrova@hotmail.com', password='abc123456')        
         
-        expired_token = Token.objects.get(user=student.user)
-        self.assertEqual(response.data, {'token': expired_token.key})
+        expired_token = ExpiringToken.objects.get(user=user)
+        expired_token.created -= datetime.timedelta(days=90)
+        expired_token.save()
+        
+        self.assertTrue(expired_token.expired())
+    
+    def test_should_deny_expired_tokens(self):
+        user = self.create_user(email='guilhermelatrova@hotmail.com', password='abc123456')        
+        
+        expired_token = Token.objects.get(user=user)
+        expired_token.created -= EXPIRING_TOKEN_LIFESPAN
+        expired_token.save()
+        
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + expired_token.key)
 
-        #Now we'll adjust its creation time to 14 days ago (which is its expiration time)
-        expired_token.created -= datetime.timedelta(days=14)
-        expired_token.save()                
-        client.credentials(HTTP_AUTHORIZATION='Token ' + expired_token.key)
-
-        response = client.get('/api/v1/subjects/2016-2')
+        response = self.client.get(reverse('expense-categories'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(response.data, expected_response)
+
+    def create_user(self, name='testuser', **kwargs):
+        user = User.objects.create_user(name, **kwargs)
+        user.save()
+
+        return user

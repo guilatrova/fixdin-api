@@ -48,11 +48,10 @@ ROOT_URLCONF = 'fixdin.urls'
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%d-%m-%YT%H:%M:%S.%fZ",
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_expiring_authtoken.authentication.ExpiringTokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-        'rest_framework_expiring_authtoken.authentication.ExpiringTokenAuthentication'
+        'rest_framework.permissions.IsAuthenticated',        
     )
 }
 
