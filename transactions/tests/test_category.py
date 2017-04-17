@@ -130,8 +130,7 @@ class CategoryTestCase(APITestCase):
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(kwargs)
         user.save()
-        token = Token.objects.create(user=user)
-        token.save()
+        token = Token.objects.get(user=user)
 
         return user, token
 
