@@ -32,13 +32,13 @@ class TransactionTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), 1)
 
+    #def test_create_
+
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(kwargs)
-        user.save()
-        token = Token.objects.create(user=user)
-        token.save()
+        user.save()        
 
-        return user, token
+        return user, user.token
 
     def create_category(self, name, user=None, kind=Category.EXPENSE_KIND):
         if user is None:

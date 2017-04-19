@@ -23,6 +23,10 @@ class Account(models.Model):
     current_balance = models.DecimalField(max_digits=19, decimal_places=2)
 
 class Transaction(models.Model):
+    def __init__(self, *args, **kwargs):
+        super(Transaction, self).__init__(*args, **kwargs)
+        self.initial_value = self.value
+
     account = models.ForeignKey(Account)
     due_date = models.DateField()
     description = models.CharField(max_length=120)
