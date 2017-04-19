@@ -35,7 +35,7 @@ class Transaction(models.Model):
     payed = models.BooleanField()
     details = models.CharField(max_length=500, blank=True)    
 
-class Balance(models.Model):
+class PeriodBalance(models.Model):
     account = models.ForeignKey(Account)
     start_date = models.DateField()
     end_date = models.DateField()
