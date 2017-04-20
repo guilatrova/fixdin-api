@@ -33,8 +33,9 @@ class Transaction(models.Model):
     category = models.ForeignKey(Category)
     value = models.DecimalField(max_digits=19, decimal_places=2)
     payed = models.BooleanField()
-    details = models.CharField(max_length=500, blank=True)    
-
+    details = models.CharField(max_length=500, blank=True)   
+    periodic_transaction = models.ForeignKey("Transaction", null=True)
+    
 class PeriodBalance(models.Model):
     account = models.ForeignKey(Account)
     start_date = models.DateField()
