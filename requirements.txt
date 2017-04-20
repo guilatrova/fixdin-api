@@ -8,3 +8,4 @@ gunicorn
 dj-database-url
 psycopg2
 django-cors-headers
+python-dateutil
