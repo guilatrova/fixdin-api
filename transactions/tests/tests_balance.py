@@ -11,8 +11,9 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
+from transactions.tests.base_test import BaseTestHelper
 
-class BalanceTestCase(TestCase):
+class BalanceTestCase(TestCase, BaseTestHelper):
     '''
     TestCase created to test signals and reactions to PeriodBalance + Account.
     Any insert in Transaction which due date is in current period (aka month) should update Account.current_balance.
@@ -28,7 +29,7 @@ class BalanceTestCase(TestCase):
     
     def setUp(self):        
         with transaction.atomic():
-            self.user = self.create_user('testuser', email='testuser@test.com', password='testing')
+            self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
             self.category = self.create_category('default category')        
             self.account = self.create_account()
             self.create_transactions()
@@ -112,12 +113,12 @@ class BalanceTestCase(TestCase):
             
             for day in range(1, days_count+1):
                 current_date = datetime.date(year=current_period.year, month=current_period.month, day=day)
-                self.create_transaction(transactions_per_day, current_date, transaction_value)
+                self.create_multiple_transactions(transactions_per_day, current_date, transaction_value)
 
             if add_remaning_transactions:
                 dif_to_create = self.TRANSACTIONS_PER_PERIOD - (transactions_per_day * days_count)
                 last_day = datetime.date(year=current_period.year, month=current_period.month, day=days_count)
-                self.create_transaction(dif_to_create, last_day, transaction_value)
+                self.create_multiple_transactions(dif_to_create, last_day, transaction_value)
             
             transaction_value = transaction_value * self.VALUE_INCREMENT_MULTIPLIER_PER_PERIOD
 
@@ -134,7 +135,7 @@ class BalanceTestCase(TestCase):
 
             value = value * self.VALUE_INCREMENT_MULTIPLIER_PER_PERIOD
     
-    def create_transaction(self, how_many, due_date, value):
+    def create_multiple_transactions(self, how_many, due_date, value):
         for i in range(how_many):
             Transaction.objects.create(
                 account=self.account, 
@@ -151,20 +152,4 @@ class BalanceTestCase(TestCase):
             start_date=start,
             end_date=end,
             closed_value=value
-        )
-
-    def create_account(self):
-        account = Account.objects.create(name='default account', user=self.user, current_balance=0)
-        return account
-
-    def create_user(self, name='testuser', **kwargs):
-        user = User.objects.create_user(kwargs)     
-
-        return user
-
-    def create_category(self, name, user=None, kind=Category.EXPENSE_KIND):
-        if user is None:
-            user = self.user
-
-        category = Category.objects.create(kind=kind, user=user, name=name)
-        return category
+        )        

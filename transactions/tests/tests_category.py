@@ -6,14 +6,17 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import Category
+from transactions.tests.base_test import BaseTestHelper
 
-class CategoryTestCase(APITestCase):
+class CategoryTestCase(APITestCase, BaseTestHelper):
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
 
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+        self.account = self.create_account(self.user)
 
     def test_create_category(self):
         category_dto = {
@@ -91,9 +94,14 @@ class CategoryTestCase(APITestCase):
         self.assertEqual(len(response.data), 4)
 
     def test_cant_delete_category_in_use(self):
-        self.create_category('in_use')
+        category = self.create_category('in_use')
+        self.create_transaction(category=category)
 
-        self.assertEqual()
+        url = reverse('expense-category', kwargs={'pk':category.id})
+        response = self.client.delete(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Category.objects.count(), 1)
 
     def test_can_delete_category_not_in_use(self):
         category = self.create_category('eating')
@@ -127,18 +135,3 @@ class CategoryTestCase(APITestCase):
 
         response = self.client.delete(url, category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def create_user(self, name='testuser', **kwargs):
-        user = User.objects.create_user(kwargs)
-        user.save()
-        token = Token.objects.get(user=user)
-
-        return user, token
-
-    def create_category(self, name, user=None, kind=Category.EXPENSE_KIND):
-        if user is None:
-            user = self.user
-
-        category = Category.objects.create(kind=kind, user=user, name=name)
-        category.save()
-        return category

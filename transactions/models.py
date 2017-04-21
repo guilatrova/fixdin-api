@@ -23,6 +23,9 @@ class Account(models.Model):
     current_balance = models.DecimalField(max_digits=19, decimal_places=2)
 
 class Transaction(models.Model):
+    EXPENSE_KIND = 0
+    INCOME_KIND = 1
+
     def __init__(self, *args, **kwargs):
         '''
         Init method used to identify which value is loaded from database, 

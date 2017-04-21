@@ -1,5 +1,4 @@
 import datetime
-from unittest import skip
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -8,7 +7,47 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
 
-class TransactionTestCase(APITestCase):
+class BaseTestHelper:
+    '''
+    Class used to create some resources to backup tests
+    '''
+    def create_transaction(self, value=-40, description='description', account=None, category=None):
+        if account is None:
+            account = self.account
+
+        if category is None:
+            category = self.category
+
+        transaction = Transaction.objects.create(
+            account=account,
+            due_date=datetime.date(2017, 1, 1),
+            description=description,
+            category=category,
+            value=value,
+            payed=False
+            )
+
+        return transaction
+
+    def create_account(self, user=None):
+        if user is None:
+            user = self.user
+
+        return Account.objects.create(name='default', user=user, current_balance=0)
+
+    def create_user(self, name='testuser', **kwargs):
+        user = User.objects.create_user(kwargs)
+        token = Token.objects.get(user=user)
+
+        return user, token
+
+    def create_category(self, name, user=None, kind=Category.EXPENSE_KIND):
+        if user is None:
+            user = self.user
+
+        return Category.objects.create(kind=kind, user=user, name=name)
+
+class TransactionTestMixin:
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -110,33 +149,3 @@ class TransactionTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Transaction.objects.count(), 0)
-
-    def create_transaction(self, value=-40, description='description', account=None):
-        if account is None:
-            account = self.account
-
-        transaction = Transaction.objects.create(
-            account=account,
-            due_date=datetime.date(2017, 1, 1),
-            description=description,
-            category=self.category,
-            value=value,
-            payed=False
-            )
-
-        return transaction
-
-    def create_account(self, user):
-        return Account.objects.create(name='default', user=user, current_balance=0)
-
-    def create_user(self, name='testuser', **kwargs):
-        user = User.objects.create_user(kwargs)
-        token = Token.objects.get(user=user)
-
-        return user, token
-
-    def create_category(self, name, user=None, kind=Category.EXPENSE_KIND):
-        if user is None:
-            user = self.user
-
-        return Category.objects.create(kind=kind, user=user, name=name)
