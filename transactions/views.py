@@ -20,6 +20,3 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
