@@ -24,6 +24,10 @@ class Account(models.Model):
 
 class Transaction(models.Model):
     def __init__(self, *args, **kwargs):
+        '''
+        Init method used to identify which value is loaded from database, 
+        so we can identify if it suffered any changes after that.
+        '''
         super(Transaction, self).__init__(*args, **kwargs)
         self.initial_value = self.value
 

@@ -1,3 +1,4 @@
+from unittest.mock import patch
 import datetime
 import calendar
 from decimal import Decimal
@@ -36,24 +37,56 @@ class BalanceTestCase(TestCase):
             self.create_transactions()
             self.create_period_balances()
 
-    def test_increase_transaction_from_first_period_assert_current_balance(self):
+    def test_increase_transaction_value_from_first_period_assert_current_balance(self):
         old_value, new_value = self.update_first_transaction_from_period(100, 1)
 
         expected_balance = self.SUM_PERIODS - old_value + new_value
 
         self.assertEqual(Account.objects.first().current_balance, expected_balance)
 
-    def test_decrease_transaction_from_second_period_assert_current_balance(self):
+    def test_decrease_transaction_value_from_second_period_assert_current_balance(self):
         old_value, new_value = self.update_first_transaction_from_period(1, 2)
 
         expected_balance = self.SUM_PERIODS - old_value + new_value
 
         self.assertEqual(Account.objects.first().current_balance, expected_balance)
 
-    def test_increase_transaction_from_second_period_assert_next_periods(self):
-        old_value, new_value = self.update_first_transaction_from_period(1000, 2)
-        expected_balances = [ 50, 1400, 6400, 50900 ]
+    def test_increase_transaction_value_from_second_period_assert_next_periods(self):
+        self.update_first_transaction_from_period(1000, 2)
+        expected_balances = [ 50, 1490, 5990, 50990 ]
 
+        self.assert_balances(expected_balances)
+
+    def test_decrease_transaction_value_from_second_period_assert_next_periods(self):
+        self.update_first_transaction_from_period(1, 2)
+        expected_balances = [ 50, 491, 4991, 49991]
+
+        self.assert_balances(expected_balances)
+
+    def test_delete_from_first_period_assert_current_balance(self):
+        transaction = Transaction.objects.all().first()
+        transaction.delete()
+
+        expected_balance = self.SUM_PERIODS - transaction.value
+
+        self.assertEqual(Account.objects.first().current_balance, expected_balance)
+
+    def test_delete_from_first_period_assert_next_periods(self):
+        transaction = Transaction.objects.all().first()
+        transaction.delete()
+        expected_balances = [ 49, 499, 4999, 49999]
+
+        self.assert_balances(expected_balances)
+
+    @patch('transactions.signals.trigger_updates')
+    def test_updated_transaction_with_no_changes_to_value_should_not_trigger_updates(self, mock):
+        transaction = Transaction.objects.all().first()
+        transaction.description = 'changed only description...'
+        transaction.save()
+
+        self.assertFalse(mock.called)
+        
+    def assert_balances(self, expected_balances):
         balances = PeriodBalance.objects.all()
         for i in range(len(self.PERIOD_BALANCES)):
             self.assertEqual(balances[i].closed_value, expected_balances[i])
