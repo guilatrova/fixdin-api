@@ -25,10 +25,7 @@ class BalanceTestCase(TestCase):
     VALUE_INCREMENT_MULTIPLIER_PER_PERIOD = 10
     PERIOD_BALANCES = [ 50, 500, 5000, 50000]
     SUM_PERIODS = 55550
-
-    #Should be 4 CLOSED periods
-    #Should update 2 period
-
+    
     def setUp(self):        
         with transaction.atomic():
             self.user = self.create_user('testuser', email='testuser@test.com', password='testing')
