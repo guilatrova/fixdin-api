@@ -1,3 +1,4 @@
+import datetime
 from unittest import skip
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -23,16 +24,91 @@ class TransactionTestCase(APITestCase):
             'due_date': '2017-04-13',
             'description': 'gas',
             'category': self.category.id,
-            'value': 40,
+            'value': -40,
             'payed': False,
             'details': '',
             'account': self.account.id
         }
 
-        response = self.client.post(reverse('expenses'), transaction_dto, format='json')
+        response = self.client.post(reverse('transactions'), transaction_dto, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), 1)
+
+    def test_update_expense(self):
+        transaction = self.create_transaction()
+
+        transaction_dto = {
+            'id': transaction.id,
+            'due_date': transaction.due_date,
+            'description': transaction.description,
+            'category': self.category.id,
+            'value': -40,
+            'payed': True, #changed
+            'details': '',
+            'account': self.account.id
+        }
+
+        url = reverse('transaction', kwargs={'pk': transaction.id})
+        response = self.client.put(url, transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Transaction.objects.all().first().payed, transaction_dto['payed'])
+    
+    def test_retrieve_expense(self):
+        transaction = self.create_transaction()
+
+        url = reverse('transaction', kwargs={'pk':transaction.id})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(transaction.id, response.data['id'])
+        self.assertEqual(transaction.due_date.strftime("%Y-%m-%d"), response.data['due_date'])
+        self.assertEqual(transaction.description, response.data['description'])
+        self.assertEqual(transaction.value, float(response.data['value']))
+        self.assertEqual(transaction.payed, response.data['payed'])
+
+    def test_delete_expense(self):
+        transaction = self.create_transaction()
+
+        url = reverse('transaction', kwargs={'pk':transaction.id})
+        response = self.client.delete(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Transaction.objects.filter(id=transaction.id).exists())
+
+    def list_users_expenses(self):
+        '''
+        Should list only user's transactions without listing data from others users
+        '''
+        #Other user
+        other_user = self.create_user('other user')
+        other_user_account = self.create_account(user=other_user)
+        self.create_transaction(account=other_user_account)
+        
+        self.create_transaction()
+        self.create_transaction()
+        self.create_transaction()
+
+        response = self.client.get(reverse('transactions'), transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+    def create_transaction(self, value=-40, description='description', account=None):
+        if account is None:
+            account = self.account
+
+        transaction = Transaction.objects.create(
+            account=account,
+            due_date=datetime.date(2017, 1, 1),
+            description=description,
+            category=self.category,
+            value=value,
+            payed=False
+            )
+
+        return transaction
 
     def create_account(self, user):
         return Account.objects.create(name='default', user=user, current_balance=0)

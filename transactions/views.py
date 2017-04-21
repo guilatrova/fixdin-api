@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from transactions.models import Category
+from transactions.models import Category, Transaction
 from transactions.serializers import CategorySerializer, TransactionSerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -20,3 +20,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
+    
+    def get_queryset(self):
+        return Transaction.objects.filter(account__user_id=self.request.user.id)
+
+

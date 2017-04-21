@@ -20,4 +20,4 @@ class CategorySerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ('due_date', 'description', 'category', 'value', 'payed', 'details', 'account')
+        fields = ('id', 'due_date', 'description', 'category', 'value', 'payed', 'details', 'account')

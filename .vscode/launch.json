@@ -119,8 +119,7 @@
             "program": "${workspaceRoot}/manage.py",
             "cwd": "${workspaceRoot}",
             "args": [
-                "test",
-                "transactions.tests.test_balance"
+                "test"
             ],
             "env": null,
             "envFile": "${workspaceRoot}/.env",
