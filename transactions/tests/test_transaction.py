@@ -77,12 +77,12 @@ class TransactionTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Transaction.objects.filter(id=transaction.id).exists())
 
-    def list_users_expenses(self):
+    def test_list_users_expenses(self):
         '''
         Should list only user's transactions without listing data from others users
         '''
         #Other user
-        other_user = self.create_user('other user')
+        other_user, other_user_token = self.create_user('other user', username='other', password='123456')
         other_user_account = self.create_account(user=other_user)
         self.create_transaction(account=other_user_account)
         
@@ -90,10 +90,26 @@ class TransactionTestCase(APITestCase):
         self.create_transaction()
         self.create_transaction()
 
-        response = self.client.get(reverse('transactions'), transaction_dto, format='json')
+        response = self.client.get(reverse('transactions'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+
+    def test_cant_create_expense_with_value_0(self):
+        transaction_dto = {
+            'due_date': '2017-04-13',
+            'description': 'gas',
+            'category': self.category.id,
+            'value': 0,
+            'payed': False,
+            'details': '',
+            'account': self.account.id
+        }
+
+        response = self.client.post(reverse('transactions'), transaction_dto, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Transaction.objects.count(), 0)
 
     def create_transaction(self, value=-40, description='description', account=None):
         if account is None:

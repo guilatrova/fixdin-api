@@ -90,9 +90,10 @@ class CategoryTestCase(APITestCase):
         response = self.client.get(reverse('expense-categories'), format='json')
         self.assertEqual(len(response.data), 4)
 
-    @skip('No transactions module yet')
     def test_cant_delete_category_in_use(self):
-        self.fail('No transactions module yet')
+        self.create_category('in_use')
+
+        self.assertEqual()
 
     def test_can_delete_category_not_in_use(self):
         category = self.create_category('eating')

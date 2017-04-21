@@ -21,3 +21,9 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('id', 'due_date', 'description', 'category', 'value', 'payed', 'details', 'account')
+
+    def validate_value(self, value):
+        if value == 0:
+            raise serializers.ValidationError('Value cannot be 0')
+
+        return value
