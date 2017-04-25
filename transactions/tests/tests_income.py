@@ -48,14 +48,3 @@ class IncomeTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
-
-    def get_dto(self):
-        return {
-            'due_date': '2017-04-13',
-            'description': 'gas',
-            'category': self.category.id,
-            'value': self.value,
-            'payed': False,
-            'details': '',
-            'account': self.account.id
-        }
