@@ -20,7 +20,7 @@ from transactions.models import Transaction
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/v1/auth/', include('users.urls')),
-    url(r'^api/v1/incomes/', include('transactions.urls.urls_transaction'), kwargs={'kind': Transaction.INCOME_KIND}),
-    url(r'^api/v1/expenses/', include('transactions.urls.urls_transaction'), kwargs={'kind': Transaction.EXPENSE_KIND}),
+    url(r'^api/v1/incomes/', include('transactions.urls.urls_transaction'), kwargs={'kind': Transaction.INCOME_KIND}, name='incomes'),
+    url(r'^api/v1/expenses/', include('transactions.urls.urls_transaction'), kwargs={'kind': Transaction.EXPENSE_KIND}, name='expenses'),
     url(r'^api/v1/categories/', include('transactions.urls.urls_category')),    
 ]

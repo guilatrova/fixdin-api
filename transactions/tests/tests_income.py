@@ -9,20 +9,22 @@ from rest_framework.authtoken.models import Token
 from transactions.models import *
 from transactions.tests.base_test import BaseTestHelper, TransactionTestMixin
 
-class ExpenseTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
+class IncomeTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
+    url_single_resource_name = 'expense'
+    url_list_resource_name = 'expenses'
 
     def setUp(self):
         TransactionTestMixin.setUp(self)
-        
-        self.url = '/api/v1/expenses/'
-        self.value = -40
 
-    def test_cant_create_expense_greater_than_0(self):
+        self.url = '/api/v1/incomes/'
+        self.value = 40
+
+    def test_cant_create_income_lower_than_0(self):
         transaction_dto = {
             'due_date': '2017-04-13',
             'description': 'gas',
             'category': self.category.id,
-            'value': 10,
+            'value': -5,
             'payed': False,
             'details': '',
             'account': self.account.id
@@ -38,7 +40,7 @@ class ExpenseTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
             'due_date': '2017-04-13',
             'description': 'gas',
             'category': self.category.id,
-            'value': -40,
+            'value': 40,
             'payed': False,
             'details': '',
             'account': self.account.id

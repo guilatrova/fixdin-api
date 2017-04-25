@@ -29,5 +29,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         if self.context['kind'] == Transaction.EXPENSE_KIND:
             if value > 0:
                 raise serializers.ValidationError('Expense value cannot be positive')
+        elif value < 0:
+            raise serializers.ValidationError('Income value cannot be negative')
 
         return value
