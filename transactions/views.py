@@ -30,7 +30,15 @@ class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
     
     def get_queryset(self):
-        return Transaction.objects.filter(account__user_id=self.request.user.id)
+        query_filter = { 'account__user_id': self.request.user.id }
+
+        kind = self.kwargs['kind']
+        if kind == Transaction.EXPENSE_KIND:
+            query_filter['value__lt'] = 0
+        else:
+            query_filter['value__gt'] = 0
+
+        return Transaction.objects.filter(**query_filter)
 
     def get_serializer_context(self):
         return {

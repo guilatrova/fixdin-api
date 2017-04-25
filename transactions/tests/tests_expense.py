@@ -33,12 +33,26 @@ class ExpenseTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Transaction.objects.count(), 0)
 
+    def test_list_only_expenses(self):
+        '''
+        Should list only user's EXPENSES without listing incomes
+        '''               
+        self.create_transaction(value=10) #income
+        self.create_transaction(value=self.value)
+        self.create_transaction(value=self.value)
+        self.create_transaction(value=self.value)
+
+        response = self.client.get(self.url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
     def get_dto(self):
         return {
             'due_date': '2017-04-13',
             'description': 'gas',
             'category': self.category.id,
-            'value': -40,
+            'value': self.value,
             'payed': False,
             'details': '',
             'account': self.account.id
