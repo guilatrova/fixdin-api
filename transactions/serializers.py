@@ -20,12 +20,15 @@ class CategorySerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'due_date', 'description', 'category', 'value', 'payed', 'details', 'account')
+        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account')
+        extra_kwargs = {
+            'kind': {'read_only': True},
+        }
+
+    def get_kind(self):
+        return self.context['kind']
 
     def validate_value(self, value):
-        if value == 0:
-            raise serializers.ValidationError('Value cannot be 0')
-
         if self.context['kind'] == Transaction.EXPENSE_KIND:
             if value > 0:
                 raise serializers.ValidationError('Expense value cannot be positive')

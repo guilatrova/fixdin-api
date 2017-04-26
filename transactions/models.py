@@ -26,6 +26,11 @@ class Transaction(models.Model):
     EXPENSE_KIND = 0
     INCOME_KIND = 1
 
+    TRANSACTION_KINDS = (
+        (EXPENSE_KIND, 'Expense'),
+        (INCOME_KIND, 'Income')
+    )
+
     def __init__(self, *args, **kwargs):
         '''
         Init method used to identify which value is loaded from database, 
@@ -39,7 +44,7 @@ class Transaction(models.Model):
     description = models.CharField(max_length=120)
     category = models.ForeignKey(Category)
     value = models.DecimalField(max_digits=19, decimal_places=2)
-    payed = models.BooleanField()
+    kind = models.PositiveIntegerField(choices=TRANSACTION_KINDS)
     details = models.CharField(max_length=500, blank=True)   
     periodic_transaction = models.ForeignKey("Transaction", null=True)
     

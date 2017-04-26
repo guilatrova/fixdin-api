@@ -143,7 +143,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
                 description='unit test',
                 category=self.category,
                 value=value,
-                payed=True,
+                kind=Transaction.EXPENSE_KIND,
                 details='')
 
     def create_period_balance(self, start, end, value):

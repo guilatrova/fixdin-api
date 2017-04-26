@@ -11,12 +11,15 @@ class BaseTestHelper:
     '''
     Class used to create some resources to backup tests
     '''
-    def create_transaction(self, value=-40, description='description', account=None, category=None):
+    def create_transaction(self, value=-40, description='description', kind=None, account=None, category=None):
         if account is None:
             account = self.account
 
         if category is None:
             category = self.category
+
+        if kind is None:
+            kind = Transaction.EXPENSE_KIND if value <= 0 else Transaction.INCOME_KIND
 
         transaction = Transaction.objects.create(
             account=account,
@@ -24,7 +27,7 @@ class BaseTestHelper:
             description=description,
             category=category,
             value=value,
-            payed=False
+            kind=kind
             )
 
         return transaction
@@ -47,7 +50,7 @@ class BaseTestHelper:
 
         return Category.objects.create(kind=kind, user=user, name=name)
 
-class TransactionTestMixin:        
+class TransactionTestMixin:
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -71,13 +74,13 @@ class TransactionTestMixin:
 
         transaction_dto = self.get_dto()
         transaction_dto['id'] = transaction.id
-        transaction_dto['payed'] = True
+        transaction_dto['description'] = 'changed'
 
         url = self.url + str(transaction.id)
         response = self.client.put(url, transaction_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(Transaction.objects.all().first().payed, transaction_dto['payed'])
+        self.assertEqual(Transaction.objects.all().first().description, transaction_dto['description'])
     
     def test_retrieve_transaction(self):
         transaction = self.create_transaction(value=self.value)
@@ -90,7 +93,6 @@ class TransactionTestMixin:
         self.assertEqual(transaction.due_date.strftime("%Y-%m-%d"), response.data['due_date'])
         self.assertEqual(transaction.description, response.data['description'])
         self.assertEqual(transaction.value, float(response.data['value']))
-        self.assertEqual(transaction.payed, response.data['payed'])
 
     def test_delete_transaction(self):
         transaction = self.create_transaction(value=self.value)
@@ -119,29 +121,12 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
-    def test_cant_create_transaction_with_value_0(self):
-        transaction_dto = {
-            'due_date': '2017-04-13',
-            'description': 'gas',
-            'category': self.category.id,
-            'value': 0,
-            'payed': False,
-            'details': '',
-            'account': self.account.id
-        }
-
-        response = self.client.post(self.url, transaction_dto, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Transaction.objects.count(), 0)
-
     def get_dto(self):
         return {
             'due_date': '2017-04-13',
             'description': 'gas',
             'category': self.category.id,
-            'value': self.value,
-            'payed': False,
+            'value': self.value,            
             'details': '',
             'account': self.account.id
         }
