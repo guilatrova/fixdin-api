@@ -23,7 +23,6 @@ class ExpenseTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
             'description': 'gas',
             'category': self.category.id,
             'value': 10,
-            'payed': False,
             'details': '',
             'account': self.account.id
         }
