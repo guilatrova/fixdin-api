@@ -128,5 +128,7 @@ class TransactionTestMixin:
             'category': self.category.id,
             'value': self.value,            
             'details': '',
-            'account': self.account.id
+            'account': self.account.id,
+            'importance': '3',
+            'deadline': '2'
         }

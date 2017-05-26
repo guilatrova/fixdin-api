@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 class Category(models.Model):
     class Meta:
@@ -47,6 +48,8 @@ class Transaction(models.Model):
     kind = models.PositiveIntegerField(choices=TRANSACTION_KINDS)
     details = models.CharField(max_length=500, blank=True)   
     periodic_transaction = models.ForeignKey("Transaction", null=True)
+    importance = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    deadline = models.PositiveIntegerField(default=0)
     
 class PeriodBalance(models.Model):
     account = models.ForeignKey(Account)
