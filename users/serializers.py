@@ -18,6 +18,11 @@ class UserSerializer(serializers.ModelSerializer):
         user = get_user_model().objects.create_user(**validated_data)
         return user
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email já cadastrado!")
+        return value
+
     def update(self, instance, validated_data):
         if 'password' in validated_data:
             password = validated_data.pop('password')

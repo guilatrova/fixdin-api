@@ -62,6 +62,20 @@ class UsersTests(APITestCase):
         response = self.client.get(reverse('expense-categories'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_should_block_create_user_with_duplicated_email(self):
+        user_email = self.create_user(email='rodriguzeh@gmail.com', password='123qwe')
+        
+        user_same_email_dto = {
+            'username': 'rodrigo',
+            'password': '123qwe',
+            'email': 'rodriguzeh@gmail.com',
+            'first_name': 'Rodrigo',
+            'last_name': 'Silva'
+        }
+
+        response = self.client.post(reverse('users'), user_same_email_dto, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(name, **kwargs)
         user.save()
