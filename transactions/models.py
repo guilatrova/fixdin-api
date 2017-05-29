@@ -48,7 +48,7 @@ class Transaction(models.Model):
     kind = models.PositiveIntegerField(choices=TRANSACTION_KINDS)
     details = models.CharField(max_length=500, blank=True)   
     periodic_transaction = models.ForeignKey("Transaction", null=True)
-    importance = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    priority = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
     deadline = models.PositiveIntegerField(default=0)
     
 class PeriodBalance(models.Model):

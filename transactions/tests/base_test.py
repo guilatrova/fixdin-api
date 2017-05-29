@@ -93,7 +93,7 @@ class TransactionTestMixin:
         self.assertEqual(transaction.due_date.strftime("%Y-%m-%d"), response.data['due_date'])
         self.assertEqual(transaction.description, response.data['description'])
         self.assertEqual(transaction.value, float(response.data['value']))
-        self.assertEqual(transaction.importance, float(response.data['importance']))
+        self.assertEqual(transaction.priority, float(response.data['priority']))
         self.assertEqual(transaction.deadline, float(response.data['deadline']))
 
     def test_delete_transaction(self):
@@ -131,6 +131,6 @@ class TransactionTestMixin:
             'value': self.value,            
             'details': '',
             'account': self.account.id,
-            'importance': '3',
+            'priority': '3',
             'deadline': '2'
         }
