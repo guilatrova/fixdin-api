@@ -123,11 +123,14 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
-    def test_userX_cant_create_expense_on_userY_account(self):
-        userX, userX_token = self.create_user('userX', email='userX@hotmail.com', password='userX')
+    def test_user_x_cant_create_transaction_on_user_self_account(self):
+        '''
+            User can't create a transaction using the credentials from another user.
+        '''
+        user_x, user_x_token = self.create_user('user_x', email='user_x@hotmail.com', password='user_x')
         
-        userX_client = APIClient()
-        userX_client.credentials(HTTP_AUTHORIZATION='Token' + userX_token.key)
+        user_x_client = APIClient()
+        user_x_client.credentials(HTTP_AUTHORIZATION='Token' + user_x_token.key)
 
         transaction_dto = {
             'due_date': '2017-04-13',
@@ -138,27 +141,28 @@ class TransactionTestMixin:
             'account': self.account.id
         }
 
-        response = userX_client.post(self.url, transaction_dto, format='json')
+        response = user_x_client.post(self.url, transaction_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_userX_cant_create_expense_with_userY_category(self):
-        userX, userX_token = self.create_user('userX', email='userX@hotmail.com', password='userX')
+    def test_user_x_cant_create_transaction_with_user_self_category(self):
+        '''
+            User can't create a transaction using the category from another user.
+        '''
+        user_x, user_x_token = self.create_user('user_x', email='user_x@hotmail.com', password='user_x')
         
-        userX_client = APIClient()
-        userX_client.credentials(HTTP_AUTHORIZATION='Token' + userX_token.key)
-
-        category = self.create_category('Work')
+        user_x_client = APIClient()
+        user_x_client.credentials(HTTP_AUTHORIZATION='Token' + user_x_token.key)
 
         transaction_dto = {
             'due_date': '2017-04-13',
             'description': 'gas',
-            'category': category.id,
+            'category': self.category.id,
             'value': 0,
             'details': '',
-            'account': userX.id
+            'account': user_x.id
         }
 
-        response = userX_client.post(self.url, transaction_dto, format='json')
+        response = user_x_client.post(self.url, transaction_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def get_dto(self):
