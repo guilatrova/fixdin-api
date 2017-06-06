@@ -2,16 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-class Category(models.Model):
-    class Meta:
-        unique_together = ('user', 'name')
-
+class HasKind:
     EXPENSE_KIND = 0
     INCOME_KIND = 1
+
+class Category(models.Model, HasKind):
+    class Meta:
+        unique_together = ('user', 'name')    
         
     CATEGORY_KINDS = (
-        (EXPENSE_KIND, 'Expense'),
-        (INCOME_KIND, 'Income')
+        (HasKind.EXPENSE_KIND, 'Expense'),
+        (HasKind.INCOME_KIND, 'Income')
     )
 
     name = models.CharField(max_length=30)
@@ -23,13 +24,11 @@ class Account(models.Model):
     name = models.CharField(max_length=30)
     current_balance = models.DecimalField(max_digits=19, decimal_places=2)
 
-class Transaction(models.Model):
-    EXPENSE_KIND = 0
-    INCOME_KIND = 1
+class Transaction(models.Model, HasKind):
 
     TRANSACTION_KINDS = (
-        (EXPENSE_KIND, 'Expense'),
-        (INCOME_KIND, 'Income')
+        (HasKind.EXPENSE_KIND, 'Expense'),
+        (HasKind.INCOME_KIND, 'Income')
     )
 
     def __init__(self, *args, **kwargs):
