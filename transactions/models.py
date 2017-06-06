@@ -33,7 +33,7 @@ class Transaction(models.Model, HasKind):
 
     def __init__(self, *args, **kwargs):
         '''
-        Init method used to identify which value is loaded from database, 
+        Init method used to identify which value (R$) is loaded from database, 
         so we can identify if it suffered any changes after that.
         '''
         super(Transaction, self).__init__(*args, **kwargs)
