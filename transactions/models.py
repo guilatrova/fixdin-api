@@ -15,7 +15,7 @@ class Category(models.Model, HasKind):
         (HasKind.INCOME_KIND, 'Income')
     )
 
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=70)
     user = models.ForeignKey(User)
     kind = models.PositiveIntegerField(choices=CATEGORY_KINDS)
 
