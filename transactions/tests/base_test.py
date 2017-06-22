@@ -105,6 +105,13 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Transaction.objects.filter(id=transaction.id).exists())
 
+    def test_cant_create_transaction_with_crossed_category(self):
+        transaction_dto = self.get_dto(self.inverse_category)        
+
+        response = self.client.post(self.url, transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_list_users_transactions(self):
         '''
         Should list only user's transactions without listing data from others users
@@ -164,12 +171,15 @@ class TransactionTestMixin:
 
         response = user_x_client.post(self.url, transaction_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        
+    def get_dto(self, category=None):
+        if category is None:
+            category = self.category
 
-    def get_dto(self):
         return {
             'due_date': '2017-04-13',
             'description': 'gas',
-            'category': self.category.id,
+            'category': category.id,
             'value': self.value,            
             'details': '',
             'account': self.account.id,
