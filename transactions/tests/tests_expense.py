@@ -12,10 +12,13 @@ from transactions.tests.base_test import BaseTestHelper, TransactionTestMixin
 class ExpenseTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
 
     def setUp(self):
-        TransactionTestMixin.setUp(self)
+        TransactionTestMixin.setUp(self)       
+         
+        income_category = self.create_category('salary', kind=Category.INCOME_KIND)
         
         self.url = '/api/v1/expenses/'
         self.value = -40
+        self.inverse_category = income_category
 
     def test_cant_create_expense_greater_than_0(self):
         transaction_dto = {

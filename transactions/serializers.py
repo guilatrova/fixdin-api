@@ -31,3 +31,8 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
             raise serializers.ValidationError('Income value cannot be negative')
 
         return value
+
+    def validate(self, data):
+        if self.context['kind'] != data['category'].kind:
+            raise serializers.ValidationError('Transaction and Category must have the same kind')
+        return data

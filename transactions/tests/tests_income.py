@@ -16,8 +16,13 @@ class IncomeTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
     def setUp(self):
         TransactionTestMixin.setUp(self)
 
+        income_category = self.create_category('salary', kind=Category.INCOME_KIND)
+        expense_category = self.create_category('dinner', kind=Category.EXPENSE_KIND)
+
         self.url = '/api/v1/incomes/'
         self.value = 40
+        self.category = income_category
+        self.inverse_category = expense_category
 
     def test_cant_create_income_lower_than_0(self):
         transaction_dto = {
