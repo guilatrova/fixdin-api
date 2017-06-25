@@ -55,8 +55,7 @@ class TransactionTestMixin:
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
 
-        self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        self.client = self.create_authenticated_client(token)
 
         self.account = self.create_account(self.user)
         self.category = self.create_category('car')        
@@ -132,17 +131,17 @@ class TransactionTestMixin:
 
     def test_user_x_cant_create_transaction_on_user_self_account(self):
         '''
-            User can't create a transaction using the credentials from another user.
+        User can't create a transaction using the credentials from another user.
         '''
         user_x, user_x_token = self.create_user('user_x', email='user_x@hotmail.com', password='user_x')
-        
-        user_x_client = APIClient()
-        user_x_client.credentials(HTTP_AUTHORIZATION='Token' + user_x_token.key)
+        category_x = self.create_category('X category', user=user_x)
+
+        user_x_client = self.create_authenticated_client(user_x_token)
 
         transaction_dto = {
             'due_date': '2017-04-13',
             'description': 'gas',
-            'category': self.category.id,
+            'category': category_x.id,
             'value': 0,
             'details': '',
             'account': self.account.id
@@ -153,12 +152,11 @@ class TransactionTestMixin:
 
     def test_user_x_cant_create_transaction_with_user_self_category(self):
         '''
-            User can't create a transaction using the category from another user.
+        User can't create a transaction using the category from another user.
         '''
         user_x, user_x_token = self.create_user('user_x', email='user_x@hotmail.com', password='user_x')
         
-        user_x_client = APIClient()
-        user_x_client.credentials(HTTP_AUTHORIZATION='Token' + user_x_token.key)
+        user_x_client = self.create_authenticated_client(user_x_token)
 
         transaction_dto = {
             'due_date': '2017-04-13',
@@ -172,6 +170,21 @@ class TransactionTestMixin:
         response = user_x_client.post(self.url, transaction_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         
+    def test_can_create_transaction_with_value_0(self):
+        transaction_dto = {
+            'due_date': '2017-04-13',
+            'description': 'gas',
+            'category': self.category.id,
+            'value': 0,
+            'details': '',
+            'account': self.account.id
+        }
+
+        response = self.client.post(self.url, transaction_dto, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Transaction.objects.count(), 1)
+
     def get_dto(self, category=None):
         if category is None:
             category = self.category
@@ -186,3 +199,9 @@ class TransactionTestMixin:
             'priority': '3',
             'deadline': '2'
         }
+
+    def create_authenticated_client(self, token):
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+        return client

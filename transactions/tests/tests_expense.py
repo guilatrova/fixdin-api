@@ -48,18 +48,3 @@ class ExpenseTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
-
-    def test_can_create_expense_with_value_0(self):
-        transaction_dto = {
-            'due_date': '2017-04-13',
-            'description': 'gas',
-            'category': self.category.id,
-            'value': 0,
-            'details': '',
-            'account': self.account.id
-        }
-
-        response = self.client.post(self.url, transaction_dto, format='json')
-        
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 1)
