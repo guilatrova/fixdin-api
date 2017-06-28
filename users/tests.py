@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework_expiring_authtoken.models import ExpiringToken
 from fixdin.settings.base import EXPIRING_TOKEN_LIFESPAN
+from transactions.models import Account
 
 import datetime
 
@@ -75,6 +76,11 @@ class UsersTests(APITestCase):
 
         response = self.client.post(reverse('users'), user_same_email_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_should_create_an_account_for_new_users(self):
+        user = self.create_user(email='guilhermelatrova@hotmail.com', password='abc123456')
+
+        self.assertTrue(Account.objects.filter(user=user).exists())
 
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(name, **kwargs)

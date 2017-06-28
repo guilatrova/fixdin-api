@@ -21,7 +21,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
     class Meta:
         model = Transaction
         fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline')
-        read_only_fields = ('kind', )
+        read_only_fields = ('kind', 'account')
 
     def validate_value(self, value):
         if self.context['kind'] == Transaction.EXPENSE_KIND:
