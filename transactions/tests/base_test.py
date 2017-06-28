@@ -134,7 +134,7 @@ class TransactionTestMixin:
         User can't create a transaction using the credentials from another user.
         '''
         user_x, user_x_token = self.create_user('user_x', email='user_x@hotmail.com', password='user_x')
-        category_x = self.create_category('X category', user=user_x)
+        category_x = self.create_category('X category', user=user_x, kind=self.category.kind)
 
         user_x_client = self.create_authenticated_client(user_x_token)
 
@@ -148,14 +148,14 @@ class TransactionTestMixin:
         }
 
         response = user_x_client.post(self.url, transaction_dto, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_user_x_cant_create_transaction_with_user_self_category(self):
         '''
         User can't create a transaction using the category from another user.
         '''
         user_x, user_x_token = self.create_user('user_x', email='user_x@hotmail.com', password='user_x')
-        
+        user_x_account = self.create_account(user_x)
         user_x_client = self.create_authenticated_client(user_x_token)
 
         transaction_dto = {
@@ -164,11 +164,11 @@ class TransactionTestMixin:
             'category': self.category.id,
             'value': 0,
             'details': '',
-            'account': user_x.id
+            'account': user_x_account.id
         }
 
         response = user_x_client.post(self.url, transaction_dto, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
     def test_can_create_transaction_with_value_0(self):
         transaction_dto = {

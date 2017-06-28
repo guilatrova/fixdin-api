@@ -32,6 +32,16 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
 
         return value
 
+    def validate_category(self, category):
+        if category.user.id != self.context['user_id']:
+            raise serializers.ValidationError("You can't use a category that doesn't belongs to you!")
+        return category
+
+    def validate_account(self, account):
+        if account.user.id != self.context['user_id']:
+            raise serializers.ValidationError("You can't use an account that doesn't belongs to you!")
+        return account
+
     def validate(self, data):
         if self.context['kind'] != data['category'].kind:
             raise serializers.ValidationError('Transaction and Category must have the same kind')

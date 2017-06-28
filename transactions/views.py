@@ -1,7 +1,6 @@
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework import status
 from transactions.models import Category, Transaction
 from transactions.serializers import CategorySerializer, TransactionSerializer
 
@@ -28,19 +27,19 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
-    
+
     def get_queryset(self):
         query_filter = { 
             'account__user_id': self.request.user.id,
             'kind': self.kwargs['kind'] 
-            }
-            
+            }            
         return Transaction.objects.filter(**query_filter)
 
     def get_serializer_context(self):
         return {
-            "kind": self.kwargs['kind']
+            "kind": self.kwargs['kind'],
+            "user_id": self.request.user.id
         }
 
     def perform_create(self, serializer):
-        serializer.save(kind=self.kwargs['kind'])
+        serializer.save(kind=self.kwargs['kind'])    
