@@ -28,7 +28,8 @@ class BaseTestHelper:
             description=description,
             category=category,
             value=value,
-            kind=kind
+            kind=kind,
+            payment_date=datetime.date(2017, 1, 2)
             )
 
         return transaction
@@ -81,7 +82,7 @@ class TransactionTestMixin:
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Transaction.objects.all().first().description, transaction_dto['description'])
-    
+            
     def test_retrieve_transaction(self):
         transaction = self.create_transaction(value=self.value)
 
@@ -95,6 +96,7 @@ class TransactionTestMixin:
         self.assertEqual(transaction.value, float(response.data['value']))
         self.assertEqual(transaction.priority, float(response.data['priority']))
         self.assertEqual(transaction.deadline, float(response.data['deadline']))
+        self.assertEqual(transaction.payment_date.strftime("%Y-%m-%d"), response.data['payment_date'])
 
     def test_delete_transaction(self):
         transaction = self.create_transaction(value=self.value)
@@ -110,7 +112,7 @@ class TransactionTestMixin:
 
         response = self.client.post(self.url, transaction_dto, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)       
 
     def test_list_users_transactions(self):
         '''
@@ -181,6 +183,14 @@ class TransactionTestMixin:
             'details': '',
             'account': self.account.id
         }
+
+        response = self.client.post(self.url, transaction_dto, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Transaction.objects.count(), 1)
+
+    def test_can_create_transaction_without_payment_date(self):
+        transaction_dto = self.get_dto()
 
         response = self.client.post(self.url, transaction_dto, format='json')
         

@@ -49,6 +49,7 @@ class Transaction(models.Model, HasKind):
     periodic_transaction = models.ForeignKey("Transaction", null=True)
     priority = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
     deadline = models.PositiveIntegerField(default=0)
+    payment_date = models.DateField(null=True, blank=True)
     
 class PeriodBalance(models.Model):
     account = models.ForeignKey(Account)

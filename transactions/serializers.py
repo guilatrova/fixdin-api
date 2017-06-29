@@ -20,7 +20,7 @@ class CategorySerializer(serializers.ModelSerializer, HasKindContextSerializer):
 class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline')
+        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date')
         read_only_fields = ('kind', 'account')
 
     def validate_value(self, value):
