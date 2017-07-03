@@ -189,8 +189,18 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), 1)
 
-    def test_can_create_transaction_without_payment_date(self):
-        transaction_dto = self.get_dto()
+    def test_can_create_transaction_with_payment_date(self):
+        transaction_dto = {
+            'due_date': '2017-04-13',
+            'description': 'gas',
+            'category': self.category.id,
+            'value': self.value,            
+            'details': '',
+            'account': self.account.id,
+            'priority': '3',
+            'deadline': '2',
+            'payment_date': '2017-04-13'
+        }
 
         response = self.client.post(self.url, transaction_dto, format='json')
         
