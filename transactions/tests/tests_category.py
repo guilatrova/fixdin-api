@@ -40,6 +40,16 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Category.objects.count(), 1)
 
+    def test_can_create_category_repeated_name_with_different_kind(self):
+        self.create_category('Other', kind=Category.EXPENSE_KIND)
+        self.create_category('Other', kind=Category.INCOME_KIND)
+
+        response = self.client.get(reverse('expense-categories'), format='json')
+        self.assertEqual(len(response.data), 1)
+
+        response = self.client.get(reverse('income-categories'), format='json')
+        self.assertEqual(len(response.data), 1)
+
     def test_cant_create_category_repeated_name_regardless_character_casing(self):
         self.create_category('eating')
 

@@ -8,7 +8,7 @@ class HasKind:
 
 class Category(models.Model, HasKind):
     class Meta:
-        unique_together = ('user', 'name')    
+        unique_together = ('user', 'name', 'kind')    
         
     CATEGORY_KINDS = (
         (HasKind.EXPENSE_KIND, 'Expense'),
