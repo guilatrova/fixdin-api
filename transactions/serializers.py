@@ -12,16 +12,16 @@ class CategorySerializer(serializers.ModelSerializer, HasKindContextSerializer):
         read_only_fields = ('kind', )
 
     def validate_name(self, value):
-        if Category.objects.filter(name__iexact=value,user_id=self.context['user_id']).exists():
-            raise serializers.ValidationError('Category already exists for this user')
+        if Category.objects.filter(name__iexact=value,user_id=self.context['user_id'],kind=self.context['kind']).exists():
+            raise serializers.ValidationError('Category already exists for this user with the same name and kind')
 
         return value
 
 class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline')
-        read_only_fields = ('kind', )
+        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date')
+        read_only_fields = ('kind', 'account')
 
     def validate_value(self, value):
         if self.context['kind'] == Transaction.EXPENSE_KIND:

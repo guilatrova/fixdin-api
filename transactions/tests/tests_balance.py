@@ -1,3 +1,4 @@
+from unittest import skip
 from unittest.mock import patch
 import datetime
 import calendar
@@ -13,6 +14,7 @@ from rest_framework.authtoken.models import Token
 from transactions.models import *
 from transactions.tests.base_test import BaseTestHelper
 
+@skip('We started it too earlier, we will continue it in future')
 class BalanceTestCase(TestCase, BaseTestHelper):
     '''
     TestCase created to test signals and reactions to PeriodBalance + Account.

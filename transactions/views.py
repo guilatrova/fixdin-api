@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from transactions.models import Category, Transaction
+from transactions.models import Category, Transaction, Account
 from transactions.serializers import CategorySerializer, TransactionSerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -42,4 +42,5 @@ class TransactionViewSet(viewsets.ModelViewSet):
         }
 
     def perform_create(self, serializer):
-        serializer.save(kind=self.kwargs['kind'])    
+        account = Account.objects.filter(user_id=self.request.user.id).first()
+        serializer.save(kind=self.kwargs['kind'],account=account)
