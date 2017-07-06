@@ -42,13 +42,14 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
 
     def test_can_create_category_repeated_name_with_different_kind(self):
         self.create_category('Other', kind=Category.EXPENSE_KIND)
-        self.create_category('Other', kind=Category.INCOME_KIND)
+        category_dto = {
+            'name': 'Other',
+            'kind': Category.INCOME_KIND
+        }
 
-        response = self.client.get(reverse('expense-categories'), format='json')
-        self.assertEqual(len(response.data), 1)
-
-        response = self.client.get(reverse('income-categories'), format='json')
-        self.assertEqual(len(response.data), 1)
+        response = self.client.post(reverse('income-categories'), category_dto, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Category.objects.count(), 2)
 
     def test_cant_create_category_repeated_name_regardless_character_casing(self):
         self.create_category('eating')
