@@ -12,19 +12,22 @@ class BaseTestHelper:
     '''
     Class used to create some resources to backup tests
     '''
-    def create_transaction(self, value=-40, description='description', kind=None, account=None, category=None):
+    def create_transaction(self, value=-40, description='description', kind=None, account=None, category=None, due_date=None):
         if account is None:
             account = self.account
 
         if category is None:
             category = self.category
 
+        if due_date is None:
+            due_date = datetime.date(2017, 1, 1)
+
         if kind is None:
             kind = Transaction.EXPENSE_KIND if value <= 0 else Transaction.INCOME_KIND
 
         transaction = Transaction.objects.create(
             account=account,
-            due_date=datetime.date(2017, 1, 1),
+            due_date=due_date,
             description=description,
             category=category,
             value=value,
@@ -206,6 +209,37 @@ class TransactionTestMixin:
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), 1)
+
+    def test_can_filter_by_due_date(self):
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))
+        #other days
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1))
+
+        url = self.url + '?due_date=2017-1-1'
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_can_filter_by_category(self):
+        second_category = self.create_category('Second category')
+        self.create_transaction(value=self.value)
+        self.create_transaction(value=self.value)
+        self.create_transaction(value=self.value)
+        #other categories
+        self.create_transaction(value=self.value, category=second_category)        
+        self.create_transaction(value=self.value, category=second_category)
+
+        url = '{}?category={}'.format(self.url, self.category.id)
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
 
     def get_dto(self, category=None):
         if category is None:

@@ -32,8 +32,22 @@ class TransactionViewSet(viewsets.ModelViewSet):
         query_filter = { 
             'account__user_id': self.request.user.id,
             'kind': self.kwargs['kind'] 
-            }            
+            }
+        
+        url_query_params = self.get_query_params_filter()  
+        query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
+
+    def get_query_params_filter(self):
+        dic = {}
+        fields = ['due_date', 'category']
+
+        for field in fields:
+            value = self.request.query_params.get(field, None)
+            if value is not None:
+                dic[field] = value
+
+        return dic
 
     def get_serializer_context(self):
         return {
