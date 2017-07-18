@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import render
 from django.db.models import Sum
 from rest_framework import viewsets, status
@@ -42,12 +43,20 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     def get_query_params_filter(self):
         dic = {}
-        fields = ['due_date', 'category']
+        fields = ['category']
 
         for field in fields:
             value = self.request.query_params.get(field, None)
             if value is not None:
                 dic[field] = value
+
+        due_date_from = self.request.query_params.get('due_date_from', False)
+        due_date_until = self.request.query_params.get('due_date_until', False)
+        if (due_date_from and due_date_until):
+            range_from = datetime.strptime(due_date_from, '%Y-%m-%d')
+            range_until = datetime.strptime(due_date_until, '%Y-%m-%d')
+
+            dic['due_date__range'] = [range_from, range_until]
 
         return dic
 

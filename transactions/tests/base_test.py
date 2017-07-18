@@ -212,18 +212,18 @@ class TransactionTestMixin:
 
     def test_can_filter_by_due_date(self):
         self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))
-        #other days
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))        
         self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+        #other days
         self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3))
         self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1))
 
-        url = self.url + '?due_date=2017-1-1'
+        url = self.url + '?due_date_from=2017-1-1&due_date_until=2017-1-2'
 
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 3)
 
     def test_can_filter_by_category(self):
         second_category = self.create_category('Second category')
