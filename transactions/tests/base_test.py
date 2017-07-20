@@ -12,7 +12,7 @@ class BaseTestHelper:
     '''
     Class used to create some resources to backup tests
     '''
-    def create_transaction(self, value=-40, description='description', kind=None, account=None, category=None, due_date=None):
+    def create_transaction(self, value=-40, description='description', kind=None, account=None, category=None, due_date=None, payment_date=None):
         if account is None:
             account = self.account
 
@@ -32,7 +32,7 @@ class BaseTestHelper:
             category=category,
             value=value,
             kind=kind,
-            payment_date=datetime.date(2017, 1, 2)
+            payment_date=payment_date
             )
 
         return transaction
@@ -87,7 +87,7 @@ class TransactionTestMixin:
         self.assertEqual(Transaction.objects.all().first().description, transaction_dto['description'])
             
     def test_retrieve_transaction(self):
-        transaction = self.create_transaction(value=self.value)
+        transaction = self.create_transaction(value=self.value, payment_date=datetime.date(2017, 7, 20))
 
         url = self.url + str(transaction.id)
         response = self.client.get(url, format='json')
@@ -241,6 +241,51 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
+    def test_can_filter_by_payed(self):
+        self.create_transaction(value=self.value, due_date=datetime.date(2016, 1, 1), payment_date=datetime.date(2016, 1, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1), payment_date=datetime.date(2017, 2, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3), payment_date=datetime.date(2017, 4, 2))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1), payment_date=datetime.date(2017, 5, 10))
+        #not payed
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+
+        url = self.url + '?payed=1'
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+
+    def test_can_filter_by_not_payed(self):
+        self.create_transaction(value=self.value, due_date=datetime.date(2016, 1, 1), payment_date=datetime.date(2016, 1, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1), payment_date=datetime.date(2017, 2, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3), payment_date=datetime.date(2017, 4, 2))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1), payment_date=datetime.date(2017, 5, 10))
+        #not payed
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+
+        url = self.url + '?payed=0'
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_can_filter_both_payed_and_not_payed(self):
+        self.create_transaction(value=self.value, due_date=datetime.date(2016, 1, 1), payment_date=datetime.date(2016, 1, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1), payment_date=datetime.date(2017, 2, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3), payment_date=datetime.date(2017, 4, 2))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1), payment_date=datetime.date(2017, 5, 10))
+        #not payed
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+
+        url = self.url + '?payed=-1'
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 5)
+
     def get_dto(self, category=None):
         if category is None:
             category = self.category
@@ -249,7 +294,7 @@ class TransactionTestMixin:
             'due_date': '2017-04-13',
             'description': 'gas',
             'category': category.id,
-            'value': self.value,            
+            'value': self.value,
             'details': '',
             'account': self.account.id,
             'priority': '3',

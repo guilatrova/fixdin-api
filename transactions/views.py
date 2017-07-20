@@ -58,6 +58,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
             dic['due_date__range'] = [range_from, range_until]
 
+        payed = self.request.query_params.get('payed', False)
+        if (payed and payed != '-1'):
+            dic['payment_date__isnull'] = (payed == '0')
+
         return dic
 
     def get_serializer_context(self):
