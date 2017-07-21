@@ -241,6 +241,23 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
+    def test_can_filter_by_multiple_categories(self):
+        second_category = self.create_category('Second category')
+        third_category = self.create_category('Third category')
+        self.create_transaction(value=self.value)
+        self.create_transaction(value=self.value)
+        self.create_transaction(value=self.value)
+        #other categories
+        self.create_transaction(value=self.value, category=second_category)        
+        self.create_transaction(value=self.value, category=third_category)
+
+        url = '{}?category={},{}'.format(self.url, second_category.id, third_category.id)
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
     def test_can_filter_by_payed(self):
         self.create_transaction(value=self.value, due_date=datetime.date(2016, 1, 1), payment_date=datetime.date(2016, 1, 1))
         self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1), payment_date=datetime.date(2017, 2, 1))
@@ -300,6 +317,21 @@ class TransactionTestMixin:
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+
+    def test_can_filter_by_description(self):
+        self.create_transaction(description='Python', value=self.value, due_date=datetime.date(2017, 1, 1))
+        self.create_transaction(description='Python Pro', value=self.value, due_date=datetime.date(2017, 1, 1))
+        self.create_transaction(description='Python Summit', value=self.value, due_date=datetime.date(2017, 1, 1))
+        #not related to Python
+        self.create_transaction(description='React Group', value=self.value, due_date=datetime.date(2017, 1, 1))
+        self.create_transaction(description='Food', value=self.value, due_date=datetime.date(2017, 1, 1))
+
+        url = self.url + '?description=python'
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
 
     def get_dto(self, category=None):
         if category is None:

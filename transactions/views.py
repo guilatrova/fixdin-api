@@ -43,12 +43,14 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     def get_query_params_filter(self):
         dic = {}
-        fields = ['category']
+        
+        description = self.request.query_params.get('description', False)
+        if description:
+            dic['description__icontains'] = description
 
-        for field in fields:
-            value = self.request.query_params.get(field, None)
-            if value is not None:
-                dic[field] = value
+        categories = self.request.query_params.get('category', False)
+        if categories:
+            dic['category_id__in'] = categories.split(',')
 
         due_date_from = self.request.query_params.get('due_date_from', False)
         due_date_until = self.request.query_params.get('due_date_until', False)
