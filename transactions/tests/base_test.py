@@ -286,6 +286,21 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 5)
 
+    def test_can_filter_by_payment_date(self):
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1), payment_date=datetime.date(2017, 2, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3), payment_date=datetime.date(2017, 4, 2))
+        #not payed or out of range
+        self.create_transaction(value=self.value, due_date=datetime.date(2016, 1, 1), payment_date=datetime.date(2016, 1, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1), payment_date=datetime.date(2017, 5, 10))
+
+        url = self.url + '?payed={}&payment_date_from={}&payment_date_until={}'.format('1', '2017-01-01', '2017-04-30')
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
     def get_dto(self, category=None):
         if category is None:
             category = self.category

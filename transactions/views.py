@@ -62,6 +62,14 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if (payed and payed != '-1'):
             dic['payment_date__isnull'] = (payed == '0')
 
+            payment_date_from = self.request.query_params.get('payment_date_from', False)
+            payment_date_until = self.request.query_params.get('payment_date_until', False)
+            if (payment_date_from and payment_date_until):
+                range_from = datetime.strptime(payment_date_from, '%Y-%m-%d')
+                range_until = datetime.strptime(payment_date_until, '%Y-%m-%d')
+
+                dic['payment_date__range'] = [range_from, range_until]
+
         return dic
 
     def get_serializer_context(self):
