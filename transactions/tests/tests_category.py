@@ -17,6 +17,7 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
         self.account = self.create_account(self.user)
+        self.value = 1
 
     def test_create_category(self):
         category_dto = {

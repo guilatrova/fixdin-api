@@ -12,7 +12,10 @@ class BaseTestHelper:
     '''
     Class used to create some resources to backup tests
     '''
-    def create_transaction(self, value=-40, description='description', kind=None, account=None, category=None, due_date=None, payment_date=None):
+    def create_transaction(self, value=None, description='description', kind=None, account=None, category=None, due_date=None, payment_date=None, priority=None):
+        if value is None:
+            value = self.value
+
         if account is None:
             account = self.account
 
@@ -25,6 +28,9 @@ class BaseTestHelper:
         if kind is None:
             kind = Transaction.EXPENSE_KIND if value <= 0 else Transaction.INCOME_KIND
 
+        if priority is None:
+            priority = 0
+
         transaction = Transaction.objects.create(
             account=account,
             due_date=due_date,
@@ -32,7 +38,8 @@ class BaseTestHelper:
             category=category,
             value=value,
             kind=kind,
-            payment_date=payment_date
+            payment_date=payment_date,
+            priority=priority
             )
 
         return transaction
@@ -327,6 +334,23 @@ class TransactionTestMixin:
         self.create_transaction(description='Food', value=self.value, due_date=datetime.date(2017, 1, 1))
 
         url = self.url + '?description=python'
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+    def test_can_filter_by_priority(self):
+        self.create_transaction(priority=5)
+        self.create_transaction(priority=4)
+        self.create_transaction(priority=3)
+        #Other below 3
+        self.create_transaction(priority=2)
+        self.create_transaction(priority=2)
+        self.create_transaction(priority=1)
+        self.create_transaction(priority=1)
+
+        url = self.url + '?priority=3'
 
         response = self.client.get(url)
 

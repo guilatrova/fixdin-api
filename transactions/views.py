@@ -52,6 +52,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if categories:
             dic['category_id__in'] = categories.split(',')
 
+        priority = self.request.query_params.get('priority', False)
+        if priority:
+            dic['priority__gte'] = priority
+
         due_date_from = self.request.query_params.get('due_date_from', False)
         due_date_until = self.request.query_params.get('due_date_until', False)
         if (due_date_from and due_date_until):
