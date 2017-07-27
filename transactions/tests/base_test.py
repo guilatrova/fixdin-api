@@ -12,7 +12,8 @@ class BaseTestHelper:
     '''
     Class used to create some resources to backup tests
     '''
-    def create_transaction(self, value=None, description='description', kind=None, account=None, category=None, due_date=None, payment_date=None, priority=None):
+    def create_transaction(self, value=None, description='description', kind=None, account=None, category=None, 
+    due_date=datetime.date(2017, 1, 1), payment_date=None, priority=0, deadline=10):
         if value is None:
             value = self.value
 
@@ -22,14 +23,8 @@ class BaseTestHelper:
         if category is None:
             category = self.category
 
-        if due_date is None:
-            due_date = datetime.date(2017, 1, 1)
-
         if kind is None:
-            kind = Transaction.EXPENSE_KIND if value <= 0 else Transaction.INCOME_KIND
-
-        if priority is None:
-            priority = 0
+            kind = Transaction.EXPENSE_KIND if value <= 0 else Transaction.INCOME_KIND    
 
         transaction = Transaction.objects.create(
             account=account,
@@ -39,7 +34,8 @@ class BaseTestHelper:
             value=value,
             kind=kind,
             payment_date=payment_date,
-            priority=priority
+            priority=priority,
+            deadline=deadline
             )
 
         return transaction
@@ -356,6 +352,24 @@ class TransactionTestMixin:
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+
+    def test_can_filter_by_deadline(self):
+        self.create_transaction(deadline=1)
+        self.create_transaction(deadline=2)
+        self.create_transaction(deadline=5)
+        self.create_transaction(deadline=10)
+        self.create_transaction(deadline=15)
+        #Other above 15
+        self.create_transaction(deadline=16)
+        self.create_transaction(deadline=20)
+        self.create_transaction(deadline=25)
+
+        url = self.url + '?deadline=15'
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 5)
 
     def get_dto(self, category=None):
         if category is None:
