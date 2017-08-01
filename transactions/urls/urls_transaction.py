@@ -10,6 +10,6 @@ retrieve_actions = {
 }
 
 urlpatterns = [
-    url(r'^$', views.TransactionAPIView.as_view(list_actions)),
-    url(r'^(?P<pk>\d+)$', views.TransactionAPIView.as_view(retrieve_actions), name='kind_transaction'),
+    url(r'^$', views.TransactionAPIView.as_view(list_actions), name='transactions'),
+    url(r'^(?P<pk>\d+)$', views.TransactionAPIView.as_view(retrieve_actions), name='transaction'),
 ]

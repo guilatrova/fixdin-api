@@ -10,6 +10,10 @@ from transactions.models import *
 from transactions.tests.base_test import BaseTestHelper, TransactionTestMixin
 
 class IncomeTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
+    '''
+    Tests a lot of operations in /incomes endpoint and some specific rules
+    valid only for this endpoint
+    '''
     url_single_resource_name = 'expense'
     url_list_resource_name = 'expenses'
 

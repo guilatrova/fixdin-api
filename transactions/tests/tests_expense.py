@@ -10,7 +10,10 @@ from transactions.models import *
 from transactions.tests.base_test import BaseTestHelper, TransactionTestMixin
 
 class ExpenseTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
-
+    '''
+    Tests a lot of operations in /expenses endpoint and some specific rules
+    valid only for this endpoint
+    '''
     def setUp(self):
         TransactionTestMixin.setUp(self)       
          

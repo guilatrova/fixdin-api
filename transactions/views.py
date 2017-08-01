@@ -102,11 +102,7 @@ class TransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, views
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
-        query_filter = { 
-            'account__user_id': self.request.user.id
-        }
-        
-        return Transaction.objects.filter(**query_filter)
+        return Transaction.objects.filter(account__user_id=self.request.user.id)
 
 class BalanceAPIView(APIView):
 

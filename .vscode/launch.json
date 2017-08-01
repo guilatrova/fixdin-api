@@ -120,7 +120,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test",
-                "transactions.tests.tests_income"
+                "transactions.tests.tests_transaction"
             ],
             "env": null,
             "envFile": "${workspaceRoot}/.env",
