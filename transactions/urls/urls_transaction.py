@@ -1,23 +1,15 @@
 from django.conf.urls import url
 from transactions import views
-from transactions.models import Category
 
 list_actions = {
-    'get': 'list', 
-    'post': 'create'
+    'get': 'list'
 }
 
-single_action = {
-    'get': 'retrieve',
-    'put': 'update',
-    'patch': 'partial_update',
-    'delete': 'destroy'
+retrieve_actions = {
+    'get': 'retrieve'
 }
-
-transaction_list = views.TransactionViewSet.as_view(list_actions)
-transaction_single = views.TransactionViewSet.as_view(single_action)
 
 urlpatterns = [
-    url(r'^$', transaction_list, name='transactions'),
-    url(r'^(?P<pk>\d+)$', transaction_single, name='transaction'),    
+    url(r'^$', views.TransactionAPIView.as_view(list_actions)),
+    url(r'^(?P<pk>\d+)$', views.TransactionAPIView.as_view(retrieve_actions), name='kind_transaction'),
 ]

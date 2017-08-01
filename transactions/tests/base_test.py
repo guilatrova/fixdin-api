@@ -58,6 +58,12 @@ class BaseTestHelper:
 
         return Category.objects.create(kind=kind, user=user, name=name)
 
+    def create_authenticated_client(self, token):
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+        return client
+
 class TransactionTestMixin:
 
     def setUp(self):
@@ -385,9 +391,3 @@ class TransactionTestMixin:
             'priority': '3',
             'deadline': '2'
         }
-
-    def create_authenticated_client(self, token):
-        client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-
-        return client

@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.shortcuts import render
 from django.db.models import Sum
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from transactions.models import Category, Transaction, Account
@@ -29,13 +29,16 @@ class CategoryViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user, kind=self.kwargs['kind'])
 
 class TransactionViewSet(viewsets.ModelViewSet):
+    '''
+    Handles /expenses and /incomes endpoints
+    '''
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
         query_filter = { 
             'account__user_id': self.request.user.id,
             'kind': self.kwargs['kind'] 
-            }
+        }
         
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
@@ -91,6 +94,19 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         account = Account.objects.filter(user_id=self.request.user.id).first()
         serializer.save(kind=self.kwargs['kind'],account=account)
+
+class TransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    '''
+    Handles only GET to retrieve all transactions
+    '''
+    serializer_class = TransactionSerializer
+
+    def get_queryset(self):
+        query_filter = { 
+            'account__user_id': self.request.user.id
+        }
+        
+        return Transaction.objects.filter(**query_filter)
 
 class BalanceAPIView(APIView):
 
