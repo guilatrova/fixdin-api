@@ -57,11 +57,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         priority = self.request.query_params.get('priority', False)
         if priority:
-            dic['priority__gte'] = priority
+            dic['priority'] = priority
 
         deadline = self.request.query_params.get('deadline', False)
         if deadline:
-            dic['deadline__lte'] = deadline
+            dic['deadline'] = deadline
 
         due_date_from = self.request.query_params.get('due_date_from', False)
         due_date_until = self.request.query_params.get('due_date_until', False)

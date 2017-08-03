@@ -343,10 +343,11 @@ class TransactionTestMixin:
         self.assertEqual(len(response.data), 3)
 
     def test_can_filter_by_priority(self):
+        self.create_transaction(priority=3)
+        self.create_transaction(priority=3)
+        #Other than 3
         self.create_transaction(priority=5)
         self.create_transaction(priority=4)
-        self.create_transaction(priority=3)
-        #Other below 3
         self.create_transaction(priority=2)
         self.create_transaction(priority=2)
         self.create_transaction(priority=1)
@@ -357,15 +358,17 @@ class TransactionTestMixin:
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data), 2)
 
     def test_can_filter_by_deadline(self):
+        self.create_transaction(deadline=15)
+        self.create_transaction(deadline=15)
+        self.create_transaction(deadline=15)
+        #Other than 15
         self.create_transaction(deadline=1)
         self.create_transaction(deadline=2)
         self.create_transaction(deadline=5)
         self.create_transaction(deadline=10)
-        self.create_transaction(deadline=15)
-        #Other above 15
         self.create_transaction(deadline=16)
         self.create_transaction(deadline=20)
         self.create_transaction(deadline=25)
@@ -375,7 +378,7 @@ class TransactionTestMixin:
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 5)
+        self.assertEqual(len(response.data), 3)
 
     def get_dto(self, category=None):
         if category is None:
