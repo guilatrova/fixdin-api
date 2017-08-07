@@ -28,22 +28,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, kind=self.kwargs['kind'])
 
-class TransactionViewSet(viewsets.ModelViewSet):
-    '''
-    Handles /expenses and /incomes endpoints
-    '''
-    serializer_class = TransactionSerializer
-
-    def get_queryset(self):
-        query_filter = { 
-            'account__user_id': self.request.user.id,
-            'kind': self.kwargs['kind'] 
-        }
-        
-        url_query_params = self.get_query_params_filter()  
-        query_filter.update(url_query_params)
-        return Transaction.objects.filter(**query_filter)
-
+class TransactionFilter:
     def get_query_params_filter(self):
         dic = {}
         
@@ -85,6 +70,22 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         return dic
 
+class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
+    '''
+    Handles /expenses and /incomes endpoints
+    '''
+    serializer_class = TransactionSerializer
+
+    def get_queryset(self):
+        query_filter = { 
+            'account__user_id': self.request.user.id,
+            'kind': self.kwargs['kind'] 
+        }
+        
+        url_query_params = self.get_query_params_filter()  
+        query_filter.update(url_query_params)
+        return Transaction.objects.filter(**query_filter)
+
     def get_serializer_context(self):
         return {
             "kind": self.kwargs['kind'],
@@ -95,14 +96,20 @@ class TransactionViewSet(viewsets.ModelViewSet):
         account = Account.objects.filter(user_id=self.request.user.id).first()
         serializer.save(kind=self.kwargs['kind'],account=account)
 
-class TransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class TransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet, TransactionFilter):
     '''
     Handles only GET to retrieve all transactions
     '''
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
-        return Transaction.objects.filter(account__user_id=self.request.user.id)
+        query_filter = { 
+            'account__user_id': self.request.user.id,
+        }
+        
+        url_query_params = self.get_query_params_filter()  
+        query_filter.update(url_query_params)
+        return Transaction.objects.filter(**query_filter)
 
 class BalanceAPIView(APIView):
 
