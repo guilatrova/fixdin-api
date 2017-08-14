@@ -1,3 +1,4 @@
+from unittest import mock
 import datetime
 from unittest import skip
 from django.test import TestCase
@@ -13,7 +14,7 @@ class BaseTestHelper:
     Class used to create some resources to backup tests
     '''
     def create_transaction(self, value=None, description='description', kind=None, account=None, category=None, 
-    due_date=datetime.date(2017, 1, 1), payment_date=None, priority=0, deadline=10):
+    due_date=datetime.datetime.today(), payment_date=None, priority=0, deadline=10):
         if value is None:
             value = self.value
 
@@ -125,7 +126,7 @@ class TransactionTestMixin:
         response = self.client.post(self.url, transaction_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)       
-
+    
     def test_list_users_transactions(self):
         '''
         Should list only user's transactions without listing data from others users
@@ -219,9 +220,32 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), 1)
 
+
+    @mock.patch('transactions.views.datetime', side_effect=lambda *args, **kw: date(*args, **kw))    
+    def test_returns_only_from_current_month_by_default(self, mock_date):
+        '''
+        Returns only transactions from current month. Considering today is 15/02/2017
+        '''
+        mocked_today = datetime.datetime(2017, 2, 15)
+        mock_date.today.return_value = mocked_today
+        
+        #old transactions
+        self.create_transaction(value=self.value, due_date=datetime.date(2016, 12, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))
+        #current month
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 7))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 8))
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 14))
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+
     def test_can_filter_by_due_date(self):
         self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))        
+        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))
         self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
         #other days
         self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3))
@@ -240,7 +264,7 @@ class TransactionTestMixin:
         self.create_transaction(value=self.value)
         self.create_transaction(value=self.value)
         #other categories
-        self.create_transaction(value=self.value, category=second_category)        
+        self.create_transaction(value=self.value, category=second_category)
         self.create_transaction(value=self.value, category=second_category)
 
         url = '{}?category={}'.format(self.url, self.category.id)
@@ -268,12 +292,12 @@ class TransactionTestMixin:
         self.assertEqual(len(response.data), 2)
 
     def test_can_filter_by_payed(self):
-        self.create_transaction(value=self.value, due_date=datetime.date(2016, 1, 1), payment_date=datetime.date(2016, 1, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1), payment_date=datetime.date(2017, 2, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3), payment_date=datetime.date(2017, 4, 2))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1), payment_date=datetime.date(2017, 5, 10))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2016, 1, 1))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 2, 1))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 4, 2))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 5, 10))
         #not payed
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+        self.create_transaction(value=self.value)
 
         url = self.url + '?payed=1'
 
@@ -283,12 +307,12 @@ class TransactionTestMixin:
         self.assertEqual(len(response.data), 4)
 
     def test_can_filter_by_not_payed(self):
-        self.create_transaction(value=self.value, due_date=datetime.date(2016, 1, 1), payment_date=datetime.date(2016, 1, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1), payment_date=datetime.date(2017, 2, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3), payment_date=datetime.date(2017, 4, 2))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1), payment_date=datetime.date(2017, 5, 10))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2016, 1, 1))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 2, 1))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 4, 2))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 5, 10))
         #not payed
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+        self.create_transaction(value=self.value)
 
         url = self.url + '?payed=0'
 
@@ -298,12 +322,12 @@ class TransactionTestMixin:
         self.assertEqual(len(response.data), 1)
 
     def test_can_filter_both_payed_and_not_payed(self):
-        self.create_transaction(value=self.value, due_date=datetime.date(2016, 1, 1), payment_date=datetime.date(2016, 1, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1), payment_date=datetime.date(2017, 2, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 3), payment_date=datetime.date(2017, 4, 2))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1), payment_date=datetime.date(2017, 5, 10))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2016, 1, 1))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 2, 1))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 4, 2))
+        self.create_transaction(value=self.value, payment_date=datetime.date(2017, 5, 10))
         #not payed
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 2))
+        self.create_transaction(value=self.value)
 
         url = self.url + '?payed=-1'
 
@@ -328,12 +352,12 @@ class TransactionTestMixin:
         self.assertEqual(len(response.data), 2)
 
     def test_can_filter_by_description(self):
-        self.create_transaction(description='Python', value=self.value, due_date=datetime.date(2017, 1, 1))
-        self.create_transaction(description='Python Pro', value=self.value, due_date=datetime.date(2017, 1, 1))
-        self.create_transaction(description='Python Summit', value=self.value, due_date=datetime.date(2017, 1, 1))
+        self.create_transaction(description='Python', value=self.value)
+        self.create_transaction(description='Python Pro', value=self.value)
+        self.create_transaction(description='Python Summit', value=self.value)
         #not related to Python
-        self.create_transaction(description='React Group', value=self.value, due_date=datetime.date(2017, 1, 1))
-        self.create_transaction(description='Food', value=self.value, due_date=datetime.date(2017, 1, 1))
+        self.create_transaction(description='React Group', value=self.value)
+        self.create_transaction(description='Food', value=self.value)
 
         url = self.url + '?description=python'
 
