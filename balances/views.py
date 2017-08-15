@@ -7,5 +7,14 @@ from transactions.models import Category, Transaction, Account
 class BalanceAPIView(APIView):
 
     def get(self, request, format='json'):
-        total_sum = Transaction.objects.filter(account__user_id=request.user.id).aggregate(Sum('value'))['value__sum']
+        additional_filters = self.get_filter()
+        total_sum = Transaction.objects.filter(account__user_id=request.user.id, **additional_filters).aggregate(Sum('value'))['value__sum']
         return Response({ 'balance': total_sum })
+
+    def get_filter(self):
+        payed = self.request.query_params.get('payed', None)
+
+        if payed is not None:
+            return { 'payment_date__isnull': (payed == 0) }
+
+        return {}

@@ -1,6 +1,6 @@
 from unittest import skip
 from unittest.mock import patch
-import datetime
+from datetime import datetime
 import calendar
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
@@ -19,13 +19,11 @@ class BalanceTestCase(TestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
 
-        self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-
+        self.client = self.create_authenticated_client(token)
         self.account = self.create_account(self.user)
-
-    def test_get_current_balance(self):
         self.category = self.create_category('category')
+
+    def test_get_current_balance(self):        
         self.create_transaction(10)
         self.create_transaction(10)
         self.create_transaction(30)
@@ -34,6 +32,19 @@ class BalanceTestCase(TestCase, BaseTestHelper):
         response = self.client.get(reverse('balances'))
         self.assertEqual(response.data['balance'], 110)
 
+    def test_get_current_real_balance(self):
+        '''
+        Calculates balance based only in payed transactions
+        '''
+        self.create_transaction(30, payment_date=datetime.today())
+        self.create_transaction(60, payment_date=datetime.today())
+        #not payed
+        self.create_transaction(10)
+        self.create_transaction(10)
+
+        url = reverse('balances') + '?payed=1'
+        response = self.client.get(url)
+        self.assertEqual(response.data['balance'], 90)
 
 # @skip('We started it too earlier, we will continue it in future')
 # class BalanceTestCase(TestCase, BaseTestHelper):
