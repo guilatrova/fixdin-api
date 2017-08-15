@@ -30,8 +30,9 @@ INSTALLED_APPS = [
     #CORS 
     'corsheaders', 
     #MY APPs
+    'users',
     'transactions',
-    'users'
+    'balances'
 ]
 
 MIDDLEWARE = [

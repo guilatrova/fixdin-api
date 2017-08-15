@@ -16,14 +16,13 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from transactions.models import Transaction
-from transactions.views import BalanceAPIView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/v1/auth/', include('users.urls')),
+    url(r'^api/v1/balances/', include('balances.urls')),
     url(r'^api/v1/transactions/', include('transactions.urls.urls_transaction'), name='transactions'),
     url(r'^api/v1/incomes/', include('transactions.urls.urls_transaction_kind'), kwargs={'kind': Transaction.INCOME_KIND}, name='incomes'),
     url(r'^api/v1/expenses/', include('transactions.urls.urls_transaction_kind'), kwargs={'kind': Transaction.EXPENSE_KIND}, name='expenses'),
     url(r'^api/v1/categories/', include('transactions.urls.urls_category')),
-    url(r'^api/v1/balance/', BalanceAPIView.as_view(), name="balance"),
 ]

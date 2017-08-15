@@ -1,6 +1,5 @@
 from datetime import datetime
 from django.shortcuts import render
-from django.db.models import Sum
 from datetime import datetime
 from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
@@ -117,9 +116,3 @@ class TransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, views
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
-
-class BalanceAPIView(APIView):
-
-    def get(self, request, format='json'):
-        total_sum = Transaction.objects.filter(account__user_id=request.user.id).aggregate(Sum('value'))['value__sum']
-        return Response({ 'balance': total_sum })
