@@ -30,6 +30,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
         self.create_transaction(60)
 
         response = self.client.get(reverse('balances'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 110)
 
     def test_get_current_real_balance(self):
@@ -44,6 +45,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
 
         url = reverse('balances') + '?payed=1'
         response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 90)
 
 # @skip('We started it too earlier, we will continue it in future')
