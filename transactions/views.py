@@ -1,6 +1,5 @@
 from datetime import datetime
 from django.shortcuts import render
-from datetime import datetime
 from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response

@@ -32,7 +32,8 @@ INSTALLED_APPS = [
     #MY APPs
     'users',
     'transactions',
-    'balances'
+    'balances',
+    'reports'
 ]
 
 MIDDLEWARE = [
