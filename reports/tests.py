@@ -19,13 +19,14 @@ class BalanceTestCase(TestCase, BaseTestHelper):
 
         self.client = self.create_authenticated_client(token)
         self.account = self.create_account(self.user)
-        self.expense_category = self.create_category('expense-cat')        
+        self.expense_category = self.create_category('expense-cat')
+        self.income_category = self.create_category('income-cat', kind=Category.INCOME_KIND)
 
-    @mock.patch('reports.views.Last13MonthsAPIView.get_start_date', return_value=datetime(2016, 12, 1))
+    @mock.patch('reports.factories.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     def test_get_amounts_expent_in_last_13_months(self, mock_date):
         '''
         Creates 2 transactions/month in a range of 14 months. 
-        Then asserts that first month is not retrieve, but all others are
+        Then asserts that first month is not retrieved, but all others are
         correctly returned with correct values
         '''
         cumulative_value = 10
@@ -33,7 +34,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
 
         for i in range(14):
             self.create_transaction(cumulative_value, due_date=cumulative_date, category=self.expense_category)
-            self.create_transaction(cumulative_value, due_date=cumulative_date, category=self.expense_category)
+            self.create_transaction(cumulative_value, due_date=cumulative_date, category=self.expense_category)            
 
             cumulative_date = cumulative_date + relativedelta(months=1)
             cumulative_value = cumulative_value + 10
@@ -63,7 +64,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
             self.assertEqual(response.data[i]['period'], expected_list[i]['period'])
             self.assertEqual(float(response.data[i]['total']), float(expected_list[i]['total']))
         
-    @mock.patch('reports.views.Last13MonthsAPIView.get_start_date', return_value=datetime(2016, 12, 1))
+    @mock.patch('reports.factories.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     def test_gets_0_when_theres_no_transactions_expent_in_last_13_months(self, mock_date):
         '''
         Creates 1 transactions/month in a range of 6 months, skipping 1. 
