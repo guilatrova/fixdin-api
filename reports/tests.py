@@ -21,7 +21,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
         self.account = self.create_account(self.user)
         self.expense_category = self.create_category('expense-cat')        
 
-    @mock.patch('reports.views.Last30MonthsAPIView.get_start_date', return_value=datetime(2016, 12, 1))
+    @mock.patch('reports.views.Last13MonthsAPIView.get_start_date', return_value=datetime(2016, 12, 1))
     def test_get_amounts_expent_in_last_13_months(self, mock_date):
         '''
         Creates 2 transactions/month in a range of 14 months. 
@@ -39,6 +39,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
             cumulative_value = cumulative_value + 10
 
         expected_list = [
+            #2016-11 is ignored, but is $ 20
             { "period":'2016-12', "total": 40 },
             { "period":'2017-01', "total": 60 },
             { "period":'2017-02', "total": 80 },
@@ -52,7 +53,6 @@ class BalanceTestCase(TestCase, BaseTestHelper):
             { "period":'2017-10', "total": 240 },
             { "period":'2017-11', "total": 260 },
             { "period":"2017-12", "total": 280 },
-            #2016-11 is ignored, but is $ 20
         ]
 
         response = self.client.get(reverse('last-13-months'), format='json')
@@ -63,3 +63,41 @@ class BalanceTestCase(TestCase, BaseTestHelper):
             self.assertEqual(response.data[i]['period'], expected_list[i]['period'])
             self.assertEqual(float(response.data[i]['total']), float(expected_list[i]['total']))
         
+    @mock.patch('reports.views.Last13MonthsAPIView.get_start_date', return_value=datetime(2016, 12, 1))
+    def test_gets_0_when_theres_no_transactions_expent_in_last_13_months(self, mock_date):
+        '''
+        Creates 1 transactions/month in a range of 6 months, skipping 1. 
+        Then asserts that all months was filled.
+        '''
+        cumulative_value = 10
+        cumulative_date = datetime(2016, 12, 1)
+
+        for i in range(0, 13, 2):
+            self.create_transaction(cumulative_value, due_date=cumulative_date, category=self.expense_category)            
+
+            cumulative_date = cumulative_date + relativedelta(months=2)
+            cumulative_value = cumulative_value + 10
+
+        expected_list = [
+            { "period":'2016-12', "total": 10 },
+            { "period":'2017-01', "total": 0 },
+            { "period":'2017-02', "total": 20 },
+            { "period":'2017-03', "total": 0 },
+            { "period":'2017-04', "total": 30 },
+            { "period":'2017-05', "total": 0 },
+            { "period":'2017-06', "total": 40 },
+            { "period":'2017-07', "total": 0 },
+            { "period":'2017-08', "total": 50 },
+            { "period":'2017-09', "total": 0 },
+            { "period":'2017-10', "total": 60 },
+            { "period":'2017-11', "total": 0 },
+            { "period":"2017-12", "total": 70 },
+        ]
+
+        response = self.client.get(reverse('last-13-months'), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 13)
+        for i in range(len(response.data)):
+            self.assertEqual(response.data[i]['period'], expected_list[i]['period'])
+            self.assertEqual(float(response.data[i]['total']), float(expected_list[i]['total']))

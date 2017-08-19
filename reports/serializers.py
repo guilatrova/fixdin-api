@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-class Last13DaysSerializer(serializers.Serializer):
+class Last13MonthsSerializer(serializers.Serializer):
     period = serializers.SerializerMethodField()
     date = serializers.DateField(write_only=True)
     total = serializers.DecimalField(max_digits=20, decimal_places=2)
