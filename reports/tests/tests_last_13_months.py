@@ -142,4 +142,4 @@ class Last13MonthsFactoryTestCase(TestCase, BaseTestHelper):
         account = self.create_account(user)
         category = self.create_category('category', user=user, kind=Category.INCOME_KIND)
         self.create_transaction(value, account=account, category=category)
-        return user.id        
+        return user.id

@@ -112,3 +112,19 @@ class NextExpensesFactoryTestCase(TestCase, BaseTestHelper):
         for i in range(len(expected['next'])):
             self.assertEqual(aggregated['next'][i].due_date, expected['next'][i]['due_date'])
         
+    def test_generates_reports_filtered_by_user(self):
+        user_id = self.create_user_with_transaction('user', -100)
+        self.create_user_with_transaction('other_user', -20)
+
+        report_factory = NextExpensesReportFactory(user_id)
+        query = report_factory._get_query()
+        data = list(query)        
+
+        self.assertEqual(data[0].value, -100)
+
+    def create_user_with_transaction(self, name, value):
+        user, token = self.create_user(name, email=name+'@test.com', password='pass')
+        account = self.create_account(user)
+        category = self.create_category('category', user=user, kind=Category.INCOME_KIND)
+        self.create_transaction(value, account=account, category=category)
+        return user.id
