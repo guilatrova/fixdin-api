@@ -11,7 +11,7 @@ from transactions.tests.base_test import BaseTestHelper
 from reports.factories.PendingReport import PendingExpensesReportFactory
 from common.helpers import Struct
 
-class PendingExpensesAPITestCase(TestCase, BaseTestHelper):
+class PendingAPITestMixin(BaseTestHelper):
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -21,23 +21,23 @@ class PendingExpensesAPITestCase(TestCase, BaseTestHelper):
         self.category = self.create_category('category')
 
     def test_gets_only_expenses(self):
-        self.create_transaction(-30) #expense
-        self.create_transaction(50) #income
-        self.create_transaction(70)
+        self.create_transaction(30) #expense
+        self.create_transaction(50, False) #income
+        self.create_transaction(70, False)
 
-        response = self.client.get(reverse('pending-expenses'), format='json')
+        response = self.client.get(self.url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['next']), 1)
 
     def test_gets_only_unpaid_expenses(self):
-        self.create_transaction(-50, payment_date=datetime.today())
-        self.create_transaction(-120, payment_date=datetime.today())
-        self.create_transaction(-22, payment_date=datetime.today())
-        self.create_transaction(-70)
-        self.create_transaction(-30)
+        self.create_transaction(50, payment_date=datetime.today())
+        self.create_transaction(120, payment_date=datetime.today())
+        self.create_transaction(22, payment_date=datetime.today())
+        self.create_transaction(70)
+        self.create_transaction(30)
 
-        response = self.client.get(reverse('pending-expenses'), format='json')
+        response = self.client.get(self.url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['next']), 2)
@@ -54,18 +54,18 @@ class PendingExpensesAPITestCase(TestCase, BaseTestHelper):
 
         #We are creating those transactions in random order to simulate unordered ids
         #next
-        expected_next_order[2] = self.create_transaction(-70, priority=1, due_date=datetime(2017, 1, 2), deadline=10) #3
-        expected_next_order[3] = self.create_transaction(-120, priority=1, due_date=datetime(2017, 2, 1), deadline=1) #4
-        expected_next_order[1] = self.create_transaction(-30, priority=1, due_date=datetime(2017, 1, 2), deadline=5)  #2
-        expected_next_order[0] = self.create_transaction(-100, priority=5, due_date=datetime(2017, 3, 1))             #1
+        expected_next_order[2] = self.create_transaction(70, priority=1, due_date=datetime(2017, 1, 2), deadline=10) #3
+        expected_next_order[3] = self.create_transaction(120, priority=1, due_date=datetime(2017, 2, 1), deadline=1) #4
+        expected_next_order[1] = self.create_transaction(30, priority=1, due_date=datetime(2017, 1, 2), deadline=5)  #2
+        expected_next_order[0] = self.create_transaction(100, priority=5, due_date=datetime(2017, 3, 1))             #1
 
         #overdue
-        expected_overdue_order[3] = self.create_transaction(-120, priority=1, due_date=datetime(2016, 2, 1), deadline=1) #4
-        expected_overdue_order[0] = self.create_transaction(-100, priority=5, due_date=datetime(2016, 3, 1))             #1
-        expected_overdue_order[2] = self.create_transaction(-70, priority=1, due_date=datetime(2016, 1, 2), deadline=10) #3
-        expected_overdue_order[1] = self.create_transaction(-30, priority=1, due_date=datetime(2016, 1, 2), deadline=5)  #2
+        expected_overdue_order[3] = self.create_transaction(120, priority=1, due_date=datetime(2016, 2, 1), deadline=1) #4
+        expected_overdue_order[0] = self.create_transaction(100, priority=5, due_date=datetime(2016, 3, 1))             #1
+        expected_overdue_order[2] = self.create_transaction(70, priority=1, due_date=datetime(2016, 1, 2), deadline=10) #3
+        expected_overdue_order[1] = self.create_transaction(30, priority=1, due_date=datetime(2016, 1, 2), deadline=5)  #2
 
-        response = self.client.get(reverse('pending-expenses'), format='json')
+        response = self.client.get(self.url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -75,6 +75,12 @@ class PendingExpensesAPITestCase(TestCase, BaseTestHelper):
 
         for i in range(len(expected_overdue_order)):
             self.assertEqual(report['overdue'][i]['id'], expected_overdue_order[i].id)
+
+    def create_transaction(self, value, multiply=True, **kwargs):
+        if multiply:
+            value = self.multiplier * value
+
+        return super(PendingAPITestMixin, self).create_transaction(value, **kwargs)
 
 class PendingExpensesFactoryTestCase(TestCase, BaseTestHelper):
 
@@ -128,3 +134,9 @@ class PendingExpensesFactoryTestCase(TestCase, BaseTestHelper):
         category = self.create_category('category', user=user, kind=Category.INCOME_KIND)
         self.create_transaction(value, account=account, category=category)
         return user.id
+
+class PendingExpensesTestCase(PendingAPITestMixin, TestCase):
+    def setUp(self):
+        super(PendingExpensesTestCase, self).setUp()
+        self.url = reverse('pending-expenses')
+        self.multiplier = -1
