@@ -40,3 +40,29 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+
+class NextExpensesFactoryTestCase(TestCase, BaseTestHelper):
+
+    def test_aggregate_by_due_date(self):
+        report = NextExpensesReportFactory(1)
+        today = datetime.today().date()
+        data = [
+            { "due_date": today }, #next
+            { "due_date": today + relativedelta(days=1) },
+            { "due_date": today + relativedelta(months=2) },
+            { "due_date": today + relativedelta(days=-1) }, #overdue
+            { "due_date": today + relativedelta(months=-1) },
+        ]
+        expected = {
+            "overdue": [
+                { "due_date": today + relativedelta(days=-1) },
+                { "due_date": today + relativedelta(months=-1) },
+            ],
+            "next": [
+                { "due_date": today },
+                { "due_date": today + relativedelta(days=1) },
+                { "due_date": today + relativedelta(months=2) }
+            ]
+        }
+        aggregated = report.aggregate_by_due_date(data)
+        self.assertEqual(aggregated, expected)

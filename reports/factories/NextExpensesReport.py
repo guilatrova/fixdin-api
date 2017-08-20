@@ -20,3 +20,12 @@ class NextExpensesReportFactory:
             payment_date__isnull=True,
             kind=Transaction.EXPENSE_KIND,
             account__user_id=self.user_id)
+
+    def aggregate_by_due_date(self, data):
+        today = datetime.today().date()
+
+        dic = {}
+        dic['overdue'] = [x for x in data if x['due_date'] < today]
+        dic['next'] = [x for x in data if x['due_date'] >= today]
+
+        return dic
