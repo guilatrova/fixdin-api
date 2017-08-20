@@ -42,6 +42,40 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['next']), 2)
 
+    @mock.patch('reports.factories.NextExpensesReport.datetime', side_effect=lambda *args, **kw: date(*args, **kw))
+    def test_returns_ordered(self, mocked_date):
+        '''
+        Assert if generated report is ordered by 
+        1. Priority; 2. Due_date; 3. Deadline
+        '''
+        mocked_date.today.return_value = datetime(2017, 1, 2)
+        expected_next_order = {}
+        expected_overdue_order = {}
+
+        #We are creating those transactions in random order to simulate unordered ids
+        #next
+        expected_next_order[2] = self.create_transaction(-70, priority=1, due_date=datetime(2017, 1, 2), deadline=10) #3
+        expected_next_order[3] = self.create_transaction(-120, priority=1, due_date=datetime(2017, 2, 1), deadline=1) #4
+        expected_next_order[1] = self.create_transaction(-30, priority=1, due_date=datetime(2017, 1, 2), deadline=5)  #2
+        expected_next_order[0] = self.create_transaction(-100, priority=5, due_date=datetime(2017, 3, 1))             #1
+
+        #overdue
+        expected_overdue_order[3] = self.create_transaction(-120, priority=1, due_date=datetime(2016, 2, 1), deadline=1) #4
+        expected_overdue_order[0] = self.create_transaction(-100, priority=5, due_date=datetime(2016, 3, 1))             #1
+        expected_overdue_order[2] = self.create_transaction(-70, priority=1, due_date=datetime(2016, 1, 2), deadline=10) #3
+        expected_overdue_order[1] = self.create_transaction(-30, priority=1, due_date=datetime(2016, 1, 2), deadline=5)  #2
+
+        response = self.client.get(reverse('next-expenses'), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        report = response.data
+        for i in range(len(expected_next_order)):
+            self.assertEqual(report['next'][i]['id'], expected_next_order[i].id)
+
+        for i in range(len(expected_overdue_order)):
+            self.assertEqual(report['overdue'][i]['id'], expected_overdue_order[i].id)
+
 class NextExpensesFactoryTestCase(TestCase, BaseTestHelper):
 
     def test_aggregate_by_due_date(self):

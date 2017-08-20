@@ -20,7 +20,8 @@ class NextExpensesReportFactory:
         return Transaction.objects.filter(
             payment_date__isnull=True,
             kind=Transaction.EXPENSE_KIND,
-            account__user_id=self.user_id)
+            account__user_id=self.user_id)\
+            .order_by('-priority', 'due_date', 'deadline')
 
     def aggregate_by_due_date(self, data):
         today = datetime.today().date()
