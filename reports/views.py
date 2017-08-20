@@ -16,7 +16,7 @@ class Last13MonthsAPIView(APIView):
         serialized = Last13MonthsSerializer(report, many=True).data
         return Response(serialized)
 
-class NextExpenses(APIView):
+class NextExpensesAPIView(APIView):
     
     def get(self, request, format='json'):
         report = NextExpensesReportFactory(request.user.id).generate_report()
