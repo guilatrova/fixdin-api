@@ -9,6 +9,7 @@ from rest_framework.authtoken.models import Token
 from transactions.models import Transaction, Category
 from transactions.tests.base_test import BaseTestHelper
 from reports.factories.NextExpensesReport import NextExpensesReportFactory
+from common.helpers import Struct
 
 class NextExpensesAPITestCase(TestCase, BaseTestHelper):
 
@@ -27,7 +28,7 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         response = self.client.get(reverse('next-expenses'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['next']), 1)
 
     def test_gets_only_unpaid_expenses(self):
         self.create_transaction(-50, payment_date=datetime.today())
@@ -39,7 +40,7 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         response = self.client.get(reverse('next-expenses'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data['next']), 2)
 
 class NextExpensesFactoryTestCase(TestCase, BaseTestHelper):
 
@@ -64,5 +65,16 @@ class NextExpensesFactoryTestCase(TestCase, BaseTestHelper):
                 { "due_date": today + relativedelta(months=2) }
             ]
         }
+        data = [Struct(**x) for x in data]
+
         aggregated = report.aggregate_by_due_date(data)
-        self.assertEqual(aggregated, expected)
+
+        self.assertEqual(len(aggregated['overdue']), len(expected['overdue']))
+        self.assertEqual(len(aggregated['next']), len(expected['next']))
+
+        for i in range(len(expected['overdue'])):
+            self.assertEqual(aggregated['overdue'][i].due_date, expected['overdue'][i]['due_date'])
+
+        for i in range(len(expected['next'])):
+            self.assertEqual(aggregated['next'][i].due_date, expected['next'][i]['due_date'])
+        

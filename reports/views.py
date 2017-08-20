@@ -5,8 +5,7 @@ from rest_framework.response import Response
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from transactions.models import Transaction
-from reports.serializers import Last13MonthsSerializer
-from transactions.serializers import TransactionSerializer
+from reports.serializers import Last13MonthsSerializer, NextExpensesSerializer
 from reports.factories.Last13MonthsReport import Last13MonthsReportFactory
 from reports.factories.NextExpensesReport import NextExpensesReportFactory
 
@@ -21,5 +20,5 @@ class NextExpenses(APIView):
     
     def get(self, request, format='json'):
         report = NextExpensesReportFactory(request.user.id).generate_report()
-        serialized = TransactionSerializer(report, many=True).data
+        serialized = NextExpensesSerializer(report).data
         return Response(serialized)

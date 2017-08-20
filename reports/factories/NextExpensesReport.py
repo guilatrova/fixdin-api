@@ -12,8 +12,9 @@ class NextExpensesReportFactory:
 
     def generate_report(self):
         data = self._get_query()
+        report = self.aggregate_by_due_date(list(data))
 
-        return list(data)
+        return report
 
     def _get_query(self):
         return Transaction.objects.filter(
@@ -25,7 +26,7 @@ class NextExpensesReportFactory:
         today = datetime.today().date()
 
         dic = {}
-        dic['overdue'] = [x for x in data if x['due_date'] < today]
-        dic['next'] = [x for x in data if x['due_date'] >= today]
+        dic['overdue'] = [x for x in data if x.due_date < today]
+        dic['next'] = [x for x in data if x.due_date >= today]
 
         return dic
