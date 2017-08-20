@@ -5,7 +5,7 @@ import calendar
 from dateutil.relativedelta import relativedelta
 from transactions.models import Transaction
 
-class NextExpensesReportFactory:
+class PendingReportFactory:
 
     def __init__(self, user_id):
         self.user_id = user_id
@@ -17,10 +17,10 @@ class NextExpensesReportFactory:
         return report
 
     def _get_query(self):
-        return Transaction.objects.filter(
-            payment_date__isnull=True,
-            kind=Transaction.EXPENSE_KIND,
-            account__user_id=self.user_id)\
+        filters = self._get_filters()
+
+        return Transaction.objects\
+            .filter(**filters)\
             .order_by('-priority', 'due_date', 'deadline')
 
     def aggregate_by_due_date(self, data):
@@ -31,3 +31,12 @@ class NextExpensesReportFactory:
         dic['next'] = [x for x in data if x.due_date >= today]
 
         return dic
+
+class PendingExpensesReportFactory(PendingReportFactory):
+
+    def _get_filters(self):
+        return {
+            "payment_date__isnull": True,
+            "kind": Transaction.EXPENSE_KIND,
+            "account__user_id": self.user_id
+        }

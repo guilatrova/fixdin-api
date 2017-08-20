@@ -11,6 +11,6 @@ class Last13MonthsSerializer(serializers.Serializer):
     def get_period(self, obj):        
         return '{}-{:02d}'.format(obj['date'].year, obj['date'].month)
 
-class NextExpensesSerializer(serializers.Serializer):
+class PendingSerializer(serializers.Serializer):
     overdue = TransactionSerializer(many=True, read_only=True)
     next = TransactionSerializer(many=True, read_only=True)

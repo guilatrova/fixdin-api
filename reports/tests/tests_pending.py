@@ -8,10 +8,10 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 from transactions.models import Transaction, Category
 from transactions.tests.base_test import BaseTestHelper
-from reports.factories.NextExpensesReport import NextExpensesReportFactory
+from reports.factories.PendingReport import PendingExpensesReportFactory
 from common.helpers import Struct
 
-class NextExpensesAPITestCase(TestCase, BaseTestHelper):
+class PendingExpensesAPITestCase(TestCase, BaseTestHelper):
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -25,7 +25,7 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         self.create_transaction(50) #income
         self.create_transaction(70)
 
-        response = self.client.get(reverse('next-expenses'), format='json')
+        response = self.client.get(reverse('pending-expenses'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['next']), 1)
@@ -37,12 +37,12 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         self.create_transaction(-70)
         self.create_transaction(-30)
 
-        response = self.client.get(reverse('next-expenses'), format='json')
+        response = self.client.get(reverse('pending-expenses'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['next']), 2)
 
-    @mock.patch('reports.factories.NextExpensesReport.datetime', side_effect=lambda *args, **kw: date(*args, **kw))
+    @mock.patch('reports.factories.PendingReport.datetime', side_effect=lambda *args, **kw: date(*args, **kw))
     def test_returns_ordered(self, mocked_date):
         '''
         Assert if generated report is ordered by 
@@ -65,7 +65,7 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         expected_overdue_order[2] = self.create_transaction(-70, priority=1, due_date=datetime(2016, 1, 2), deadline=10) #3
         expected_overdue_order[1] = self.create_transaction(-30, priority=1, due_date=datetime(2016, 1, 2), deadline=5)  #2
 
-        response = self.client.get(reverse('next-expenses'), format='json')
+        response = self.client.get(reverse('pending-expenses'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -76,10 +76,10 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         for i in range(len(expected_overdue_order)):
             self.assertEqual(report['overdue'][i]['id'], expected_overdue_order[i].id)
 
-class NextExpensesFactoryTestCase(TestCase, BaseTestHelper):
+class PendingExpensesFactoryTestCase(TestCase, BaseTestHelper):
 
     def test_aggregate_by_due_date(self):
-        report = NextExpensesReportFactory(1)
+        report = PendingExpensesReportFactory(1)
         today = datetime.today().date()
         data = [
             { "due_date": today }, #next
@@ -116,7 +116,7 @@ class NextExpensesFactoryTestCase(TestCase, BaseTestHelper):
         user_id = self.create_user_with_transaction('user', -100)
         self.create_user_with_transaction('other_user', -20)
 
-        report_factory = NextExpensesReportFactory(user_id)
+        report_factory = PendingExpensesReportFactory(user_id)
         query = report_factory._get_query()
         data = list(query)        
 
