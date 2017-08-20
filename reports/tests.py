@@ -139,6 +139,8 @@ class FactoryTestCase(TestCase, BaseTestHelper):
         query = self.report_factory._get_query()
         data = list(query)
 
+        print(data)
+
         self.assertEqual(data[0]['total'], 100)
 
     def create_user_with_transaction(self, name, value):
