@@ -11,6 +11,6 @@ from reports.factories import Last13MonthsReportFactory
 class Last13MonthsAPIView(APIView):
 
     def get(self, request, format='json'):        
-        report = Last13MonthsReportFactory().generate_report()
+        report = Last13MonthsReportFactory(request.user.id).generate_report()
         serialized = Last13MonthsSerializer(report, many=True).data
         return Response(serialized)

@@ -7,6 +7,9 @@ from transactions.models import Transaction
 
 class Last13MonthsReportFactory:
 
+    def __init__(self, user_id):
+        self.user_id = user_id
+
     def generate_report(self):
         data = self._get_query()
         report = self.aggregate_transactions(list(data))
@@ -33,7 +36,7 @@ class Last13MonthsReportFactory:
         start_date = self.get_start_date()
 
         return Transaction.objects.\
-                filter(due_date__gte=start_date).\
+                filter(due_date__gte=start_date, account__user_id=self.user_id).\
                 annotate(date=TruncMonth('due_date')).\
                 values('date', 'kind').\
                 annotate(total=Sum('value')).\

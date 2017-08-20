@@ -25,7 +25,7 @@ class ReportsTestCase(TestCase, BaseTestHelper):
     
     @mock.patch('reports.factories.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     @mock.patch('reports.factories.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
-    def test_get_amounts_expent_in_last_13_months(self, mock_start_date, mock_end_date):
+    def test_gets_amounts_expent_in_last_13_months(self, mock_start_date, mock_end_date):
         '''
         Creates 2 transactions/month in a range of 14 months. 
         Then asserts that first month is not retrieved, but all others are
@@ -109,10 +109,11 @@ class ReportsTestCase(TestCase, BaseTestHelper):
             self.assertEqual(response.data[i]['period'], expected_list[i]['period'])
             self.assertEqual(float(response.data[i]['total']), float(expected_list[i]['total']))
 
+
 class FactoryTestCase(TestCase, BaseTestHelper):
 
     def setUp(self):
-        self.report_factory = Last13MonthsReportFactory()
+        self.report_factory = Last13MonthsReportFactory(1)
 
     @mock.patch('reports.factories.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     @mock.patch('reports.factories.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 1))
@@ -130,3 +131,18 @@ class FactoryTestCase(TestCase, BaseTestHelper):
 
         report = self.report_factory.aggregate_transactions(data)        
         self.assertEqual(report, expected)
+
+    def test_generates_reports_filtered_by_user(self):
+        self.create_user_with_transaction('user', 100)
+        self.create_user_with_transaction('other_user', 20)
+
+        query = self.report_factory._get_query()
+        data = list(query)
+
+        self.assertEqual(data[0]['total'], 100)
+
+    def create_user_with_transaction(self, name, value):
+        user, token = self.create_user(name, email=name+'@test.com', password='pass')
+        account = self.create_account(user)
+        category = self.create_category('category', user=user, kind=Category.INCOME_KIND)
+        self.create_transaction(value, account=account, category=category)
