@@ -8,9 +8,9 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 from transactions.models import Transaction, Category
 from transactions.tests.base_test import BaseTestHelper
-from reports.factories import Last13MonthsReportFactory
+from reports.factories.Last13MonthsReport import Last13MonthsReportFactory
 
-class ReportsTestCase(TestCase, BaseTestHelper):
+class Last13MonthsAPITestCase(TestCase, BaseTestHelper):
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -20,8 +20,8 @@ class ReportsTestCase(TestCase, BaseTestHelper):
         self.expense_category = self.create_category('expense-cat')
         self.income_category = self.create_category('income-cat', kind=Category.INCOME_KIND)
     
-    @mock.patch('reports.factories.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
-    @mock.patch('reports.factories.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
+    @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
+    @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
     def test_gets_amounts_expent_in_last_13_months(self, mock_start_date, mock_end_date):
         '''
         Creates 2 transactions/month in a range of 14 months. 
@@ -66,8 +66,8 @@ class ReportsTestCase(TestCase, BaseTestHelper):
             self.assertEqual(float(response.data[i]['expenses']), float(expected_list[i]['expenses']))
             self.assertEqual(float(response.data[i]['total']), float(expected_list[i]['total']))
         
-    @mock.patch('reports.factories.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
-    @mock.patch('reports.factories.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
+    @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
+    @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
     def test_gets_0_when_theres_no_transactions_expent_in_last_13_months(self, mocked_start_date, mocked_end_date):
         '''
         Creates 1 transactions/month in a range of 6 months, skipping 1. 
@@ -107,10 +107,10 @@ class ReportsTestCase(TestCase, BaseTestHelper):
             self.assertEqual(float(response.data[i]['total']), float(expected_list[i]['total']))
 
 
-class FactoryTestCase(TestCase, BaseTestHelper):
+class Last13MonthsFactoryTestCase(TestCase, BaseTestHelper):
 
-    @mock.patch('reports.factories.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
-    @mock.patch('reports.factories.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 1))
+    @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
+    @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 1))
     def test_aggregate_transactions(self, mocked_start, mocked_end):
         data = [
             { "date": datetime(2016, 12, 1).date(), "kind": Transaction.EXPENSE_KIND, "total": -20 },
