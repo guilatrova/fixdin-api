@@ -112,9 +112,6 @@ class ReportsTestCase(TestCase, BaseTestHelper):
 
 class FactoryTestCase(TestCase, BaseTestHelper):
 
-    def setUp(self):
-        self.report_factory = Last13MonthsReportFactory(1)
-
     @mock.patch('reports.factories.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     @mock.patch('reports.factories.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 1))
     def test_aggregate_transactions(self, mocked_start, mocked_end):
@@ -129,17 +126,17 @@ class FactoryTestCase(TestCase, BaseTestHelper):
             { "date": datetime(2017,  1, 1), "expenses": -50, "incomes": 10, "total": -40 },
         ]
 
-        report = self.report_factory.aggregate_transactions(data)        
+        report_factory = Last13MonthsReportFactory(0)
+        report = report_factory.aggregate_transactions(data)        
         self.assertEqual(report, expected)
 
     def test_generates_reports_filtered_by_user(self):
-        self.create_user_with_transaction('user', 100)
+        user_id = self.create_user_with_transaction('user', 100)
         self.create_user_with_transaction('other_user', 20)
 
-        query = self.report_factory._get_query()
-        data = list(query)
-
-        print(data)
+        report_factory = Last13MonthsReportFactory(user_id)
+        query = report_factory._get_query()
+        data = list(query)        
 
         self.assertEqual(data[0]['total'], 100)
 
@@ -148,4 +145,4 @@ class FactoryTestCase(TestCase, BaseTestHelper):
         account = self.create_account(user)
         category = self.create_category('category', user=user, kind=Category.INCOME_KIND)
         self.create_transaction(value, account=account, category=category)
-        print(user.id)
+        return user.id        
