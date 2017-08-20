@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 from transactions.models import Transaction, Category
 from transactions.tests.base_test import BaseTestHelper
-#from reports.factories import Last13MonthsReportFactory
+from reports.factories.NextExpensesReport import NextExpensesReportFactory
 
 class NextExpensesAPITestCase(TestCase, BaseTestHelper):
 
