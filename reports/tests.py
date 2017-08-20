@@ -1,15 +1,12 @@
-from unittest import skip
-from unittest import mock
+from unittest import skip, mock
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from django.test import TestCase
-from django.contrib.auth.models import User
 from django.urls import reverse
-from django.db import transaction
-from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
+from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
-from transactions.models import *
+from transactions.models import Transaction, Category
 from transactions.tests.base_test import BaseTestHelper
 from reports.factories import Last13MonthsReportFactory
 
