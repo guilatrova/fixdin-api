@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from transactions.models import Transaction
 from reports.serializers import Last13MonthsSerializer, PendingSerializer
 from reports.factories.Last13MonthsReport import Last13MonthsReportFactory
-from reports.factories.PendingReport import PendingExpensesReportFactory
+from reports.factories.PendingReport import PendingExpensesReportFactory, PendingIncomesReportFactory
 
 class Last13MonthsAPIView(APIView):
 
@@ -18,7 +18,12 @@ class Last13MonthsAPIView(APIView):
 
 class PendingAPIView(APIView):
     
-    def get(self, request, format='json'):
-        report = PendingExpensesReportFactory(request.user.id).generate_report()
+    def get(self, request, kind, format='json'):
+        if kind == Transaction.EXPENSE_KIND:
+            report_factory = PendingExpensesReportFactory(request.user.id)
+        else:
+            report_factory = PendingIncomesReportFactory(request.user.id)
+        
+        report = report_factory.generate_report()
         serialized = PendingSerializer(report).data
         return Response(serialized)

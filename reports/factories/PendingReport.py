@@ -1,8 +1,4 @@
-from django.db.models import Sum
-from django.db.models.functions import TruncMonth
 from datetime import datetime
-import calendar
-from dateutil.relativedelta import relativedelta
 from transactions.models import Transaction
 
 class PendingReportFactory:
@@ -38,5 +34,14 @@ class PendingExpensesReportFactory(PendingReportFactory):
         return {
             "payment_date__isnull": True,
             "kind": Transaction.EXPENSE_KIND,
+            "account__user_id": self.user_id
+        }
+
+class PendingIncomesReportFactory(PendingReportFactory):
+
+    def _get_filters(self):
+        return {
+            "payment_date__isnull": True,
+            "kind": Transaction.INCOME_KIND,
             "account__user_id": self.user_id
         }

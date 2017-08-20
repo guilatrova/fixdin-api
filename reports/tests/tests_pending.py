@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 from transactions.models import Transaction, Category
 from transactions.tests.base_test import BaseTestHelper
-from reports.factories.PendingReport import PendingExpensesReportFactory
+from reports.factories.PendingReport import PendingReportFactory, PendingExpensesReportFactory, PendingIncomesReportFactory
 from common.helpers import Struct
 
 class PendingAPITestMixin(BaseTestHelper):
@@ -21,8 +21,8 @@ class PendingAPITestMixin(BaseTestHelper):
         self.category = self.create_category('category')
 
     def test_gets_only_expenses(self):
-        self.create_transaction(30) #expense
-        self.create_transaction(50, False) #income
+        self.create_transaction(30) #expected
+        self.create_transaction(50, False) #not expected
         self.create_transaction(70, False)
 
         response = self.client.get(self.url, format='json')
@@ -79,13 +79,15 @@ class PendingAPITestMixin(BaseTestHelper):
     def create_transaction(self, value, multiply=True, **kwargs):
         if multiply:
             value = self.multiplier * value
+        else:
+            value = (-self.multiplier) * value
 
         return super(PendingAPITestMixin, self).create_transaction(value, **kwargs)
 
 class PendingExpensesFactoryTestCase(TestCase, BaseTestHelper):
 
     def test_aggregate_by_due_date(self):
-        report = PendingExpensesReportFactory(1)
+        report = PendingReportFactory(1)
         today = datetime.today().date()
         data = [
             { "due_date": today }, #next
@@ -118,15 +120,33 @@ class PendingExpensesFactoryTestCase(TestCase, BaseTestHelper):
         for i in range(len(expected['next'])):
             self.assertEqual(aggregated['next'][i].due_date, expected['next'][i]['due_date'])
         
-    def test_generates_reports_filtered_by_user(self):
+    def test_generates_expenses_report_filtered_by_user(self):
         user_id = self.create_user_with_transaction('user', -100)
-        self.create_user_with_transaction('other_user', -20)
+        other_user_id = self.create_user_with_transaction('other_user', -20)
 
-        report_factory = PendingExpensesReportFactory(user_id)
-        query = report_factory._get_query()
-        data = list(query)        
+        user_data = self.generate_report_query(Transaction.EXPENSE_KIND, user_id)
+        other_user_data = self.generate_report_query(Transaction.EXPENSE_KIND, other_user_id)
+        
+        self.assertEqual(user_data[0].value, -100)
+        self.assertEqual(other_user_data[0].value, -20)
 
-        self.assertEqual(data[0].value, -100)
+    def test_generates_incomes_report_filtetered_by_user(self):
+        user_id = self.create_user_with_transaction('user', 800)
+        other_user_id = self.create_user_with_transaction('other_user', 70)
+
+        user_data = self.generate_report_query(Transaction.INCOME_KIND, user_id)
+        other_user_data = self.generate_report_query(Transaction.INCOME_KIND, other_user_id)
+        
+        self.assertEqual(user_data[0].value, 800)
+        self.assertEqual(other_user_data[0].value, 70)
+
+    def generate_report_query(self, kind, user_id):
+        if kind == Transaction.EXPENSE_KIND:
+            factory = PendingExpensesReportFactory(user_id)
+        else:
+            factory = PendingIncomesReportFactory(user_id)
+
+        return list(factory._get_query())
 
     def create_user_with_transaction(self, name, value):
         user, token = self.create_user(name, email=name+'@test.com', password='pass')
@@ -140,3 +160,9 @@ class PendingExpensesTestCase(PendingAPITestMixin, TestCase):
         super(PendingExpensesTestCase, self).setUp()
         self.url = reverse('pending-expenses')
         self.multiplier = -1
+
+class PendingIncomesTestCase(PendingAPITestMixin, TestCase):
+    def setUp(self):
+        super(PendingIncomesTestCase, self).setUp()
+        self.url = reverse('pending-incomes')
+        self.multiplier = 1
