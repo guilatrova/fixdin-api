@@ -19,6 +19,16 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         self.account = self.create_account(self.user)
         self.category = self.create_category('category')
 
+    def test_gets_only_expenses(self):
+        self.create_transaction(-30) #expense
+        self.create_transaction(50) #income
+        self.create_transaction(70)
+
+        response = self.client.get(reverse('next-expenses'), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
     def test_gets_only_unpaid_expenses(self):
         self.create_transaction(-50, payment_date=datetime.today())
         self.create_transaction(-120, payment_date=datetime.today())
@@ -29,4 +39,4 @@ class NextExpensesAPITestCase(TestCase, BaseTestHelper):
         response = self.client.get(reverse('next-expenses'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)        
+        self.assertEqual(len(response.data), 2)

@@ -18,4 +18,5 @@ class NextExpensesReportFactory:
     def _get_query(self):
         return Transaction.objects.filter(
             payment_date__isnull=True,
+            kind=Transaction.EXPENSE_KIND,
             account__user_id=self.user_id)
