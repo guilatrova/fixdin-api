@@ -60,11 +60,7 @@ class Last13MonthsAPITestCase(TestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 13)
-        for i in range(len(response.data)):
-            self.assertEqual(response.data[i]['period'], expected_list[i]['period'])
-            self.assertEqual(float(response.data[i]['incomes']), float(expected_list[i]['incomes']))
-            self.assertEqual(float(response.data[i]['expenses']), float(expected_list[i]['expenses']))
-            self.assertEqual(float(response.data[i]['total']), float(expected_list[i]['total']))
+        self.assertActualExpected(response.data, expected_list)
         
     @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
@@ -102,10 +98,39 @@ class Last13MonthsAPITestCase(TestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 13)
-        for i in range(len(response.data)):
-            self.assertEqual(response.data[i]['period'], expected_list[i]['period'])
-            self.assertEqual(float(response.data[i]['total']), float(expected_list[i]['total']))
+        self.assertActualExpected(response.data, expected_list)
 
+    
+    @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_start_date', return_value=datetime(2017, 1, 1))
+    @mock.patch('reports.factories.Last13MonthsReport.Last13MonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 28))
+    def test_gets_amounts_expent_in_last_13_months_filtered_by_payed(self, mocked_start_date, mocked_end_date):
+        #Incomes
+        self.create_transaction(50, due_date=datetime(2017, 1, 5), payment_date=datetime(2017, 2, 5), category=self.income_category) #Payed one month later only
+        self.create_transaction(20, due_date=datetime(2017, 1, 10), payment_date=datetime(2017, 1, 8), category=self.income_category)
+        self.create_transaction(30, due_date=datetime(2017, 2, 15), payment_date=datetime(2017, 2, 15), category=self.income_category)
+
+        #Expenses
+        self.create_transaction(-10, due_date=datetime(2017, 1, 6), payment_date=datetime(2017, 2, 6), category=self.expense_category) #Payed one month later only
+        self.create_transaction(-30, due_date=datetime(2017, 2, 15), payment_date=datetime(2017, 2, 20), category=self.expense_category)
+
+        expected_list = [
+            { "period": "2017-01", "expenses":   0, "incomes": 20, "total": 20 },
+            { "period": "2017-02", "expenses": -40, "incomes": 80, "total": 40 },
+        ]
+
+        url = reverse('last-13-months') + '?payed=1'
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertActualExpected(response.data, expected_list)
+
+    def assertActualExpected(self, actual, expected):
+        for i in range(len(actual)):
+            self.assertEqual(actual[i]['period'], expected[i]['period'])
+            self.assertEqual(float(actual[i]['incomes']), float(expected[i]['incomes']))
+            self.assertEqual(float(actual[i]['expenses']), float(expected[i]['expenses']))
+            self.assertEqual(float(actual[i]['total']), float(expected[i]['total']))
 
 class Last13MonthsFactoryTestCase(TestCase, BaseTestHelper):
 

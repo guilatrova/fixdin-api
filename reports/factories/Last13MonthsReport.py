@@ -6,6 +6,9 @@ from dateutil.relativedelta import relativedelta
 from transactions.models import Transaction
 
 class Last13MonthsReportFactory:
+    '''
+    Calculates sum of expenses, incomes and total over last 12 months + (13) actual month.
+    '''
 
     def __init__(self, user_id):
         self.user_id = user_id
@@ -51,3 +54,19 @@ class Last13MonthsReportFactory:
         today = datetime.today()
         last_day = calendar.monthrange(today.year, today.month)[1]
         return datetime(today.year, today.month, last_day)
+
+class Last13MonthsPayedReportFactory(Last13MonthsReportFactory):
+    '''
+    Calculates sum of expenses, incomes and total over last 12 months + (13) actual month, but
+    based on payment_date
+    '''
+
+    def _get_query(self):
+        start_date = self.get_start_date()
+
+        return Transaction.objects.\
+                filter(payment_date__gte=start_date, account__user_id=self.user_id).\
+                annotate(date=TruncMonth('payment_date')).\
+                values('date', 'kind').\
+                annotate(total=Sum('value')).\
+                order_by('date')
