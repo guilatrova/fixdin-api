@@ -14,3 +14,7 @@ class Last13MonthsSerializer(serializers.Serializer):
 class PendingSerializer(serializers.Serializer):
     overdue = TransactionSerializer(many=True, read_only=True)
     next = TransactionSerializer(many=True, read_only=True)
+
+class ValuesByCategorySerializer(serializers.Serializer):
+    category_id = serializers.IntegerField()
+    total = serializers.DecimalField(max_digits=20, decimal_places=2)

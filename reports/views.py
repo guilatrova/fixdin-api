@@ -5,9 +5,10 @@ from rest_framework.response import Response
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from transactions.models import Transaction
-from reports.serializers import Last13MonthsSerializer, PendingSerializer
+from reports.serializers import Last13MonthsSerializer, PendingSerializer, ValuesByCategorySerializer
 from reports.factories.Last13MonthsReport import Last13MonthsReportFactory, Last13MonthsPayedReportFactory
 from reports.factories.PendingReport import PendingExpensesReportFactory, PendingIncomesReportFactory
+from reports.factories.ValuesByCategoryReport import ValuesByCategoryReportFactory
 
 class Last13MonthsAPIView(APIView):
 
@@ -32,4 +33,14 @@ class PendingAPIView(APIView):
         
         report = report_factory.generate_report()
         serialized = PendingSerializer(report).data
+        return Response(serialized)
+
+class ValuesByCategoryAPIView(APIView):
+
+    def get(self, request, kind, format='json'):
+        kind = Transaction.EXPENSE_KIND if kind == 'expenses' else Transaction.INCOME_KIND
+        report_factory = ValuesByCategoryReportFactory(request.user.id, kind=kind)
+
+        report = report_factory.generate_report()
+        serialized = ValuesByCategorySerializer(report, many=True).data
         return Response(serialized)
