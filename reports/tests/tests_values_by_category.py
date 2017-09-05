@@ -23,7 +23,7 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
             self.expense_categories.append(self.create_category('EC' + str(i)))
             self.income_categories.append(self.create_category('IC' + str(i), kind=Category.INCOME_KIND))
 
-    def test_gets_values_aggregated_by_category(self):
+    def test_gets_values_aggregated_by_expense_category(self):
         cumulative_value = 10
         for i in range(len(self.expense_categories)):
             self.create_transaction(-cumulative_value, category=self.expense_categories[i])
@@ -38,6 +38,29 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
         ]
 
         url = reverse('values-by-category', kwargs={'kind': 'expenses'})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+        for i in range(len(expected_list)):
+            self.assertEqual(expected_list[i]["category_id"], response.data[i]["category_id"])
+            self.assertEqual(float(expected_list[i]["total"]), float(response.data[i]["total"]))
+
+    def test_gets_values_aggregated_by_income_category(self):
+        cumulative_value = 10
+        for i in range(len(self.income_categories)):
+            self.create_transaction(cumulative_value, category=self.income_categories[i])
+            self.create_transaction(cumulative_value * 2, category=self.income_categories[i])
+            cumulative_value += 10
+
+        expected_list = [
+            { "category_id": 2, "total": 30 }, #Skip expenses
+            { "category_id": 4, "total": 60 },
+            { "category_id": 6, "total": 90 },
+            { "category_id": 8, "total": 120 },
+        ]
+
+        url = reverse('values-by-category', kwargs={'kind': 'incomes'})
         response = self.client.get(url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
