@@ -68,3 +68,7 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
         for i in range(len(expected_list)):
             self.assertEqual(expected_list[i]["category_id"], response.data[i]["category_id"])
             self.assertEqual(float(expected_list[i]["total"]), float(response.data[i]["total"]))
+
+    @skip('DO THIS, ITS IMPORTANT')
+    def test_only_calculates_categories_from_authenticated_user(self):
+        self.fail('MISSING IMPLEMENTATION')
