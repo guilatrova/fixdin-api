@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"reports"
+                ,"transactions"
             ],
             "env": null,
             "envFile": "${workspaceRoot}/.env",

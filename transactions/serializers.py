@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from transactions.models import Category, Transaction
+from transactions.factories import create_periodic_transactions
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
 class HasKindContextSerializer():
     def get_kind(self, obj):
@@ -55,6 +57,42 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
             raise serializers.ValidationError('Transaction and Category must have the same kind')
         return data
 
+    def to_representation(self, value):
+        if isinstance(value, list):
+            result = []
+            for x in value:
+                result.append(super(TransactionSerializer, self).to_representation(x))
+            return result
+
+        return super(TransactionSerializer, self).to_representation(value)
+
+    @property
+    def data(self):
+        if hasattr(self, 'initial_data') and not hasattr(self, '_validated_data'):
+            msg = (
+                'When a serializer is passed a `data` keyword argument you '
+                'must call `.is_valid()` before attempting to access the '
+                'serialized `.data` representation.\n'
+                'You should either call `.is_valid()` first, '
+                'or access `.initial_data` instead.'
+            )
+            raise AssertionError(msg)
+
+        if not hasattr(self, '_data'):
+            if self.instance is not None and not getattr(self, '_errors', None):
+                self._data = self.to_representation(self.instance)
+            elif hasattr(self, '_validated_data') and not getattr(self, '_errors', None):
+                self._data = self.to_representation(self.validated_data)
+            else:
+                self._data = self.get_initial()        
+        
+        if hasattr(self, '_validated_data') and 'periodic' in self._validated_data:
+            return ReturnList(self._data, serializer=self)
+        return ReturnDict(self._data, serializer=self)
+
     def create(self, validated_data):
         if 'periodic' not in validated_data:
-            return super().create(validated_data)            
+            return super().create(validated_data)
+
+        transactions = create_periodic_transactions(**validated_data)
+        return transactions

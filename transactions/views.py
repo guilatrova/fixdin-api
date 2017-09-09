@@ -82,6 +82,12 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
     '''
     serializer_class = TransactionSerializer
 
+    def get_serializer_context(self):
+        return {
+            "kind": self.kwargs['kind'],
+            "user_id": self.request.user.id
+        }
+
     def get_queryset(self):
         query_filter = { 
             'account__user_id': self.request.user.id,
@@ -91,12 +97,6 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
-
-    def get_serializer_context(self):
-        return {
-            "kind": self.kwargs['kind'],
-            "user_id": self.request.user.id
-        }
 
     def perform_create(self, serializer):
         account = Account.objects.filter(user_id=self.request.user.id).first()
