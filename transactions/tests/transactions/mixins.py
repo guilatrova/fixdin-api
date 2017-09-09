@@ -368,8 +368,8 @@ class TransactionFilterTestMixin:
 
 class TransactionPeriodicTestMixin:
 
-    def test_create_periodic_daily_transactions(self):
-        dto = {
+    def test_create_periodic_daily_distance_1_transactions(self):
+        transaction_dto = {
             'due_date': '2017-09-09',
             'description': 'repeat daily',
             'category': self.category.id,
@@ -381,5 +381,11 @@ class TransactionPeriodicTestMixin:
             "periodic": {
                 "period": "daily",
                 "distance": 1,
+                "until": "2017-09-12"
             }
-        }    
+        }
+
+        response = self.client.post(self.url, transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Transaction.objects.count(), 4)

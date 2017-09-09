@@ -17,11 +17,19 @@ class CategorySerializer(serializers.ModelSerializer, HasKindContextSerializer):
 
         return value
 
+class PeriodicSerializer(serializers.Serializer):
+    period = serializers.ChoiceField(['daily', 'weekly', 'monthly', 'yearly'])
+    distance = serializers.IntegerField()
+    until = serializers.DateField()
+
 class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date')
+        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date', 'periodic')
         read_only_fields = ('kind', 'account')
+        write_only_fields = ('periodic')
+
+    periodic = PeriodicSerializer(required=False, write_only=True)
 
     def validate_value(self, value):
         if self.context['kind'] == Transaction.EXPENSE_KIND:
@@ -46,3 +54,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
         if self.context['kind'] != data['category'].kind:
             raise serializers.ValidationError('Transaction and Category must have the same kind')
         return data
+
+    def create(self, validated_data):
+        if 'periodic' not in validated_data:
+            return super().create(validated_data)            
