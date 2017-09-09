@@ -7,9 +7,10 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
-from transactions.tests.base_test import BaseTestHelper, TransactionTestMixin
+from transactions.tests.base_test import BaseTestHelper
+from transactions.tests.transactions.mixins import *
 
-class IncomeTestCase(APITestCase, TransactionTestMixin, BaseTestHelper):
+class IncomeTestCase(APITestCase, TransactionTestMixin, TransactionFilterTestMixin, TransactionPeriodicTestMixin, BaseTestHelper):
     '''
     Tests a lot of operations in /incomes endpoint and some specific rules
     valid only for this endpoint
