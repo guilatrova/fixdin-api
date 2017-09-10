@@ -421,8 +421,20 @@ class TransactionPeriodicTestMixin:
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def create_periodic_dto(self, due_date, period, distance, until):
-        return {
+    def test_can_create_with_how_many(self):
+        transaction_dto = self.create_periodic_dto('2017-06-01', 'monthly', 1, how_many=6)
+        self.post_and_assert_dates(transaction_dto, [
+            '2017-06-01', '2017-07-01', '2017-08-01', '2017-09-01', '2017-10-01', '2017-11-01'
+        ])
+
+    def test_cant_create_with_how_many_and_distance_2(self):
+        transaction_dto = self.create_periodic_dto('2017-06-01', 'monthly', 2, how_many=6)
+        self.post_and_assert_dates(transaction_dto, [
+            '2017-06-01', '2017-08-01', '2017-10-01', '2017-12-01', '2018-02-01', '2018-04-01'
+        ])
+
+    def create_periodic_dto(self, due_date, period, distance, until=None, how_many=None):
+        dto = {
             'due_date': due_date,
             'description': 'repeat',
             'category': self.category.id,
@@ -433,14 +445,22 @@ class TransactionPeriodicTestMixin:
             'deadline': '2',
             "periodic": {
                 "period": period,
-                "distance": distance,
-                "until": until
+                "distance": distance
             }
         }
+
+        if until is not None:
+            dto['periodic']['until'] = until
+        else:
+            dto['periodic']['how_many'] = how_many
+
+        return dto
         
     def post_and_assert_dates(self, dto, expected_dates):
         response = self.client.post(self.url, dto, format='json')
 
+        if response.status_code != status.HTTP_201_CREATED:
+            print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), len(expected_dates))
 

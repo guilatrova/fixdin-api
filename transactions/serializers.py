@@ -22,7 +22,13 @@ class CategorySerializer(serializers.ModelSerializer, HasKindContextSerializer):
 class PeriodicSerializer(serializers.Serializer):
     period = serializers.ChoiceField(['daily', 'weekly', 'monthly', 'yearly'])
     distance = serializers.IntegerField()
-    until = serializers.DateField()
+    until = serializers.DateField(required=False)
+    how_many = serializers.IntegerField(required=False)
+
+    def validate(self, data):
+        if 'how_many' not in data and 'until' not in data:
+            raise serializers.ValidationError('You need to specify until when or how many times it should be repeated')
+        return data
 
 class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerializer):
     class Meta:
@@ -53,7 +59,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
         return account
 
     def validate(self, data):
-        if 'periodic' in data and data['periodic']['until'] < data['due_date']:
+        if 'periodic' in data and 'until' in data['periodic'] and data['periodic']['until'] < data['due_date']:
             raise serializers.ValidationError("periodic until must be greater than due date")
 
         if self.context['kind'] != data['category'].kind:

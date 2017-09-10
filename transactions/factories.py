@@ -7,13 +7,20 @@ def create_periodic_transactions(**kwargs):
     periodic = kwargs.pop('periodic')
     transactions_list = []
 
-    increment_args = get_increment_args(periodic)
+    increment_args = get_increment_args(periodic, periodic['distance'])
 
     start_date = kwargs.pop('due_date')
     current_due_date = start_date
+
+    if 'how_many' in periodic:
+        length = (periodic['how_many']-1) * periodic['distance']
+        increment = get_increment_args(periodic, length)
+        date_until = start_date + relativedelta(**increment)
+    else:
+        date_until = periodic['until']
     
     parent = None
-    while current_due_date <= periodic['until']:
+    while current_due_date <= date_until:
         trans = Transaction.objects.create(due_date=current_due_date, **kwargs)
 
         #Periodics should point to parent or itself
@@ -33,13 +40,12 @@ def create_periodic_transactions(**kwargs):
 
     return transactions_list
 
-def get_increment_args(periodic):
-    distance = periodic['distance']
+def get_increment_args(periodic, length):    
     choices = {
-        'daily':   {'days': distance},
-        'weekly':  {'weeks': distance},
-        'monthly': {'months': distance},
-        'yearly':  {'years': distance}
+        'daily':   {'days': length},
+        'weekly':  {'weeks': length},
+        'monthly': {'months': length},
+        'yearly':  {'years': length}
     }
     return choices.get(periodic['period'])
 
