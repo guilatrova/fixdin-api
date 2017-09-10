@@ -428,6 +428,26 @@ class TransactionPeriodicTestMixin:
             '2017-06-01', '2017-12-01', '2018-06-01'
         ])
 
+    def test_yearly_period_distance_1(self):
+        transaction_dto = self.create_periodic_dto("2017-06-01", "yearly", 1, "2018-06-01")
+        response = self.client.post(self.url, transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Transaction.objects.count(), 2)
+        self.assert_dates(response.data, [
+            '2017-06-01', '2018-06-01'
+        ])
+
+    def test_yearly_period_distance_2(self):
+        transaction_dto = self.create_periodic_dto("2017-06-01", "yearly", 2, "2020-06-01")
+        response = self.client.post(self.url, transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Transaction.objects.count(), 2)
+        self.assert_dates(response.data, [
+            '2017-06-01', '2019-06-01'
+        ])
+
     def create_periodic_dto(self, due_date, period, distance, until):
         return {
             'due_date': due_date,
