@@ -413,13 +413,7 @@ class TransactionPeriodicTestMixin:
         transaction_dto = self.create_periodic_dto("2017-06-01", "yearly", 2, "2020-06-01")
         self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2019-06-01'
-        ])
-
-    def test_cant_create_periodic_with_until_greater_than_due_date(self):
-        transaction_dto = self.create_periodic_dto("2017-07-01", "yearly", 1, "2017-06-01")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        ])    
 
     def test_can_create_with_how_many(self):
         transaction_dto = self.create_periodic_dto('2017-06-01', 'monthly', 1, how_many=6)
@@ -432,6 +426,18 @@ class TransactionPeriodicTestMixin:
         self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2017-08-01', '2017-10-01', '2017-12-01', '2018-02-01', '2018-04-01'
         ])
+
+    def test_cant_create_periodic_with_both_until_and_how_many_set(self):
+        transaction_dto = self.create_periodic_dto("2017-07-01", "yearly", 1, until="2017-07-02", how_many=2)
+        response = self.client.post(self.url, transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cant_create_periodic_with_how_many_below_1(self):
+        transaction_dto = self.create_periodic_dto("2017-07-01", "yearly", 1, until="2017-07-02", how_many=0)
+        response = self.client.post(self.url, transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def create_periodic_dto(self, due_date, period, distance, until=None, how_many=None):
         dto = {
@@ -451,7 +457,7 @@ class TransactionPeriodicTestMixin:
 
         if until is not None:
             dto['periodic']['until'] = until
-        else:
+        if how_many is not None:
             dto['periodic']['how_many'] = how_many
 
         return dto
