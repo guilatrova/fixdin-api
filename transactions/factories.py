@@ -19,24 +19,24 @@ def create_periodic_transactions(**kwargs):
     else:
         date_until = periodic['until']
     
-    parent = None
+    #Periodics should point to parent or itself
+    parent = Transaction.objects.create(due_date=current_due_date, **kwargs)
+    parent.periodic_transaction_id = parent.id
+    parent.save()
+    if 'payment_date' in kwargs:
+        kwargs.pop('payment_date') #payment date cant repeat
+    kwargs['periodic_transaction_id'] = parent.id
+    transactions_list.append(parent)
+    current_due_date = current_due_date + relativedelta(**increment_args)
+
     while current_due_date <= date_until:
         trans = Transaction.objects.create(due_date=current_due_date, **kwargs)
-
-        #Periodics should point to parent or itself
-        if parent is None:
-            parent = trans
-            
-            trans.periodic_transaction_id = trans.id
-            kwargs['periodic_transaction_id'] = parent.id
-
-            trans.save()
-
         transactions_list.append(trans)
-        current_due_date = current_due_date + relativedelta(**increment_args)
 
         if need_to_fix_date(periodic['period'], start_date):
             current_due_date = fix_last_day_month(start_date, current_due_date)
+
+        current_due_date = current_due_date + relativedelta(**increment_args)
 
     return transactions_list
 

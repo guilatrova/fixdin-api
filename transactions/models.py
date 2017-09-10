@@ -46,7 +46,7 @@ class Transaction(models.Model, HasKind):
     value = models.DecimalField(max_digits=19, decimal_places=2)
     kind = models.PositiveIntegerField(choices=TRANSACTION_KINDS)
     details = models.CharField(max_length=500, blank=True)   
-    periodic_transaction = models.ForeignKey("Transaction", null=True)
+    periodic_transaction = models.ForeignKey("Transaction", null=True, on_delete=models.DO_NOTHING)
     priority = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
     deadline = models.PositiveIntegerField(default=0)
     payment_date = models.DateField(null=True, blank=True)

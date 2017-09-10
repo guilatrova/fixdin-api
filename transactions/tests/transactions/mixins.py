@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
+from transactions.factories import create_periodic_transactions
 
 class TransactionTestMixin:
 
@@ -438,6 +439,31 @@ class TransactionPeriodicTestMixin:
         response = self.client.post(self.url, transaction_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_periodics_doesnt_duplicate_payment_date(self):
+        dto = {
+            'due_date': datetime.date(2017, 1, 1),
+            'payment_date': datetime.date(2017, 1, 1),
+            'description': 'repeat',
+            'category_id': self.category.id,
+            'value': self.value,
+            'account_id': self.account.id,
+            'kind': 0,
+            'details': '',
+            'priority': 3,
+            'deadline': 2,
+            "periodic": {
+                "period": 'daily',
+                "distance": 1,
+                "how_many": 3
+            }
+        }
+        transactions = create_periodic_transactions(**dto)
+
+        self.assertEqual(transactions[0].payment_date, datetime.date(2017, 1, 1))
+        for transaction in transactions[1:]:
+            self.assertEqual(transaction.payment_date, None)
+
 
     def create_periodic_dto(self, due_date, period, distance, until=None, how_many=None):
         dto = {
