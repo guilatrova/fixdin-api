@@ -62,10 +62,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
 
     def to_representation(self, value):
         if isinstance(value, list):
-            result = []
-            for x in value:
-                result.append(super(TransactionSerializer, self).to_representation(x))
-            return result
+            return [super(TransactionSerializer, self).to_representation(x) for x in value]
 
         return super(TransactionSerializer, self).to_representation(value)
 
@@ -95,7 +92,6 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
 
     def create(self, validated_data):
         if 'periodic' not in validated_data:
-            return super().create(validated_data)
+            return super(TransactionSerializer, self).create(validated_data)
 
-        transactions = create_periodic_transactions(**validated_data)
-        return transactions
+        return create_periodic_transactions(**validated_data)
