@@ -369,81 +369,49 @@ class TransactionPeriodicTestMixin:
 
     def test_create_periodic_daily_distance_1(self):
         transaction_dto = self.create_periodic_dto("2017-09-09", "daily", 1, "2017-09-12")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 4)
-        self.assert_dates(response.data, [
+        self.post_and_assert_dates(transaction_dto, [
             '2017-09-09', '2017-09-10', '2017-09-11', '2017-09-12'
         ])
 
     def test_create_periodic_daily_distance_3(self):
         transaction_dto = self.create_periodic_dto("2017-09-09", "daily", 3, "2017-09-12")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 2)
-        self.assert_dates(response.data, [
+        self.post_and_assert_dates(transaction_dto, [
             '2017-09-09', '2017-09-12'
         ])
 
     def test_create_periodic_weekly_distance_1(self):
         transaction_dto = self.create_periodic_dto("2017-09-04", "weekly", 1, "2017-09-18")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 3)
-        self.assert_dates(response.data, [
+        self.post_and_assert_dates(transaction_dto, [
             '2017-09-04', '2017-09-11', '2017-09-18', 
         ])
 
     def test_create_periodic_weekly_distance_2(self):
         transaction_dto = self.create_periodic_dto("2017-09-04", "weekly", 2, "2017-09-18")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 2)
-        self.assert_dates(response.data, [
+        self.post_and_assert_dates(transaction_dto, [
             '2017-09-04', '2017-09-18', 
         ])
 
     def test_create_monthly_distance_1(self):
         transaction_dto = self.create_periodic_dto("2017-09-01", "monthly", 1, "2017-10-01")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 2)
-        self.assert_dates(response.data, [
+        self.post_and_assert_dates(transaction_dto, [
             '2017-09-01', '2017-10-01',
         ])
 
     def test_create_monthly_distance_6(self):
         transaction_dto = self.create_periodic_dto("2017-06-01", "monthly", 6, "2018-06-01")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 3)
-        self.assert_dates(response.data, [
+        self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2017-12-01', '2018-06-01'
         ])
 
     def test_yearly_period_distance_1(self):
         transaction_dto = self.create_periodic_dto("2017-06-01", "yearly", 1, "2018-06-01")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 2)
-        self.assert_dates(response.data, [
+        self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2018-06-01'
         ])
 
     def test_yearly_period_distance_2(self):
         transaction_dto = self.create_periodic_dto("2017-06-01", "yearly", 2, "2020-06-01")
-        response = self.client.post(self.url, transaction_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 2)
-        self.assert_dates(response.data, [
+        self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2019-06-01'
         ])
 
@@ -470,14 +438,13 @@ class TransactionPeriodicTestMixin:
             }
         }
         
-    def assert_dates(self, data, expected_dates):
-        for i in range(len(data)):
-            transaction = data[i]
+    def post_and_assert_dates(self, dto, expected_dates):
+        response = self.client.post(self.url, dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Transaction.objects.count(), len(expected_dates))
+
+        for i in range(len(response.data)):
+            transaction = response.data[i]
             self.assertEqual(transaction['due_date'], expected_dates[i])
-            self.assertEqual(transaction['periodic_transaction'], data[0]['id'])
-
-    def test_factory_creates_pointing_to_itself(self):
-        pass
-
-    def tests_factory_trows_errors_if_only_one_date(self):
-        pass
+            self.assertEqual(transaction['periodic_transaction'], response.data[0]['id'])
