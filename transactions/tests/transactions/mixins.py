@@ -448,6 +448,12 @@ class TransactionPeriodicTestMixin:
             '2017-06-01', '2019-06-01'
         ])
 
+    def test_cant_create_periodic_with_until_greater_than_due_date(self):
+        transaction_dto = self.create_periodic_dto("2017-07-01", "yearly", 1, "2017-06-01")
+        response = self.client.post(self.url, transaction_dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def create_periodic_dto(self, due_date, period, distance, until):
         return {
             'due_date': due_date,

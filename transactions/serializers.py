@@ -32,7 +32,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
         write_only_fields = ('periodic')
 
     periodic = PeriodicSerializer(required=False, write_only=True)
-    
+
     def validate_value(self, value):
         if self.context['kind'] == Transaction.EXPENSE_KIND:
             if value > 0:
@@ -53,6 +53,9 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
         return account
 
     def validate(self, data):
+        if 'periodic' in data and data['periodic']['until'] < data['due_date']:
+            raise serializers.ValidationError("periodic until must be greater than due date")
+
         if self.context['kind'] != data['category'].kind:
             raise serializers.ValidationError('Transaction and Category must have the same kind')
         return data
