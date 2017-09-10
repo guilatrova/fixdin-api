@@ -12,14 +12,20 @@ def create_periodic_transactions(**kwargs):
     start_date = kwargs.pop('due_date')
     current_due_date = start_date
     
+    parent = None
     while current_due_date <= periodic['until']:
         trans = Transaction.objects.create(due_date=current_due_date, **kwargs)
+
+        #Periodics should point to parent or itself
+        if parent is None:
+            parent = trans
+            
+            trans.periodic_transaction_id = trans.id
+            kwargs['periodic_transaction_id'] = parent.id
+
+            trans.save()
+
         transactions_list.append(trans)
-
-        #First transaction periodic id is null
-        if not 'periodic_transaction_id' in kwargs:
-            kwargs['periodic_transaction_id'] = trans.id
-
         current_due_date = current_due_date + relativedelta(**increment_args)
 
         if need_to_fix_date(periodic['period'], start_date):

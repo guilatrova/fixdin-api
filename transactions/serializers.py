@@ -27,12 +27,12 @@ class PeriodicSerializer(serializers.Serializer):
 class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date', 'periodic')
-        read_only_fields = ('kind', 'account')
+        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date', 'periodic', 'periodic_transaction')
+        read_only_fields = ('kind', 'account', 'periodic_parent')
         write_only_fields = ('periodic')
 
     periodic = PeriodicSerializer(required=False, write_only=True)
-
+    
     def validate_value(self, value):
         if self.context['kind'] == Transaction.EXPENSE_KIND:
             if value > 0:
