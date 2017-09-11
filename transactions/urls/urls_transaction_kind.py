@@ -4,7 +4,8 @@ from transactions.models import Category
 
 list_actions = {
     'get': 'list', 
-    'post': 'create'
+    'post': 'create',
+    'delete': 'destroy_all_periodics'
 }
 
 single_action = {

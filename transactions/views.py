@@ -98,13 +98,21 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
 
+    def destroy_all_periodics(self, request, *args, **kwargs):
+        periodic = self.request.query_params.get('periodic_transaction', False)
+        if periodic:
+            Transaction.objects.filter(periodic_transaction=periodic).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     def perform_destroy(self, instance):
         params = self.request.query_params
 
         if params.get('next', False) == '1':
-            Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gt=instance.due_date).delete()
-            
-        return super(TransactionViewSet, self).perform_destroy(instance)
+            Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gte=instance.due_date).delete()
+        else:
+            return super(TransactionViewSet, self).perform_destroy(instance)
 
     def perform_create(self, serializer):
         account = Account.objects.filter(user_id=self.request.user.id).first()

@@ -456,6 +456,17 @@ class TransactionPeriodicTestMixin:
         #only father remains
         self.assertEqual(Transaction.objects.count(), 1)
 
+    def test_can_delete_all_periodics(self):
+        self.create_transaction()
+        transactions = self.create_periodic(6)
+        self.create_transaction()
+
+        url = "{}?periodic_transaction={}".format(self.url, transactions[1].periodic_transaction_id)
+        response = self.client.delete(url, format='json')
+
+        #only both 2 random transactions remains
+        self.assertEqual(Transaction.objects.count(), 2)
+
     def create_periodic(self, how_many):
         dto = {
             'due_date': datetime.date(2017, 1, 1),
@@ -501,9 +512,7 @@ class TransactionPeriodicTestMixin:
         
     def post_and_assert_dates(self, dto, expected_dates):
         response = self.client.post(self.url, dto, format='json')
-
-        if response.status_code != status.HTTP_201_CREATED:
-            print(response.data)
+        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), len(expected_dates))
 
