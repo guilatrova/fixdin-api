@@ -447,7 +447,7 @@ class TransactionPeriodicTestMixin:
         for transaction in transactions[1:]:
             self.assertEqual(transaction.payment_date, None)
 
-    def test_can_delete_this_and_next_periodics(self):
+    def test_delete_this_and_next_periodics(self):
         transactions = self.create_periodic(4)
 
         url = "{}{}?next=1".format(self.url, transactions[1].id)
@@ -456,16 +456,36 @@ class TransactionPeriodicTestMixin:
         #only father remains
         self.assertEqual(Transaction.objects.count(), 1)
 
-    def test_can_delete_all_periodics(self):
+    def test_delete_all_periodics(self):
         self.create_transaction()
         transactions = self.create_periodic(6)
         self.create_transaction()
 
-        url = "{}?periodic_transaction={}".format(self.url, transactions[1].periodic_transaction_id)
+        url = "{}?periodic_transaction={}".format(self.url, transactions[0].periodic_transaction_id)
         response = self.client.delete(url, format='json')
 
         #only both 2 random transactions remains
         self.assertEqual(Transaction.objects.count(), 2)
+
+    def test_partial_update_all_periodics(self):
+        self.create_transaction()
+        transactions = self.create_periodic(6)
+        periodic_id = transactions[0].id
+        new_description = 'updated all periodics description'
+
+        dto = {
+            'description': new_description,
+            'category': transactions[0].category.id
+        }
+
+        url = "{}?periodic_transaction={}".format(self.url, periodic_id)
+        response = self.client.patch(url, dto, format='json')
+        
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        all_periodics = Transaction.objects.filter(periodic_transaction_id=periodic_id)
+        for periodic in all_periodics:
+            self.assertEqual(periodic.description, new_description)
+
 
     def create_periodic(self, how_many):
         dto = {
@@ -482,7 +502,7 @@ class TransactionPeriodicTestMixin:
             "periodic": {
                 "period": 'daily',
                 "distance": 1,
-                "how_many": 3
+                "how_many": how_many
             }
         }
         return create_periodic_transactions(**dto)

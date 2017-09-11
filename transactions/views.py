@@ -98,6 +98,23 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
 
+    def patch_all_periodics(self, request, *args, **kwargs):
+        periodic = self.request.query_params.get('periodic_transaction', False)
+        if periodic:
+            queryset = self.filter_queryset(Transaction.objects.filter(periodic_transaction=periodic))
+            data = request.data
+            to_return = []
+
+            for instance in queryset:
+                serializer = self.get_serializer(instance, data=data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                to_return.append(serializer.data)
+
+            return Response(to_return)
+
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     def destroy_all_periodics(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
