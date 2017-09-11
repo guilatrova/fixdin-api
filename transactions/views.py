@@ -105,18 +105,12 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         if periodic:
             queryset = self.filter_queryset(Transaction.objects.filter(periodic_transaction=periodic))
             data = request.data
-            to_return = []
-
-            for instance in queryset:
-                serializer = self.get_serializer(instance, data=data, partial=True)
-                serializer.is_valid(raise_exception=True)
-                self.perform_update(serializer)
-                to_return.append(serializer.data)
+            to_return = self.patch_periodics(data, queryset)
 
             return Response(to_return)
 
         return Response(status=status.HTTP_404_NOT_FOUND)
-
+    
     def destroy_all_periodics(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
@@ -124,6 +118,28 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def update(self, request, *args, **kwargs):
+        if request.query_params.get('next', False) == '1':
+            data = request.data
+            instance = self.get_object()
+            next_periodics = Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gte=instance.due_date)
+            to_return = self.patch_periodics(data, next_periodics)
+
+            return Response(to_return)
+        else:
+            return super(TransactionViewSet, self).update(request, *args, **kwargs)
+
+    def patch_periodics(self, data, periodics):
+        to_return = []
+
+        for instance in periodics:
+            serializer = self.get_serializer(instance, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            to_return.append(serializer.data)
+
+        return to_return
 
     def perform_destroy(self, instance):
         params = self.request.query_params

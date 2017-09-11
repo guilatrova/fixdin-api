@@ -467,6 +467,26 @@ class TransactionPeriodicTestMixin:
         #only both 2 random transactions remains
         self.assertEqual(Transaction.objects.count(), 2)
 
+    def test_partial_update_this_and_next_periodics(self):
+        transactions = self.create_periodic(7)
+        periodic_id = transactions[0].id
+        new_description = 'updated some periodics description'
+
+        dto = {
+            'description': new_description,
+            'category': transactions[0].category.id
+        }
+
+        url = "{}{}?next=1".format(self.url, transactions[2].id, periodic_id)
+        response = self.client.patch(url, dto, format='json')
+
+        updated_transactions = Transaction.objects.filter(periodic_transaction_id=periodic_id)
+        for not_modified in updated_transactions[:1]:
+            self.assertNotEqual(not_modified.description, new_description)
+
+        for modified in updated_transactions[2:]:
+            self.assertEqual(modified.description, new_description)
+
     def test_partial_update_all_periodics(self):
         self.create_transaction()
         transactions = self.create_periodic(6)
