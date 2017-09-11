@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.shortcuts import render
+from django.db import transaction as db_transaction
 from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -98,6 +99,7 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
 
+    @db_transaction.atomic
     def patch_all_periodics(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
