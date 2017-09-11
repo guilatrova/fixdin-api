@@ -50,14 +50,12 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
-
-    @db_transaction.atomic
+    
     def patch_all_periodics(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
             queryset = self.filter_queryset(Transaction.objects.filter(periodic_transaction=periodic))
-            data = request.data
-            to_return = self.patch_periodics(data, queryset)
+            to_return = self.patch_periodics(request.data, queryset)
 
             return Response(to_return)
 
@@ -73,15 +71,15 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
 
     def update(self, request, *args, **kwargs):
         if request.query_params.get('next', False) == '1':
-            data = request.data
             instance = self.get_object()
             next_periodics = Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gte=instance.due_date)
-            to_return = self.patch_periodics(data, next_periodics)
+            to_return = self.patch_periodics(request.data, next_periodics)
 
             return Response(to_return)
         else:
             return super(TransactionViewSet, self).update(request, *args, **kwargs)
 
+    @db_transaction.atomic
     def patch_periodics(self, data, periodics):
         to_return = []
 

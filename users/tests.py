@@ -45,7 +45,7 @@ class UsersTests(APITestCase):
         user = self.create_user(email='guilhermelatrova@hotmail.com', password='abc123456')        
         
         expired_token = ExpiringToken.objects.get(user=user)
-        expired_token.created -= datetime.timedelta(days=90)
+        expired_token.created -= datetime.timedelta(days=91)
         expired_token.save()
         
         self.assertTrue(expired_token.expired())
