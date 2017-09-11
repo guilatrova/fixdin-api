@@ -441,6 +441,22 @@ class TransactionPeriodicTestMixin:
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_periodics_doesnt_duplicate_payment_date(self):
+        transactions = self.create_periodic(3)
+
+        self.assertEqual(transactions[0].payment_date, datetime.date(2017, 1, 1))
+        for transaction in transactions[1:]:
+            self.assertEqual(transaction.payment_date, None)
+
+    def test_can_delete_this_and_next_periodics(self):
+        transactions = self.create_periodic(4)
+
+        url = "{}{}?next=1".format(self.url, transactions[1].id)
+        response = self.client.delete(url, format='json')
+
+        #only father remains
+        self.assertEqual(Transaction.objects.count(), 1)
+
+    def create_periodic(self, how_many):
         dto = {
             'due_date': datetime.date(2017, 1, 1),
             'payment_date': datetime.date(2017, 1, 1),
@@ -448,7 +464,7 @@ class TransactionPeriodicTestMixin:
             'category_id': self.category.id,
             'value': self.value,
             'account_id': self.account.id,
-            'kind': 0,
+            'kind': Transaction.EXPENSE_KIND if self.value < 0 else Transaction.INCOME_KIND,
             'details': '',
             'priority': 3,
             'deadline': 2,
@@ -458,12 +474,7 @@ class TransactionPeriodicTestMixin:
                 "how_many": 3
             }
         }
-        transactions = create_periodic_transactions(**dto)
-
-        self.assertEqual(transactions[0].payment_date, datetime.date(2017, 1, 1))
-        for transaction in transactions[1:]:
-            self.assertEqual(transaction.payment_date, None)
-
+        return create_periodic_transactions(**dto)
 
     def create_periodic_dto(self, due_date, period, distance, until=None, how_many=None):
         dto = {

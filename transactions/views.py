@@ -98,6 +98,14 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
 
+    def perform_destroy(self, instance):
+        params = self.request.query_params
+
+        if params.get('next', False) == '1':
+            Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gt=instance.due_date).delete()
+            
+        return super(TransactionViewSet, self).perform_destroy(instance)
+
     def perform_create(self, serializer):
         account = Account.objects.filter(user_id=self.request.user.id).first()
         serializer.save(kind=self.kwargs['kind'],account=account)
