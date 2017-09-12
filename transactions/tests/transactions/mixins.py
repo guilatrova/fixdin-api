@@ -454,6 +454,7 @@ class TransactionPeriodicTestMixin:
         response = self.client.delete(url, format='json')
 
         #only father remains
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(Transaction.objects.count(), 1)
 
     def test_delete_all_periodics(self):
@@ -465,6 +466,7 @@ class TransactionPeriodicTestMixin:
         response = self.client.delete(url, format='json')
 
         #only both 2 random transactions remains
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(Transaction.objects.count(), 2)
 
     def test_partial_update_this_and_next_periodics(self):
@@ -479,6 +481,7 @@ class TransactionPeriodicTestMixin:
 
         url = "{}{}?next=1".format(self.url, transactions[2].id, periodic_id)
         response = self.client.patch(url, dto, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         updated_transactions = Transaction.objects.filter(periodic_transaction_id=periodic_id)
         for not_modified in updated_transactions[:1]:
