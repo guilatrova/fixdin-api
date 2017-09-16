@@ -50,18 +50,46 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
-        return Transaction.objects.filter(**query_filter)
+        return Transaction.objects.filter(**query_filter)    
     
+    def update(self, request, *args, **kwargs):
+        if request.query_params.get('next', False) == '1':
+            instance = self.get_object()
+            next_periodics = Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gte=instance.due_date)
+            to_return = self._patch_periodics(request.data, next_periodics)
+
+            return Response(to_return)
+        else:
+            return super(TransactionViewSet, self).update(request, *args, **kwargs)
+
     def patch_all_periodics(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
             queryset = self.filter_queryset(Transaction.objects.filter(periodic_transaction=periodic))
-            to_return = self.patch_periodics(request.data, queryset)
+            to_return = self._patch_periodics(request.data, queryset)
 
             return Response(to_return)
 
         return Response(status=status.HTTP_404_NOT_FOUND)
-    
+
+    @db_transaction.atomic
+    def _patch_periodics(self, data, periodics):
+        to_return = []        
+
+        is_first = True
+        for instance in periodics:
+            serializer = self.get_serializer(instance, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            to_return.append(serializer.data)
+
+            if is_first:
+                data.pop('due_date', None)
+                data.pop('payment_date', None)
+                is_first = False
+
+        return to_return
+
     def destroy_all_periodics(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
@@ -69,28 +97,6 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def update(self, request, *args, **kwargs):
-        if request.query_params.get('next', False) == '1':
-            instance = self.get_object()
-            next_periodics = Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gte=instance.due_date)
-            to_return = self.patch_periodics(request.data, next_periodics)
-
-            return Response(to_return)
-        else:
-            return super(TransactionViewSet, self).update(request, *args, **kwargs)
-
-    @db_transaction.atomic
-    def patch_periodics(self, data, periodics):
-        to_return = []
-
-        for instance in periodics:
-            serializer = self.get_serializer(instance, data=data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            self.perform_update(serializer)
-            to_return.append(serializer.data)
-
-        return to_return
 
     def perform_destroy(self, instance):
         params = self.request.query_params

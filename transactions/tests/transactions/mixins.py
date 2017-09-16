@@ -523,6 +523,33 @@ class TransactionPeriodicTestMixin:
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_partial_update_doesnt_affect_dates(self):
+        self.create_transaction()
+        transactions = self.create_periodic(6)
+        periodic_id = transactions[0].id
+
+        new_due_date = datetime.date(2017, 12, 21)
+        new_payment_date = datetime.date(2017, 12, 22)
+
+        dto = {
+            'category': transactions[0].category.id,
+            'due_date': new_due_date,
+            'payment_date': new_payment_date
+        }
+
+        url = "{}{}?next=1".format(self.url, periodic_id)
+        response = self.client.patch(url, dto, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        updated_transactions = Transaction.objects.filter(periodic_transaction_id=periodic_id)
+        only_modified = updated_transactions.get(pk=periodic_id)
+        self.assertEqual(only_modified.due_date, new_due_date)
+        self.assertEqual(only_modified.payment_date, new_payment_date)
+
+        for not_modified in updated_transactions[2:]:
+            self.assertNotEqual(not_modified.due_date, new_due_date)
+            self.assertNotEqual(not_modified.payment_date, new_payment_date)
+
     def cast_to_dict(self, transaction):
         return {
             'id': transaction.id,
