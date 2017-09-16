@@ -509,6 +509,33 @@ class TransactionPeriodicTestMixin:
         for periodic in all_periodics:
             self.assertEqual(periodic.description, new_description)
 
+    def test_cant_update_transaction_to_be_periodic(self):
+        transaction = self.create_transaction()        
+        data = self.cast_to_dict(transaction)
+        data['periodic'] = {
+            "period": 'daily',
+            "distance": 1,
+            "how_many": 2
+        }
+
+        url = self.url + str(transaction.id)
+        response = self.client.put(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def cast_to_dict(self, transaction):
+        return {
+            'id': transaction.id,
+            'description': transaction.description,
+            'value': transaction.value,
+            'kind': transaction.kind,
+            'category': transaction.category_id,
+            'due_date': '2017-10-10',
+            'payment_date': '2017-10-10',
+            'account_id': transaction.account_id,
+            'details': transaction.details,
+            'deadline': transaction.deadline
+        }
 
     def create_periodic(self, how_many):
         dto = {

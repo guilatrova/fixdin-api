@@ -38,7 +38,8 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
     def get_serializer_context(self):
         return {
             "kind": self.kwargs['kind'],
-            "user_id": self.request.user.id
+            "user_id": self.request.user.id,
+            "request_method": self.request.method
         }
 
     def get_queryset(self):

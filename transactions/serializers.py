@@ -67,9 +67,14 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
             raise serializers.ValidationError("You can't use an account that doesn't belongs to you!")
         return account
 
+    def validate_periodic(self, periodic):
+        if periodic is not None and self.context['request_method'] == 'PUT':
+            raise serializers.ValidationError("You can't update a transaction to be periodic. Create a new one instead.")
+        return periodic
+
     def validate(self, data):
         if 'periodic' in data and 'until' in data['periodic'] and data['periodic']['until'] < data['due_date']:
-            raise serializers.ValidationError("periodic until must be greater than due date")
+            raise serializers.ValidationError("Periodic until must be greater than due date")
 
         if self.context['kind'] != data['category'].kind:
             raise serializers.ValidationError('Transaction and Category must have the same kind')
