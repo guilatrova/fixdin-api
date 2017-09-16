@@ -483,7 +483,7 @@ class TransactionPeriodicTestMixin:
         response = self.client.patch(url, dto, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        updated_transactions = Transaction.objects.filter(periodic_transaction_id=periodic_id)
+        updated_transactions = Transaction.objects.filter(periodic_transaction_id=periodic_id).order_by('id')
         for not_modified in updated_transactions[:1]:
             self.assertNotEqual(not_modified.description, new_description)
 
@@ -546,7 +546,7 @@ class TransactionPeriodicTestMixin:
         self.assertEqual(only_modified.due_date, new_due_date)
         self.assertEqual(only_modified.payment_date, new_payment_date)
 
-        for not_modified in updated_transactions[2:]:
+        for not_modified in updated_transactions.exclude(id=only_modified.id):
             self.assertNotEqual(not_modified.due_date, new_due_date)
             self.assertNotEqual(not_modified.payment_date, new_payment_date)
 
