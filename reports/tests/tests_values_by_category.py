@@ -30,11 +30,13 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
             self.create_transaction(-(cumulative_value * 2), category=self.expense_categories[i])
             cumulative_value += 10
 
+        expense_id = [cat.id for cat in self.expense_categories]
+
         expected_list = [
-            { "category_id": 1, "total": 30 },
-            { "category_id": 3, "total": 60 }, #Skip incomes
-            { "category_id": 5, "total": 90 },
-            { "category_id": 7, "total": 120 },
+            { "category_id": expense_id[0], "total": 30 },
+            { "category_id": expense_id[1], "total": 60 }, #Skip incomes
+            { "category_id": expense_id[2], "total": 90 },
+            { "category_id": expense_id[3], "total": 120 },
         ]
 
         url = reverse('values-by-category', kwargs={'kind': 'expenses'})
@@ -53,11 +55,13 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
             self.create_transaction(cumulative_value * 2, category=self.income_categories[i])
             cumulative_value += 10
 
+        income_id = [cat.id for cat in self.income_categories]
+
         expected_list = [
-            { "category_id": 2, "total": 30 }, #Skip expenses
-            { "category_id": 4, "total": 60 },
-            { "category_id": 6, "total": 90 },
-            { "category_id": 8, "total": 120 },
+            { "category_id": income_id[0], "total": 30 }, #Skip expenses
+            { "category_id": income_id[1], "total": 60 },
+            { "category_id": income_id[2], "total": 90 },
+            { "category_id": income_id[3], "total": 120 },
         ]
 
         url = reverse('values-by-category', kwargs={'kind': 'incomes'})
