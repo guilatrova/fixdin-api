@@ -22,8 +22,7 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
         for i in range(1, 5):
             self.expense_categories.append(self.create_category('EC' + str(i)))
             self.income_categories.append(self.create_category('IC' + str(i), kind=Category.INCOME_KIND))
-
-    @skip('Fast fix')
+    
     def test_gets_values_aggregated_by_expense_category(self):
         cumulative_value = 10
         for i in range(len(self.expense_categories)):
@@ -47,7 +46,6 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
             self.assertEqual(expected_list[i]["category_id"], response.data[i]["category_id"])
             self.assertEqual(float(expected_list[i]["total"]), float(response.data[i]["total"]))
 
-    @skip('Fast fix')
     def test_gets_values_aggregated_by_income_category(self):
         cumulative_value = 10
         for i in range(len(self.income_categories)):
@@ -70,7 +68,21 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
         for i in range(len(expected_list)):
             self.assertEqual(expected_list[i]["category_id"], response.data[i]["category_id"])
             self.assertEqual(float(expected_list[i]["total"]), float(response.data[i]["total"]))
-
-    @skip('DO THIS, ITS IMPORTANT')
+    
     def test_only_calculates_categories_from_authenticated_user(self):
-        self.fail('MISSING IMPLEMENTATION')
+        other_user, token = self.create_user('other', email='other@test.com', password='pass')
+        other_account = self.create_account(other_user)
+        other_user_category = self.create_category('NOT_RETRIEVED', user=other_user)
+        self.create_transaction(10, category=other_user_category, account=other_account)
+        self.create_transaction(20, category=self.income_categories[0])
+
+        expected_list = [
+            { "category_id": self.income_categories[0], "total": 20 }
+        ]
+
+        url = reverse('values-by-category', kwargs={'kind': 'incomes'})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(float(response.data[0]['total']), 20)
