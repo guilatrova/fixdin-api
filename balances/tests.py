@@ -23,11 +23,17 @@ class BalanceTestCase(TestCase, BaseTestHelper):
         self.account = self.create_account(self.user)
         self.category = self.create_category('category')
 
-    def test_get_current_balance(self):        
+    def test_get_current_balance(self):
+        '''
+        Get current balance regardless of payed or not, until present date
+        '''
         self.create_transaction(10)
         self.create_transaction(10)
         self.create_transaction(30)
         self.create_transaction(60)
+        #tomorrow
+        tomorrow = datetime.today() + relativedelta(days=1)
+        self.create_transaction(100, due_date=tomorrow)
 
         response = self.client.get(reverse('balances'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -47,6 +53,17 @@ class BalanceTestCase(TestCase, BaseTestHelper):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 90)
+
+    def test_get_expected_balance_until_date(self):
+        self.create_transaction(30, due_date=datetime(2017, 9, 1), payment_date=datetime.today())
+        self.create_transaction(60, due_date=datetime(2017, 9, 4), payment_date=datetime.today())
+        self.create_transaction(10, due_date=datetime(2017, 9, 15))
+        self.create_transaction(25, due_date=datetime(2017, 9, 30))
+
+        url = reverse('balances') + '?until=2017-09-30'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['balance'], 125)
 
 # @skip('We started it too earlier, we will continue it in future')
 # class BalanceTestCase(TestCase, BaseTestHelper):
