@@ -7,13 +7,13 @@ def create_periodic_transactions(**kwargs):
     periodic = kwargs.pop('periodic')
     transactions_list = []
 
-    increment_args = get_increment_args(periodic, periodic['distance'])
+    increment_args = get_increment_args(periodic, periodic['interval'])
 
     start_date = kwargs.pop('due_date')
     current_due_date = start_date
 
     if 'how_many' in periodic:
-        length = (periodic['how_many']-1) * periodic['distance']
+        length = (periodic['how_many']-1) * periodic['interval']
         increment = get_increment_args(periodic, length)
         date_until = start_date + relativedelta(**increment)
     else:
@@ -33,7 +33,7 @@ def create_periodic_transactions(**kwargs):
         trans = Transaction.objects.create(due_date=current_due_date, **kwargs)
         transactions_list.append(trans)
 
-        if need_to_fix_date(periodic['period'], start_date):
+        if need_to_fix_date(periodic['frequency'], start_date):
             current_due_date = fix_last_day_month(start_date, current_due_date)
 
         current_due_date = current_due_date + relativedelta(**increment_args)
@@ -47,7 +47,7 @@ def get_increment_args(periodic, length):
         'monthly': {'months': length},
         'yearly':  {'years': length}
     }
-    return choices.get(periodic['period'])
+    return choices.get(periodic['frequency'])
 
 def need_to_fix_date(interval, start_date):
     if interval != 'daily' and interval != 'weekly':

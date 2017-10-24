@@ -20,8 +20,8 @@ class CategorySerializer(serializers.ModelSerializer, HasKindContextSerializer):
         return value
 
 class PeriodicSerializer(serializers.Serializer):
-    period = serializers.ChoiceField(['daily', 'weekly', 'monthly', 'yearly'])
-    distance = serializers.IntegerField()
+    frequency = serializers.ChoiceField(['daily', 'weekly', 'monthly', 'yearly'])
+    interval = serializers.IntegerField()
     until = serializers.DateField(required=False)
     how_many = serializers.IntegerField(required=False)
 

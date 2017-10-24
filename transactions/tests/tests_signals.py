@@ -36,7 +36,7 @@ class TransactionSignalsTestCase(TestCase, BaseTestHelper):
             kind=Transaction.INCOME_KIND,
             payment_date=datetime.date(2017, 1, 1),
             periodic={
-                'period': 'daily',
-                'distance': 1,
+                'frequency': 'daily',
+                'interval': 1,
                 'how_many': how_many,
             })

@@ -383,49 +383,49 @@ class TransactionFilterTestMixin:
 
 class TransactionPeriodicTestMixin:
 
-    def test_create_periodic_daily_distance_1(self):
+    def test_create_periodic_daily_interval_1(self):
         transaction_dto = self.create_periodic_dto("2017-09-09", "daily", 1, "2017-09-12")
         self.post_and_assert_dates(transaction_dto, [
             '2017-09-09', '2017-09-10', '2017-09-11', '2017-09-12'
         ])
 
-    def test_create_periodic_daily_distance_3(self):
+    def test_create_periodic_daily_interval_3(self):
         transaction_dto = self.create_periodic_dto("2017-09-09", "daily", 3, "2017-09-12")
         self.post_and_assert_dates(transaction_dto, [
             '2017-09-09', '2017-09-12'
         ])
 
-    def test_create_periodic_weekly_distance_1(self):
+    def test_create_periodic_weekly_interval_1(self):
         transaction_dto = self.create_periodic_dto("2017-09-04", "weekly", 1, "2017-09-18")
         self.post_and_assert_dates(transaction_dto, [
             '2017-09-04', '2017-09-11', '2017-09-18', 
         ])
 
-    def test_create_periodic_weekly_distance_2(self):
+    def test_create_periodic_weekly_interval_2(self):
         transaction_dto = self.create_periodic_dto("2017-09-04", "weekly", 2, "2017-09-18")
         self.post_and_assert_dates(transaction_dto, [
             '2017-09-04', '2017-09-18', 
         ])
 
-    def test_create_monthly_distance_1(self):
+    def test_create_monthly_interval_1(self):
         transaction_dto = self.create_periodic_dto("2017-09-01", "monthly", 1, "2017-10-01")
         self.post_and_assert_dates(transaction_dto, [
             '2017-09-01', '2017-10-01',
         ])
 
-    def test_create_monthly_distance_6(self):
+    def test_create_monthly_interval_6(self):
         transaction_dto = self.create_periodic_dto("2017-06-01", "monthly", 6, "2018-06-01")
         self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2017-12-01', '2018-06-01'
         ])
 
-    def test_yearly_period_distance_1(self):
+    def test_yearly_period_interval_1(self):
         transaction_dto = self.create_periodic_dto("2017-06-01", "yearly", 1, "2018-06-01")
         self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2018-06-01'
         ])
 
-    def test_yearly_period_distance_2(self):
+    def test_yearly_period_interval_2(self):
         transaction_dto = self.create_periodic_dto("2017-06-01", "yearly", 2, "2020-06-01")
         self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2019-06-01'
@@ -437,7 +437,7 @@ class TransactionPeriodicTestMixin:
             '2017-06-01', '2017-07-01', '2017-08-01', '2017-09-01', '2017-10-01', '2017-11-01'
         ])
 
-    def test_cant_create_with_how_many_and_distance_2(self):
+    def test_cant_create_with_how_many_and_interval_2(self):
         transaction_dto = self.create_periodic_dto('2017-06-01', 'monthly', 2, how_many=6)
         self.post_and_assert_dates(transaction_dto, [
             '2017-06-01', '2017-08-01', '2017-10-01', '2017-12-01', '2018-02-01', '2018-04-01'
@@ -528,8 +528,8 @@ class TransactionPeriodicTestMixin:
         transaction = self.create_transaction()        
         data = self.cast_to_dict(transaction)
         data['periodic'] = {
-            "period": 'daily',
-            "distance": 1,
+            "frequency": 'daily',
+            "interval": 1,
             "how_many": 2
         }
 
@@ -592,14 +592,14 @@ class TransactionPeriodicTestMixin:
             'priority': 3,
             'deadline': 2,
             "periodic": {
-                "period": 'daily',
-                "distance": 1,
+                "frequency": 'daily',
+                "interval": 1,
                 "how_many": how_many
             }
         }
         return create_periodic_transactions(**dto)
 
-    def create_periodic_dto(self, due_date, period, distance, until=None, how_many=None):
+    def create_periodic_dto(self, due_date, frequency, interval, until=None, how_many=None):
         dto = {
             'due_date': due_date,
             'description': 'repeat',
@@ -610,8 +610,8 @@ class TransactionPeriodicTestMixin:
             'priority': '3',
             'deadline': '2',
             "periodic": {
-                "period": period,
-                "distance": distance
+                "frequency": frequency,
+                "interval": interval
             }
         }
 
