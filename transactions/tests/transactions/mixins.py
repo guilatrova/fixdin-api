@@ -188,6 +188,21 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 4)
 
+    def test_partial_update_list(self):
+        t1 = self.create_transaction()
+        t2 = self.create_transaction()
+
+        data = {
+            'payment_date': datetime.date(2017, 8, 22)
+        }
+
+        url = self.url + "?ids={},{}".format(t1.id, t2.id)
+        response = self.client.patch(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for transaction in Transaction.objects.all():
+            self.assertEqual(transaction.payment_date, datetime.date(2017, 8, 22))
+
     def get_dto(self, category=None):
         if category is None:
             category = self.category
@@ -523,7 +538,7 @@ class TransactionPeriodicTestMixin:
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_partial_update_doesnt_affect_dates(self):
+    def test_partial_update_periodics_doesnt_affect_dates(self):
         self.create_transaction()
         transactions = self.create_periodic(6)
         periodic_id = transactions[0].id

@@ -44,7 +44,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
         model = Transaction
         fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date', 'periodic', 'periodic_transaction')
         read_only_fields = ('kind', 'account', 'periodic_transaction')
-        write_only_fields = ('periodic')
+        write_only_fields = ('periodic',)
 
     periodic = PeriodicSerializer(required=False, write_only=True)
 
@@ -76,8 +76,9 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
         if 'periodic' in data and 'until' in data['periodic'] and data['periodic']['until'] < data['due_date']:
             raise serializers.ValidationError("Periodic until must be greater than due date")
 
-        if self.context['kind'] != data['category'].kind:
-            raise serializers.ValidationError('Transaction and Category must have the same kind')
+        if 'category' in data:
+            if self.context['kind'] != data['category'].kind:
+                raise serializers.ValidationError('Transaction and Category must have the same kind')
         return data
 
     def to_representation(self, value):

@@ -14,7 +14,7 @@ class BaseTestHelper:
     Class used to create some resources to backup tests
     '''
     def create_transaction(self, value=None, description='description', kind=None, account=None, category=None, 
-    due_date=datetime.datetime.today(), payment_date=None, priority=0, deadline=10):
+                            due_date=datetime.datetime.today(), payment_date=None, priority=0, deadline=10):
         if value is None:
             value = self.value
 

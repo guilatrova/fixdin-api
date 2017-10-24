@@ -23,6 +23,5 @@ class BalanceAPIView(APIView):
 
         if until is not None:
             return { 'due_date__lte': datetime.strptime(until, '%Y-%m-%d') }
-        #date = datetime.today() if until is None else datetime.strptime(until, 'YYYY-MM-DD')
 
         return { 'due_date__lte': datetime.today() }

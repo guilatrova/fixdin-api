@@ -62,11 +62,19 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         else:
             return super(TransactionViewSet, self).update(request, *args, **kwargs)
 
-    def patch_all_periodics(self, request, *args, **kwargs):
+    def patch_list(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
             queryset = self.filter_queryset(Transaction.objects.filter(periodic_transaction=periodic)).order_by('id')
             to_return = self._patch_periodics(request.data, queryset)
+
+            return Response(to_return)
+        
+        transactions = self.request.query_params.get('ids', False)
+        if transactions:
+            ids = transactions.split(',')
+            queryset = self.filter_queryset(Transaction.objects.filter(id__in=ids))
+            to_return = self._patch_list(request.data, queryset)
 
             return Response(to_return)
 
@@ -87,6 +95,17 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
                 data.pop('due_date', None)
                 data.pop('payment_date', None)
                 is_first = False
+
+        return to_return
+
+    def _patch_list(self, data, transactions):
+        to_return = []
+
+        for instance in transactions:
+            serializer = self.get_serializer(instance, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            to_return.append(serializer.data)
 
         return to_return
 
