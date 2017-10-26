@@ -36,6 +36,7 @@ class SyncHistory(models.Model, HasStatus):
 
     settings = models.ForeignKey(IntegrationSettings)
     status = models.PositiveIntegerField(choices=HasStatus.STATUS)
+    datetime = models.DateTimeField(auto_now_add=True)
     result = models.CharField(max_length=120)
     details = models.TextField()
     trigger = models.PositiveIntegerField(choices=TRIGGER_CHOICES)
