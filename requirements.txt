@@ -3,6 +3,9 @@ djangorestframework
 markdown #Markdown support for the browsable API.
 djangorestframework-expiring-authtoken
 
+#For CPFL Integration
+requests
+
 #For production
 gunicorn
 dj-database-url
