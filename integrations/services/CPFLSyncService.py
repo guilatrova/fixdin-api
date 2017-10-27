@@ -1,10 +1,11 @@
 import json
 import requests
 import traceback
+from datetime import datetime
 
 from integrations.models import SyncHistory
 from integrations.services.SyncService import SyncService
-from transactions.models import Transaction
+from transactions.models import Transaction, Category, Account
 
 TOKEN_URL = 'https://servicosonline.cpfl.com.br/agencia-webapi/api/token'
 SITUACAO_URL = 'https://servicosonline.cpfl.com.br/agencia-webapi/api/historico-contas/validar-situacao'
@@ -60,27 +61,14 @@ class CPFL:
         return contas
 
 class CPFL_SyncService(SyncService):
-    def __init__(self, settings):
-        super().__init__(settings)
+    def __init__(self, user, settings):
+        super().__init__(user, settings)
         self.cpfl_service = CPFL()
 
     def run(self, trigger):
         super().run(trigger)
-        succeed_count = 0
-        failed_count = 0
-        created = 0
-        errors = ""
 
-        for setting in self.settings:
-            try:
-                contas = self.cpfl_service.recuperar_contas_abertas(setting.documento, setting.imovel)
-                # self._save_transactions(contas)
-                created += len(contas)
-                succeed_count += 1
-            except Exception as exc:
-                failed_count += 1
-                result = str(exc)
-                errors += traceback.format_exc() + "\n"
+        succeed_count, created, failed_count, errors, result = self._inner_run()
 
         if succeed_count > 0:
             status = SyncHistory.SUCCESS if failed_count == 0 else SyncHistory.PARTIAL
@@ -100,5 +88,52 @@ class CPFL_SyncService(SyncService):
                 
         return history
 
+    def _inner_run(self):
+        succeed_count = 0
+        failed_count = 0
+        created = 0
+        errors = ""
+        result = ""
+
+        for setting in self.settings:
+            try:
+                contas = self.cpfl_service.recuperar_contas_abertas(setting.documento, setting.imovel)
+                self._save_transactions(contas)
+                created += len(contas)
+                succeed_count += 1
+            except Exception as exc:
+                failed_count += 1
+                result = str(exc)
+                errors += traceback.format_exc() + "\n"
+
+        return succeed_count, created, failed_count, errors, result
+
+    def _format_conta(self, conta):
+        return {
+            "NumeroContaEnergia": conta["NumeroContaEnergia"],
+            "CodigoBarras": conta['CodigoBarras'],
+            "DescricaoFatura": conta["DescricaoFatura"],
+            "MesReferencia": conta["MesReferencia"],
+            "Vencimento": datetime.strptime(conta['Vencimento'], '%Y-%m-%dT%H:%M:%S'),
+            "Valor": float(conta["Valor"].replace(".", "").replace(",", ".")),
+        }
+
     def _save_transactions(self, contas):
-        Transaction.objects.create()
+        contas = [self._format_conta(x) for x in contas]
+        #TO DO: Change automatic account
+        account = None
+        category = None
+
+        for conta in contas:
+            description = conta['DescricaoFatura']
+            details = 'Mes Referencia:{} \nCod Barras:{}'.format(conta['MesReferencia'], conta['CodigoBarras'])
+
+            Transaction.objects.create(
+                description=description,
+                details=details,
+                account=account,
+                category=category,
+                due_date=conta['Vencimento'],
+                value=conta['Valor'],
+                kind=Transaction.EXPENSE_KIND
+            )
