@@ -80,11 +80,13 @@ class CPFL_SyncService(SyncService):
         elif status == SyncHistory.PARTIAL:
             result = "{} created {} places failed".format(created, failed_count)
 
-        history = SyncHistory.objects.create(settings=self.settings[0].settings,
-                                            status=status,
-                                            result=result,
-                                            details=errors,
-                                            trigger=trigger)
+        history = SyncHistory.objects.create(
+            settings=self.settings[0].settings,
+            status=status,
+            result=result,
+            details=errors,
+            trigger=trigger
+        )
                 
         return history
 

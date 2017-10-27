@@ -33,7 +33,7 @@ class CPFL_SyncServiceTestCase(TestCase):
         self.create_history_mock_patcher = patch('integrations.models.SyncHistory.objects.create')
 
         self.create_transaction_mock = self.create_transaction_mock_patcher.start()
-        self.create_history_mock_patcher = self.create_history_mock_patcher.start()
+        self.create_history_mock = self.create_history_mock_patcher.start()
 
     def tearDown(self):
         self.create_transaction_mock_patcher.stop()
@@ -52,8 +52,6 @@ class CPFL_SyncServiceTestCase(TestCase):
         self.assertEqual(created, 4)
         self.assertFalse(errors)
         self.assertFalse(result)
-        # create_transaction_mock.assert_called_with(a=recuperar_contas_mock.return_value[0]['a'])
-        # create_history_mock.assert_called_once_with(settings='settings', status=SyncHistory.SUCCESS, details="", result='6 created', trigger=SyncHistory.MANUAL)
 
     @patch.object(CPFL, 'recuperar_contas_abertas', side_effect=Exception('Something went wrong'))
     def test_asserts_inner_run_failed(self,recuperar_contas_mock):
@@ -81,3 +79,41 @@ class CPFL_SyncServiceTestCase(TestCase):
         self.assertEqual(failed, 1)
         self.assertIn(error_message, errors)
         self.assertIn(error_message, result)
+
+    @patch.object(CPFL_SyncService, '_inner_run', return_value=(1, 3, 0, "", ""))
+    def test_run_creates_successful_history(self, inner_run_mock):
+        self.cpfl_sync_service.run(SyncHistory.MANUAL)
+
+        self.create_history_mock.assert_called_once_with(
+            settings='settings',
+            status=SyncHistory.SUCCESS,
+            result="3 created",
+            details="",
+            trigger=SyncHistory.MANUAL,
+        )
+
+    @patch.object(CPFL_SyncService, '_inner_run', return_value=(0, 0, 2, 
+        "Long stack trace that explains that Something went wrong", "Something went wrong"))
+    def test_run_creates_failed_history(self, inner_run_mock):
+        self.cpfl_sync_service.run(SyncHistory.MANUAL)
+
+        self.create_history_mock.assert_called_once_with(
+            settings='settings',
+            status=SyncHistory.FAIL,
+            result="Something went wrong",
+            details="Long stack trace that explains that Something went wrong",
+            trigger=SyncHistory.MANUAL,
+        )
+
+    @patch.object(CPFL_SyncService, '_inner_run', return_value=(1, 3, 2, 
+        "Long stack trace that explains that Something went wrong", "Something went wrong"))
+    def test_run_creates_partial_succeed_history(self, inner_run_mock):
+        self.cpfl_sync_service.run(SyncHistory.AUTO)
+
+        self.create_history_mock.assert_called_once_with(
+            settings='settings',
+            status=SyncHistory.PARTIAL,
+            result="3 created 2 places failed",
+            details="Long stack trace that explains that Something went wrong",
+            trigger=SyncHistory.AUTO,
+        )
