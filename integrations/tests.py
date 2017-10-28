@@ -44,13 +44,14 @@ class CPFL_SyncServiceTestCase(TestCase):
     def test_invalid_trigger_throws_exceptions(self):
         self.assertRaises(AssertionError, self.cpfl_sync_service.run, 'Invalid')
     
+    @patch.object(CPFL_SyncService, '_save_transactions', return_value=True)
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
     @patch.object(CPFL, 'recuperar_contas_abertas', return_value=CONTAS_RECUPERADAS_MOCK)
-    def test_asserts_inner_run_succeed(self, recuperar_contas_mock, should_create_mock):
+    def test_asserts_inner_run_succeed(self, recuperar_contas_mock, should_create_mock, save_transactions_mock):
         succeed, created, failed, errors, result = self.cpfl_sync_service._inner_run()
 
         self.assertEqual(recuperar_contas_mock.call_count, 2)
-        self.assertEqual(self.create_transaction_mock.call_count, 4)
+        self.assertEqual(save_transactions_mock.call_count, 2)        
         self.assertEqual(succeed, 2)
         self.assertEqual(created, 4)
         self.assertFalse(errors)
@@ -69,15 +70,16 @@ class CPFL_SyncServiceTestCase(TestCase):
         self.assertIn(error_message, errors)
         self.assertIn(error_message, result)
 
+    @patch.object(CPFL_SyncService, '_save_transactions', return_value=True)
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
     @patch.object(CPFL, 'recuperar_contas_abertas', side_effect=[CONTAS_RECUPERADAS_MOCK, Exception('Something went wrong')])
-    def test_asserts_inner_run_partial(self, recuperar_contas_mock, should_create_mock):
+    def test_asserts_inner_run_partial(self, recuperar_contas_mock, should_create_mock, save_transactions_mock):
         error_message = 'Something went wrong'
 
         succeed, created, failed, errors, result = self.cpfl_sync_service._inner_run()
 
         self.assertEqual(recuperar_contas_mock.call_count, 2)
-        self.assertEqual(self.create_transaction_mock.call_count, 2)
+        self.assertTrue(save_transactions_mock.called)
         self.assertEqual(succeed, 1)
         self.assertEqual(created, 2)
         self.assertEqual(failed, 1)
@@ -136,20 +138,25 @@ class CPFL_SyncServiceTestCase(TestCase):
             self.assertTrue(self.cpfl_sync_service._should_create_transaction(CONTAS_RECUPERADAS_MOCK[1]))
             self.assertEqual(mock.call_count, 2)
             mock.assert_called_with(user=self.user_mock, generic_tag='2')
-
+    
+    @patch('transactions.models.Account.objects.filter')
+    @patch('transactions.models.Category.objects.filter')
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
-    def test_save_transactions(self, should_create_mock):
+    def test_save_transactions(self, should_create_mock, category_filter_mock, account_filter_mock):
         mock = self.create_transaction_mock
         conta = CONTAS_RECUPERADAS_MOCK[1]
 
         self.cpfl_sync_service._save_transactions([conta])
 
+        category_filter_mock.assert_called_once_with(user=self.user_mock)
+        account_filter_mock.assert_called_once_with(user=self.user_mock)
+
         mock.assert_called_once()
         mock.assert_called_with(
             description='Descricao',
             details='Mes Referencia:{} \nCod Barras:{}'.format(conta['MesReferencia'], conta['CodigoBarras']),
-            account=None,
-            category=None,
+            account=account_filter_mock().first(),
+            category=category_filter_mock().first(),
             due_date=datetime(2017, 10, 1, 0, 0).date(),
             value=1207.58,
             kind=Transaction.EXPENSE_KIND

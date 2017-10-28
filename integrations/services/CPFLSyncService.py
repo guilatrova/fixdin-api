@@ -131,8 +131,9 @@ class CPFL_SyncService(SyncService):
 
     def _save_transactions(self, contas):
         contas = [self._format_conta(x) for x in contas if self._should_create_transaction(x)]
-        account = None
-        category = None
+        #TODO: Change it to be configurable
+        account = Account.objects.filter(user=self.user).first()
+        category = Category.objects.filter(user=self.user).first()
 
         for conta in contas:
             description = conta['DescricaoFatura']
