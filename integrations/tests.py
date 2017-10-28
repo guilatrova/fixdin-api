@@ -4,6 +4,7 @@ from unittest import skip
 from django.test import TestCase
 from integrations.services.CPFLSyncService import CPFL_SyncService, CPFL
 from integrations.models import SyncHistory
+from transactions.models import Transaction
 
 CONTAS_RECUPERADAS_MOCK = [
     {
@@ -136,11 +137,21 @@ class CPFL_SyncServiceTestCase(TestCase):
             self.assertEqual(mock.call_count, 2)
             mock.assert_called_with(user=self.user_mock, generic_tag='2')
 
+    @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
+    def test_save_transactions(self, should_create_mock):
+        mock = self.create_transaction_mock
+        conta = CONTAS_RECUPERADAS_MOCK[1]
 
-    @skip('unfinished')
-    def test_save_transactions(self):
-        self.cpfl_sync_service._save_transactions(CONTAS_RECUPERADAS_MOCK)
+        self.cpfl_sync_service._save_transactions([conta])
 
-        # create_transaction_mock.assert_called_with(
-        #     description=
-        # )
+        mock.assert_called_once()
+        mock.assert_called_with(
+            description='Descricao',
+            details='Mes Referencia:{} \nCod Barras:{}'.format(conta['MesReferencia'], conta['CodigoBarras']),
+            account=None,
+            category=None,
+            due_date=datetime(2017, 10, 1, 0, 0).date(),
+            value=1207.58,
+            kind=Transaction.EXPENSE_KIND
+        )
+        

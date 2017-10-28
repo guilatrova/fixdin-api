@@ -116,7 +116,7 @@ class CPFL_SyncService(SyncService):
             "CodigoBarras": conta['CodigoBarras'],
             "DescricaoFatura": conta["DescricaoFatura"],
             "MesReferencia": conta["MesReferencia"],
-            "Vencimento": datetime.strptime(conta['Vencimento'], '%Y-%m-%dT%H:%M:%S'),
+            "Vencimento": datetime.strptime(conta['Vencimento'], '%Y-%m-%dT%H:%M:%S').date(),
             "Valor": float(conta["Valor"].replace(".", "").replace(",", ".")),
         }
 
@@ -131,7 +131,6 @@ class CPFL_SyncService(SyncService):
 
     def _save_transactions(self, contas):
         contas = [self._format_conta(x) for x in contas if self._should_create_transaction(x)]
-        #TO DO: Change automatic account
         account = None
         category = None
 
