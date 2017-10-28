@@ -120,8 +120,17 @@ class CPFL_SyncService(SyncService):
             "Valor": float(conta["Valor"].replace(".", "").replace(",", ".")),
         }
 
+    def _generate_ref_tag(self, conta):
+        return conta["NumeroContaEnergia"]
+
+    def _should_create_transaction(self, conta):
+        tag = self._generate_ref_tag(conta)
+        if Transaction.objects.filter(user=self.user, generic_tag=tag).exists():
+            return False
+        return True
+
     def _save_transactions(self, contas):
-        contas = [self._format_conta(x) for x in contas]
+        contas = [self._format_conta(x) for x in contas if self._should_create_transaction(x)]
         #TO DO: Change automatic account
         account = None
         category = None

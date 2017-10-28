@@ -50,3 +50,6 @@ class Transaction(models.Model, HasKind):
     priority = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
     deadline = models.PositiveIntegerField(default=0)
     payment_date = models.DateField(null=True, blank=True)
+
+    generic_tag = models.TextField(null=True, blank=True)
+    """Generic text field to be used for third party and other stuff"""

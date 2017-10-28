@@ -1,5 +1,6 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+from unittest import skip
 from django.test import TestCase
 from integrations.services.CPFLSyncService import CPFL_SyncService, CPFL
 from integrations.models import SyncHistory
@@ -42,8 +43,9 @@ class CPFL_SyncServiceTestCase(TestCase):
     def test_invalid_trigger_throws_exceptions(self):
         self.assertRaises(AssertionError, self.cpfl_sync_service.run, 'Invalid')
     
+    @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
     @patch.object(CPFL, 'recuperar_contas_abertas', return_value=CONTAS_RECUPERADAS_MOCK)
-    def test_asserts_inner_run_succeed(self, recuperar_contas_mock):
+    def test_asserts_inner_run_succeed(self, recuperar_contas_mock, should_create_mock):
         succeed, created, failed, errors, result = self.cpfl_sync_service._inner_run()
 
         self.assertEqual(recuperar_contas_mock.call_count, 2)
@@ -66,8 +68,9 @@ class CPFL_SyncServiceTestCase(TestCase):
         self.assertIn(error_message, errors)
         self.assertIn(error_message, result)
 
+    @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
     @patch.object(CPFL, 'recuperar_contas_abertas', side_effect=[CONTAS_RECUPERADAS_MOCK, Exception('Something went wrong')])
-    def test_asserts_inner_run_partial(self, recuperar_contas_mock):
+    def test_asserts_inner_run_partial(self, recuperar_contas_mock, should_create_mock):
         error_message = 'Something went wrong'
 
         succeed, created, failed, errors, result = self.cpfl_sync_service._inner_run()
@@ -117,3 +120,27 @@ class CPFL_SyncServiceTestCase(TestCase):
             details="Long stack trace that explains that Something went wrong",
             trigger=SyncHistory.AUTO,
         )
+
+    def test_should_create_transaction(self):
+        def filter_side_effect(**kwargs):
+            mock = MagicMock()            
+            mock.exists.return_value = (kwargs['generic_tag'] == '1')
+
+            return mock
+
+        with patch('transactions.models.Transaction.objects.filter', side_effect=filter_side_effect) as mock:
+            self.assertFalse(self.cpfl_sync_service._should_create_transaction(CONTAS_RECUPERADAS_MOCK[0]))
+            mock.assert_called_once_with(user=self.user_mock, generic_tag='1')
+
+            self.assertTrue(self.cpfl_sync_service._should_create_transaction(CONTAS_RECUPERADAS_MOCK[1]))
+            self.assertEqual(mock.call_count, 2)
+            mock.assert_called_with(user=self.user_mock, generic_tag='2')
+
+
+    @skip('unfinished')
+    def test_save_transactions(self):
+        self.cpfl_sync_service._save_transactions(CONTAS_RECUPERADAS_MOCK)
+
+        # create_transaction_mock.assert_called_with(
+        #     description=
+        # )
