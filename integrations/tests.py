@@ -272,9 +272,19 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
     def test_retrieves_service_history(self):
         SyncHistory.objects.create(settings=self.settings, status=SyncHistory.SUCCESS, result='good', details="", trigger=SyncHistory.MANUAL)
 
-        response = self.client.get(reverse('integrations-service-histories', kwargs={'name_id':'cpfl'}))
+        response = self.client.get(self.get_url('integrations-service-histories', name_id='cpfl'))
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(len(response.data), 1)
 
-    # def test_
+    def test_integration_service_retrieves_settings(self):
+        CPFL_Settings.objects.create(settings=self.settings, documento='11', imovel='12')
+        CPFL_Settings.objects.create(settings=self.settings, documento='11', imovel='13')
+
+        response = self.client.get(self.get_url('integrations-service', name_id='cpfl'))
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(len(response.data), 2)
+
+    def get_url(self, name, **kwargs):
+        return reverse(name, kwargs=kwargs)

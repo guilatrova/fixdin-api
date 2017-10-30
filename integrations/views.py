@@ -19,4 +19,5 @@ class ListIntegrationServiceHistoryAPIView(ListAPIView):
         )
 
 class IntegrationServiceAPIView(APIView):
-    pass
+    def get(self, request, name_id, format='json'):
+        return Response()
