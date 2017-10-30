@@ -21,12 +21,24 @@ class ListIntegrationServiceHistoryAPIView(ListAPIView):
 class IntegrationSettingsAPIView(APIView):    
 
     def get(self, request, name_id, format='json'):
-        factory = IntegrationSettingsViewFactory(name_id, request.user)
-        serializer = factory.get_serializer()
+        factory = IntegrationSettingsHandler(name_id, request.user)
+        serializer = factory.retrieve_data()
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
-class IntegrationSettingsViewFactory:
+    def put(self, request, name_id, format='json'):
+        factory = IntegrationSettingsHandler(name_id, request.user)
+        integration_instance, created = factory.get_or_create_base_settings()
+        serializer_cls = factory.get_serializer()
+
+        serializer = serializer_cls(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(integration_instance)
+        
+        return Response(serializer.data)
+
+
+class IntegrationSettingsHandler:
     def __init__(self, name_id, user):
         self.name_id = name_id
         self.user = user
@@ -34,20 +46,16 @@ class IntegrationSettingsViewFactory:
     def get_or_create_base_settings(self):
         return IntegrationSettings.objects.get_or_create(
             user=self.user,
-            integration__name_id="cpfl",
+            integration__name_id=self.name_id,
             defaults={
-                'integration': Integration.objects.get(name_id="cpfl")
+                'integration': Integration.objects.get(name_id=self.name_id)
             }
         )
 
-    def get_data(self):
-        base_setting, created = self.get_or_create_base_settings()
-        cpfl_settings = CPFL_Settings.objects.filter(settings=base_setting)
+    def retrieve_data(self):
+        raw_base, created = self.get_or_create_base_settings()
+        raw_cpfl = CPFL_Settings.objects.filter(settings=raw_base)
         
-        return base_setting, cpfl_settings
-
-    def get_serializer(self):
-        raw_base, raw_cpfl = self.get_data()
         cpfl = []
         for raw in raw_cpfl:
             cpfl.append({
@@ -56,10 +64,16 @@ class IntegrationSettingsViewFactory:
                 'documento': raw.documento,
                 'imovel': raw.imovel
             })
+
         data = {
             'last_sync': raw_base.last_sync,
             'status': raw_base.status,
             'enabled': raw_base.enabled,
             'cpfl_settings': cpfl
         }
+
         return ServiceSettingsSerializer(data=data)
+
+    def get_serializer(self):
+        return ServiceSettingsSerializer
+        

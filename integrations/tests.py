@@ -274,7 +274,7 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(len(response.data), 1)
 
-    def test_integration_service_retrieves_settings(self):
+    def test_get_integration_service_settings(self):
         CPFL_Settings.objects.create(settings=self.settings, name="local1", documento='11', imovel='12')
         CPFL_Settings.objects.create(settings=self.settings, name="local2", documento='11', imovel='13')
 
@@ -282,6 +282,23 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(len(response.data['cpfl_settings']), 2)
+
+    def test_put_integration_service_settings(self):
+        cpfl_setting = CPFL_Settings.objects.create(settings=self.settings, name="local1", documento='11', imovel='12')
+        payload = {
+            'enabled': True,
+            'cpfl_settings': [
+                { 'id': cpfl_setting.id, 'name': cpfl_setting.name, 'documento': cpfl_setting.documento, 'imovel': cpfl_setting.imovel },
+                { 'name': 'new', 'documento': '2', 'imovel': 'im-novo' }
+            ]
+        }
+
+        response = self.client.put(self.get_url('integrations-service', name_id='cpfl'), payload, format='json')
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(len(response.data['cpfl_settings']), 2)
+        self.assertEqual(CPFL_Settings.objects.count(), 2)
+        
 
     def get_url(self, name, **kwargs):
         return reverse(name, kwargs=kwargs)
