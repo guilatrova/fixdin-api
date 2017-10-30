@@ -9,5 +9,11 @@ class ListIntegrationsAPIView(ListAPIView):
     queryset = models.Integration.objects.all()
     serializer_class = IntegrationSerializer
 
+class ListIntegrationServiceHistoryAPIView(ListAPIView):
+    serializer_class = None
+
+    def get_queryset(self):
+        return None
+
 class IntegrationServiceAPIView(APIView):
     pass

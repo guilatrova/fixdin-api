@@ -211,10 +211,15 @@ class IntegrationsUrlsTestCase(TestCase):
 
         self.assertEqual(resolver.func.cls, views.ListIntegrationsAPIView)
 
-    def test_resolves_service_name(self):
+    def test_resolves_service_name_url(self):
         resolver = self.resolve_by_name('integrations-service', name_id="cpfl")
 
         self.assertEqual(resolver.func.cls, views.IntegrationServiceAPIView)
+
+    def test_resolves_history_service_url(self):
+        resolver = self.resolve_by_name('integrations-service-histories', name_id="cpfl")
+
+        self.assertEqual(resolver.func.cls, views.ListIntegrationServiceHistoryAPIView)
 
     def resolve_by_name(self, name, **kwargs): 
             url = reverse(name, kwargs=kwargs) 
