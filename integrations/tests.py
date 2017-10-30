@@ -3,10 +3,12 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from unittest import skip
 from django.test import TestCase
+from django.urls import reverse, resolve
 from integrations.services.CPFLSyncService import CPFL_SyncService, CPFL
 from integrations.models import SyncHistory, IntegrationSettings, Integration, CPFL_Settings
 from transactions.models import Transaction
 from transactions.tests.base_test import BaseTestHelper
+from integrations import views
 
 CONTAS_RECUPERADAS_MOCK = [
     {
@@ -201,3 +203,14 @@ class CPFL_SyncServiceIntegrationTestCase(TestCase, BaseTestHelper):
         self.assertEqual(SyncHistory.objects.all().count(), 1)
         self.assertEqual(Transaction.objects.all().count(), 2)
         self.assertEqual(history_result.status, SyncHistory.SUCCESS)
+
+class IntegrationsUrlsTestCase(TestCase):
+
+    def test_resolves_list_url(self):
+        resolver = self.resolve_by_name('integrations')
+
+        self.assertEqual(resolver.func.cls, views.ListIntegrations)
+
+    def resolve_by_name(self, name, **kwargs): 
+            url = reverse(name, kwargs=kwargs) 
+            return resolve(url)
