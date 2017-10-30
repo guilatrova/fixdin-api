@@ -1,7 +1,12 @@
 from rest_framework import serializers
-from integrations.models import Integration
+from integrations.models import Integration, SyncHistory
 
 class IntegrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Integration
-        fields = ('name_id', 'name')
+        fields = '__all__'
+
+class SyncHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SyncHistory
+        fields = '__all__'

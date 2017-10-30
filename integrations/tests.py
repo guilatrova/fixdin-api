@@ -1,13 +1,15 @@
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-from unittest import skip
-from django.test import TestCase
 from django.urls import reverse, resolve
-from integrations.services.CPFLSyncService import CPFL_SyncService, CPFL
-from integrations.models import SyncHistory, IntegrationSettings, Integration, CPFL_Settings
+from django.test import TestCase
+from rest_framework.test import APITestCase
+from rest_framework import status
+
 from transactions.models import Transaction
 from transactions.tests.base_test import BaseTestHelper
+from integrations.services.CPFLSyncService import CPFL_SyncService, CPFL
+from integrations.models import SyncHistory, IntegrationSettings, Integration, CPFL_Settings
 from integrations import views
 
 CONTAS_RECUPERADAS_MOCK = [
@@ -216,11 +218,63 @@ class IntegrationsUrlsTestCase(TestCase):
 
         self.assertEqual(resolver.func.cls, views.IntegrationServiceAPIView)
 
-    def test_resolves_history_service_url(self):
+    def test_resolves_list_history_service_url(self):
         resolver = self.resolve_by_name('integrations-service-histories', name_id="cpfl")
 
-        self.assertEqual(resolver.func.cls, views.ListIntegrationServiceHistoryAPIView)
+        self.assertEqual(resolver.func.cls, views.ListIntegrationServiceHistoryAPIView)    
 
     def resolve_by_name(self, name, **kwargs): 
-            url = reverse(name, kwargs=kwargs) 
-            return resolve(url)
+        url = reverse(name, kwargs=kwargs)
+        return resolve(url)
+
+class IntegrationsViewsTestCase(TestCase):
+
+    def test_list_integrations_allows_only_get(self):
+        view = views.ListIntegrationsAPIView()
+
+        self.assertEqual(['GET', 'OPTIONS'], view.allowed_methods)
+
+    def test_list_integration_history_filters_by_user_and_service(self):
+        request_mock = MagicMock()        
+        view = views.ListIntegrationServiceHistoryAPIView(request=request_mock, kwargs={'name_id':"cpfl"})
+
+        with patch('integrations.models.SyncHistory.objects.filter') as mock:
+            view.get_queryset()
+
+            mock.assert_called_once_with(
+                settings__user=request_mock.user,
+                settings__integration__name_id='cpfl'
+            )
+
+    def test_list_integrations_history_allows_only_get(self):
+        view = views.ListIntegrationServiceHistoryAPIView()
+
+        self.assertEqual(['GET', 'OPTIONS'], view.allowed_methods)
+
+    # def test_integrations_
+
+class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
+    def setUp(self):
+        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
+        self.client = self.create_authenticated_client(token)
+        self.settings = IntegrationSettings.objects.create(integration=Integration.objects.get(name_id='cpfl'), user=self.user)
+        # self.account = self.create_account(self.user)
+
+        # self.income_category = self.create_category('salary', kind=Category.INCOME_KIND)
+        # self.expense_category = self.create_category('dinner', kind=Category.EXPENSE_KIND)
+
+    def test_retrieves_services_list(self):
+        response = self.client.get(reverse('integrations'))
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual('CPFL', response.data[0]['name'])
+
+    def test_retrieves_service_history(self):
+        SyncHistory.objects.create(settings=self.settings, status=SyncHistory.SUCCESS, result='good', details="", trigger=SyncHistory.MANUAL)
+
+        response = self.client.get(reverse('integrations-service-histories', kwargs={'name_id':'cpfl'}))
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(len(response.data), 1)
+
+    # def test_
