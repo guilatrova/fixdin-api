@@ -23,7 +23,7 @@ class IntegrationSettingsAPIView(APIView):
     def get(self, request, name_id, format='json'):
         factory = IntegrationSettingsViewFactory(name_id, request.user)
         serializer = factory.get_serializer()
-        serializer.is_valid(raises_exception=True)
+        serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
 class IntegrationSettingsViewFactory:
@@ -48,9 +48,17 @@ class IntegrationSettingsViewFactory:
 
     def get_serializer(self):
         raw_base, raw_cpfl = self.get_data()
+        cpfl = []
+        for raw in raw_cpfl:
+            cpfl.append({
+                'id': raw.id,
+                'name': raw.name,
+                'documento': raw.documento,
+                'imovel': raw.imovel
+            })
         data = {
-            '',
-            'cpfl_settings'
+            'last_sync': raw_base.last_sync,
+            'status': raw_base.status,
+            'cpfl_settings': cpfl
         }
-        data['cpfl_settings'] = raw_cpfl
-        ServiceSettingsSerializer(data)
+        return ServiceSettingsSerializer(data=data)

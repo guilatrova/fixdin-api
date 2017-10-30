@@ -274,14 +274,14 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(len(response.data), 1)
 
-    # def test_integration_service_retrieves_settings(self):
-    #     CPFL_Settings.objects.create(settings=self.settings, documento='11', imovel='12')
-    #     CPFL_Settings.objects.create(settings=self.settings, documento='11', imovel='13')
+    def test_integration_service_retrieves_settings(self):
+        CPFL_Settings.objects.create(settings=self.settings, name="local1", documento='11', imovel='12')
+        CPFL_Settings.objects.create(settings=self.settings, name="local2", documento='11', imovel='13')
 
-    #     response = self.client.get(self.get_url('integrations-service', name_id='cpfl'))
+        response = self.client.get(self.get_url('integrations-service', name_id='cpfl'))
 
-    #     self.assertEqual(status.HTTP_200_OK, response.status_code)
-    #     self.assertEqual(len(response.data), 2)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(len(response.data['cpfl_settings']), 2)
 
     def get_url(self, name, **kwargs):
         return reverse(name, kwargs=kwargs)
@@ -289,6 +289,8 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
 class IntegrationsSerializersTestCase(TestCase):
     def test_valid_cpfl_serializer_without_base_settings(self):
         data = {
+            'last_sync': None,
+            'status': None,
             'cpfl_settings': [
                 { 'name': 'place1', 'documento': '1', 'imovel': 'im1' },
                 { 'name': 'place2', 'documento': '2', 'imovel': 'im2' },
