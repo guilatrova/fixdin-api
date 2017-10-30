@@ -30,7 +30,7 @@ CONTAS_RECUPERADAS_MOCK = [
 class CPFL_SyncServiceTestCase(TestCase):
     def setUp(self):
         self.user_mock = MagicMock()
-        self.mocked_settings = [MagicMock(documento=x, imovel='imovel', settings='settings') for x in range(1, 3)]
+        self.mocked_settings = [MagicMock(documento=x, imovel='imovel' + str(x), settings='settings') for x in range(1, 3)]
         self.cpfl_sync_service = CPFL_SyncService(self.user_mock, self.mocked_settings)
 
         self.create_transaction_mock_patcher = patch('transactions.models.Transaction.objects.create')
@@ -45,6 +45,21 @@ class CPFL_SyncServiceTestCase(TestCase):
 
     def test_invalid_trigger_throws_exceptions(self):
         self.assertRaises(AssertionError, self.cpfl_sync_service.run, 'Invalid')
+
+    @patch.object(CPFL, '_gerar_token', return_value=('token', { 'info': 'info' }))
+    def test_validate_settings_successful(self, gerar_token_mock):
+        result, message = self.cpfl_sync_service.validate_settings()
+
+        self.assertTrue(result)
+        self.assertFalse(message)
+
+    @patch.object(CPFL, '_gerar_token', side_effect=Exception("error"))
+    def test_validate_settings_failed(self, gerar_token_mock):
+        result, message = self.cpfl_sync_service.validate_settings()
+
+        self.assertFalse(result)
+        self.assertIn('imovel1', message)
+        self.assertIn('imovel2', message)
     
     @patch.object(CPFL_SyncService, '_save_transactions', return_value=True)
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)

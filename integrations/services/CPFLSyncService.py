@@ -56,7 +56,7 @@ class CPFL:
         raise Exception(resp.json().get('error'))
 
     def recuperar_contas_abertas(self, documento, instalacao):
-        """Autentica e recupera todas as contas em aberta do documento e instalacao"""
+        """Autentica e recupera todas as contas em aberto do documento e instalacao"""
         token, info = self._gerar_token(documento, instalacao)
         contas = self._obter_contas_aberto(token, instalacao, **info)
         return contas
@@ -66,6 +66,18 @@ class CPFL_SyncService(SyncService):
         super().__init__(user, settings)
         self.cpfl_service = CPFL()
 
+    def validate_settings(self):
+        result = True
+        errors = {}
+        for setting in self.settings:
+            try:
+                self.cpfl_service._gerar_token(setting.documento, setting.imovel)                
+            except Exception as exc:
+                result = False
+                errors[setting.imovel] = str(exc)
+
+        return result, errors
+    
     def run(self, trigger):
         super().run(trigger)
 
