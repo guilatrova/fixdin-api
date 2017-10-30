@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from django.urls import reverse, resolve
 from django.test import TestCase
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIRequestFactory, force_authenticate
 from rest_framework import status
 
 from transactions.models import Transaction
@@ -298,8 +298,17 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(len(response.data['cpfl_settings']), 2)
         self.assertEqual(CPFL_Settings.objects.count(), 2)
-        
 
+    def test_post_integration_settings_runs_it(self):
+        history = SyncHistory.objects.create(settings=self.settings, status=SyncHistory.SUCCESS, result='good', details="", trigger=SyncHistory.MANUAL)
+
+        with patch('integrations.services.CPFLSyncService.CPFL_SyncService.run', return_value=history) as mock:
+            response = self.client.post(self.get_url('integrations-service', name_id='cpfl'), format='json')
+
+            self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+            self.assertEqual(history.id, response.data['id'])
+            mock.assert_called_once_with(SyncHistory.MANUAL)
+        
     def get_url(self, name, **kwargs):
         return reverse(name, kwargs=kwargs)
 

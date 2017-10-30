@@ -1,9 +1,11 @@
 from django.shortcuts import render
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from integrations.models import Integration, IntegrationSettings, SyncHistory, CPFL_Settings
 from integrations.serializers import IntegrationSerializer, SyncHistorySerializer, ServiceSettingsSerializer
+from integrations.services.CPFLSyncService import CPFL_SyncService
 
 class ListIntegrationsAPIView(ListAPIView):
     queryset = Integration.objects.all()
@@ -37,6 +39,14 @@ class IntegrationSettingsAPIView(APIView):
         
         return Response(serializer.data)
 
+    def post(self, request, name_id, format='json'):
+        factory = IntegrationSettingsHandler(name_id, request.user)
+        service = factory.get_service()
+
+        history = service.run(SyncHistory.MANUAL)
+        serializer = SyncHistorySerializer(history)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class IntegrationSettingsHandler:
     def __init__(self, name_id, user):
@@ -52,9 +62,14 @@ class IntegrationSettingsHandler:
             }
         )
 
+    def _get_data(self):
+        base, created = self.get_or_create_base_settings()
+        cpfl = CPFL_Settings.objects.filter(settings=base)
+
+        return base, cpfl 
+
     def retrieve_data(self):
-        raw_base, created = self.get_or_create_base_settings()
-        raw_cpfl = CPFL_Settings.objects.filter(settings=raw_base)
+        raw_base, raw_cpfl = self._get_data()
         
         cpfl = []
         for raw in raw_cpfl:
@@ -76,4 +91,8 @@ class IntegrationSettingsHandler:
 
     def get_serializer(self):
         return ServiceSettingsSerializer
+
+    def get_service(self):
+        base, cpfl = self._get_data()
+        return CPFL_SyncService(self.user, cpfl)
         

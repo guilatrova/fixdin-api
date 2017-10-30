@@ -32,13 +32,10 @@ class ServiceSettingsSerializer(serializers.Serializer):
         return serializers
 
     def save(self, integration):
-        integration.enabled = self.validated_data['enabled']
+        integration.enabled = self.validated_data['enabled']                
         cpfl_serializers = self.serialize_cpfl_settings()
+        CPFL_Settings.objects.filter(settings=integration).delete()
         for serializer in cpfl_serializers:
-            # try:
-                # instance = CPFL_Settings.objects.get(pk=serializer['id'])
-                # CPFLSettingsSerializer()
-            # except CPFL_Settings.DoesNotExist:
             serializer.save(settings=integration)
 
 
