@@ -1,10 +1,12 @@
 from datetime import datetime
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from unittest import skip
 from django.test import TestCase
 from integrations.services.CPFLSyncService import CPFL_SyncService, CPFL
-from integrations.models import SyncHistory
+from integrations.models import SyncHistory, IntegrationSettings, Integration, CPFL_Settings
 from transactions.models import Transaction
+from transactions.tests.base_test import BaseTestHelper
 
 CONTAS_RECUPERADAS_MOCK = [
     {
@@ -133,11 +135,11 @@ class CPFL_SyncServiceTestCase(TestCase):
 
         with patch('transactions.models.Transaction.objects.filter', side_effect=filter_side_effect) as mock:
             self.assertFalse(self.cpfl_sync_service._should_create_transaction(CONTAS_RECUPERADAS_MOCK[0]))
-            mock.assert_called_once_with(user=self.user_mock, generic_tag='1')
+            mock.assert_called_once_with(account__user=self.user_mock, generic_tag='1')
 
             self.assertTrue(self.cpfl_sync_service._should_create_transaction(CONTAS_RECUPERADAS_MOCK[1]))
             self.assertEqual(mock.call_count, 2)
-            mock.assert_called_with(user=self.user_mock, generic_tag='2')
+            mock.assert_called_with(account__user=self.user_mock, generic_tag='2')
     
     @patch('transactions.models.Account.objects.filter')
     @patch('transactions.models.Category.objects.filter')
@@ -148,7 +150,7 @@ class CPFL_SyncServiceTestCase(TestCase):
 
         self.cpfl_sync_service._save_transactions([conta])
 
-        category_filter_mock.assert_called_once_with(user=self.user_mock)
+        category_filter_mock.assert_called_once_with(user=self.user_mock, kind=Transaction.EXPENSE_KIND)
         account_filter_mock.assert_called_once_with(user=self.user_mock)
 
         mock.assert_called_once()
@@ -158,7 +160,29 @@ class CPFL_SyncServiceTestCase(TestCase):
             account=account_filter_mock().first(),
             category=category_filter_mock().first(),
             due_date=datetime(2017, 10, 1, 0, 0).date(),
-            value=1207.58,
+            value=Decimal('1207.58'),
             kind=Transaction.EXPENSE_KIND
         )
         
+class CPFL_SyncServiceIntegrationTestCase(TestCase, BaseTestHelper):
+    def setUp(self):
+        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
+        self.create_category(name="luz", kind=Transaction.EXPENSE_KIND)
+        self.settings = [self.create_integration()]
+
+    def create_integration(self):
+        integration = Integration.objects.get(name_id="cpfl") #Already created in migrations
+        base_settings = IntegrationSettings.objects.create(integration=integration, user=self.user)
+        cpfl_settings = CPFL_Settings.objects.create(settings=base_settings, name="Home", documento="05717538847", imovel="4001647780")
+
+        return cpfl_settings
+
+    @patch.object(CPFL, 'recuperar_contas_abertas', return_value=CONTAS_RECUPERADAS_MOCK)
+    def test_create_transactions_from_cpfl(self, recuperar_contas_mock):
+        service = CPFL_SyncService(self.user, self.settings)
+        
+        history_result = service.run(SyncHistory.AUTO)        
+
+        self.assertEqual(SyncHistory.objects.all().count(), 1)
+        self.assertEqual(Transaction.objects.all().count(), 2)
+        self.assertEqual(history_result.status, SyncHistory.SUCCESS)

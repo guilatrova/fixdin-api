@@ -2,6 +2,7 @@ import json
 import requests
 import traceback
 from datetime import datetime
+from decimal import Decimal
 
 from integrations.models import SyncHistory
 from integrations.services.SyncService import SyncService
@@ -117,7 +118,7 @@ class CPFL_SyncService(SyncService):
             "DescricaoFatura": conta["DescricaoFatura"],
             "MesReferencia": conta["MesReferencia"],
             "Vencimento": datetime.strptime(conta['Vencimento'], '%Y-%m-%dT%H:%M:%S').date(),
-            "Valor": float(conta["Valor"].replace(".", "").replace(",", ".")),
+            "Valor": Decimal(conta["Valor"].replace(".", "").replace(",", ".")),
         }
 
     def _generate_ref_tag(self, conta):
@@ -125,7 +126,7 @@ class CPFL_SyncService(SyncService):
 
     def _should_create_transaction(self, conta):
         tag = self._generate_ref_tag(conta)
-        if Transaction.objects.filter(user=self.user, generic_tag=tag).exists():
+        if Transaction.objects.filter(account__user=self.user, generic_tag=tag).exists():
             return False
         return True
 
@@ -133,7 +134,7 @@ class CPFL_SyncService(SyncService):
         contas = [self._format_conta(x) for x in contas if self._should_create_transaction(x)]
         #TODO: Change it to be configurable
         account = Account.objects.filter(user=self.user).first()
-        category = Category.objects.filter(user=self.user).first()
+        category = Category.objects.filter(user=self.user, kind=Transaction.EXPENSE_KIND).first()
 
         for conta in contas:
             description = conta['DescricaoFatura']

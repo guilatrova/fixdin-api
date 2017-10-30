@@ -22,8 +22,8 @@ class IntegrationSettings(models.Model, HasStatus):
 
     integration = models.ForeignKey(Integration)
     user = models.ForeignKey(User)
-    last_sync = models.DateTimeField()
-    status = models.PositiveIntegerField(choices=HasStatus.STATUS)
+    last_sync = models.DateTimeField(null=True)
+    status = models.PositiveIntegerField(choices=HasStatus.STATUS, null=True)
 
 class SyncHistory(models.Model, HasStatus):
     AUTO = 0
