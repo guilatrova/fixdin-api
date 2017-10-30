@@ -18,11 +18,6 @@ class CPFLSettingsSerializer(serializers.ModelSerializer):
 
 class ServiceSettingsSerializer(serializers.Serializer):
     cpfl_settings = CPFLSettingsSerializer(many=True)
+    enabled = serializers.BooleanField()
     last_sync = serializers.DateField(required=False, allow_null=True)
     status = serializers.ChoiceField(choices=IntegrationSettings.STATUS, required=False, allow_null=True)
-
-    def get_last_sync(self, obj):
-        return obj.settings.last_sync
-
-    def get_status(self):
-        return obj.settings.status

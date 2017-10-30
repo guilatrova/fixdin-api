@@ -291,6 +291,7 @@ class IntegrationsSerializersTestCase(TestCase):
         data = {
             'last_sync': None,
             'status': None,
+            'enabled': False,
             'cpfl_settings': [
                 { 'name': 'place1', 'documento': '1', 'imovel': 'im1' },
                 { 'name': 'place2', 'documento': '2', 'imovel': 'im2' },
@@ -304,6 +305,7 @@ class IntegrationsSerializersTestCase(TestCase):
         data = {
             'last_sync': date(2017, 10, 1),
             'status': IntegrationSettings.SUCCESS,
+            'enabled': True,
             'cpfl_settings': [
                 { 'name': 'place1', 'documento': '1', 'imovel': 'im1' },
                 { 'name': 'place2', 'documento': '2', 'imovel': 'im2' },

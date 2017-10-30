@@ -59,6 +59,7 @@ class IntegrationSettingsViewFactory:
         data = {
             'last_sync': raw_base.last_sync,
             'status': raw_base.status,
+            'enabled': raw_base.enabled,
             'cpfl_settings': cpfl
         }
         return ServiceSettingsSerializer(data=data)
