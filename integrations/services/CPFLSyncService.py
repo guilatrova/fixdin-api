@@ -101,7 +101,7 @@ class CPFL_SyncService(SyncService):
             trigger=trigger
         )
                 
-        return history
+        return history, created
 
     def _inner_run(self):
         succeed_count = 0
@@ -113,8 +113,8 @@ class CPFL_SyncService(SyncService):
         for setting in self.settings:
             try:
                 contas = self.cpfl_service.recuperar_contas_abertas(setting.documento, setting.imovel)
-                self._save_transactions(contas)
-                created += len(contas)
+                just_created = self._save_transactions(contas)
+                created += just_created
                 succeed_count += 1
             except Exception as exc:
                 failed_count += 1
@@ -147,10 +147,12 @@ class CPFL_SyncService(SyncService):
         #TODO: Change it to be configurable
         account = Account.objects.filter(user=self.user).first()
         category = Category.objects.filter(user=self.user, kind=Transaction.EXPENSE_KIND).first()
+        created = 0
 
         for conta in contas:
             description = conta['DescricaoFatura']
             details = 'Mes Referencia:{} \nCod Barras:{}'.format(conta['MesReferencia'], conta['CodigoBarras'])
+            tag = self._generate_ref_tag(conta)
 
             Transaction.objects.create(
                 description=description,
@@ -159,5 +161,10 @@ class CPFL_SyncService(SyncService):
                 category=category,
                 due_date=conta['Vencimento'],
                 value=conta['Valor'],
-                kind=Transaction.EXPENSE_KIND
+                kind=Transaction.EXPENSE_KIND,
+                generic_tag=tag
             )
+
+            created += 1
+
+        return created

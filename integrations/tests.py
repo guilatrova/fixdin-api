@@ -66,7 +66,7 @@ class CPFL_SyncServiceTestCase(TestCase):
         self.assertIn('imovel1', message)
         self.assertIn('imovel2', message)
     
-    @patch.object(CPFL_SyncService, '_save_transactions', return_value=True)
+    @patch.object(CPFL_SyncService, '_save_transactions', return_value=2)
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
     @patch.object(CPFL, 'recuperar_contas_abertas', return_value=CONTAS_RECUPERADAS_MOCK)
     def test_asserts_inner_run_succeed(self, recuperar_contas_mock, should_create_mock, save_transactions_mock):
@@ -92,7 +92,7 @@ class CPFL_SyncServiceTestCase(TestCase):
         self.assertIn(error_message, errors)
         self.assertIn(error_message, result)
 
-    @patch.object(CPFL_SyncService, '_save_transactions', return_value=True)
+    @patch.object(CPFL_SyncService, '_save_transactions', return_value=2)
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
     @patch.object(CPFL, 'recuperar_contas_abertas', side_effect=[CONTAS_RECUPERADAS_MOCK, Exception('Something went wrong')])
     def test_asserts_inner_run_partial(self, recuperar_contas_mock, should_create_mock, save_transactions_mock):
@@ -164,7 +164,8 @@ class CPFL_SyncServiceTestCase(TestCase):
     @patch('transactions.models.Account.objects.filter')
     @patch('transactions.models.Category.objects.filter')
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
-    def test_save_transactions(self, should_create_mock, category_filter_mock, account_filter_mock):
+    @patch.object(CPFL_SyncService, '_generate_ref_tag', return_value='TAG')
+    def test_save_transactions(self, tag_mock, should_create_mock, category_filter_mock, account_filter_mock):
         mock = self.create_transaction_mock
         conta = CONTAS_RECUPERADAS_MOCK[1]
 
@@ -181,7 +182,8 @@ class CPFL_SyncServiceTestCase(TestCase):
             category=category_filter_mock().first(),
             due_date=datetime(2017, 10, 1, 0, 0).date(),
             value=Decimal('1207.58'),
-            kind=Transaction.EXPENSE_KIND
+            kind=Transaction.EXPENSE_KIND,
+            generic_tag="TAG"
         )
         
 class CPFL_SyncServiceIntegrationTestCase(TestCase, BaseTestHelper):
@@ -201,11 +203,12 @@ class CPFL_SyncServiceIntegrationTestCase(TestCase, BaseTestHelper):
     def test_create_transactions_from_cpfl(self, recuperar_contas_mock):
         service = CPFL_SyncService(self.user, self.settings)
         
-        history_result = service.run(SyncHistory.AUTO)        
+        history_result, created = service.run(SyncHistory.AUTO)        
 
         self.assertEqual(SyncHistory.objects.all().count(), 1)
         self.assertEqual(Transaction.objects.all().count(), 2)
         self.assertEqual(history_result.status, SyncHistory.SUCCESS)
+        self.assertEqual(created, 2)
 
 class IntegrationsUrlsTestCase(TestCase):
 
@@ -302,10 +305,30 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
     def test_post_integration_settings_runs_it(self):
         history = SyncHistory.objects.create(settings=self.settings, status=SyncHistory.SUCCESS, result='good', details="", trigger=SyncHistory.MANUAL)
 
-        with patch('integrations.services.CPFLSyncService.CPFL_SyncService.run', return_value=history) as mock:
+        with patch('integrations.services.CPFLSyncService.CPFL_SyncService.run', return_value=(history, 2)) as mock:
             response = self.client.post(self.get_url('integrations-service', name_id='cpfl'), format='json')
 
             self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+            self.assertEqual(history.id, response.data['id'])
+            mock.assert_called_once_with(SyncHistory.MANUAL)
+
+    def test_post_integration_settings_failed(self):
+        history = SyncHistory.objects.create(settings=self.settings, status=SyncHistory.FAIL, result='bad', details="", trigger=SyncHistory.MANUAL)
+
+        with patch('integrations.services.CPFLSyncService.CPFL_SyncService.run', return_value=(history, 2)) as mock:
+            response = self.client.post(self.get_url('integrations-service', name_id='cpfl'), format='json')
+
+            self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+            self.assertEqual(history.id, response.data['id'])
+            mock.assert_called_once_with(SyncHistory.MANUAL)
+
+    def test_post_integration_settings_no_creations(self):
+        history = SyncHistory.objects.create(settings=self.settings, status=SyncHistory.SUCCESS, result='good', details="", trigger=SyncHistory.MANUAL)
+
+        with patch('integrations.services.CPFLSyncService.CPFL_SyncService.run', return_value=(history, 0)) as mock:
+            response = self.client.post(self.get_url('integrations-service', name_id='cpfl'), format='json')
+
+            self.assertEqual(status.HTTP_200_OK, response.status_code)
             self.assertEqual(history.id, response.data['id'])
             mock.assert_called_once_with(SyncHistory.MANUAL)
         

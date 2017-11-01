@@ -43,10 +43,17 @@ class IntegrationSettingsAPIView(APIView):
         factory = IntegrationSettingsHandler(name_id, request.user)
         service = factory.get_service()
 
-        history = service.run(SyncHistory.MANUAL)
+        history, created = service.run(SyncHistory.MANUAL)
         serializer = SyncHistorySerializer(history)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if history.status == SyncHistory.FAIL:
+            status_response = status.HTTP_400_BAD_REQUEST
+        elif created > 0:
+            status_response = status.HTTP_201_CREATED
+        else:
+            status_response = status.HTTP_200_OK
+            
+        return Response(serializer.data, status=status_response)
 
 class IntegrationSettingsHandler:
     def __init__(self, name_id, user):
