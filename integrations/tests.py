@@ -255,8 +255,6 @@ class IntegrationsViewsTestCase(TestCase):
 
         self.assertEqual(['GET', 'OPTIONS'], view.allowed_methods)
 
-    # def test_integrations_
-
 class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
