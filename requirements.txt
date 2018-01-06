@@ -1,14 +1,16 @@
-django
-djangorestframework
-markdown #Markdown support for the browsable API.
-djangorestframework-expiring-authtoken
-
-#For CPFL Integration
-requests
-
-#For production
-gunicorn
-dj-database-url
-psycopg2
-django-cors-headers
-python-dateutil
+certifi==2017.7.27.1
+chardet==3.0.4
+dj-database-url==0.4.2
+Django==1.11.4
+django-cors-headers==2.1.0
+djangorestframework==3.6.3
+djangorestframework-expiring-authtoken==0.1.4
+gunicorn==19.7.1
+idna==2.6
+Markdown==2.6.9
+psycopg2==2.7.3
+python-dateutil==2.6.1
+pytz==2017.2
+requests==2.18.4
+six==1.10.0
+urllib3==1.22
