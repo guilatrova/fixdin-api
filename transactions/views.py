@@ -6,7 +6,23 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from transactions.models import Category, Transaction, Account
 from transactions.filters import TransactionFilter
-from transactions.serializers import CategorySerializer, TransactionSerializer
+from transactions.serializers import CategorySerializer, TransactionSerializer, AccountSerializer
+
+class AccountViewSet(viewsets.ModelViewSet):
+    serializer_class = AccountSerializer
+
+    def get_queryset(self):
+        return Account.objects.filter(user_id=self.request.user.id)
+
+    def get_serializer_context(self):
+        return {
+            "user_id": self.request.user.id,
+            "request_method": self.request.method
+        }
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user, current_balance=0)
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer

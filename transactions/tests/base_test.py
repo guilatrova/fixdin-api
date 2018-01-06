@@ -3,7 +3,7 @@ import datetime
 from unittest import skip
 from django.test import TestCase
 from django.contrib.auth.models import User
-from django.urls import reverse
+from django.urls import reverse, resolve
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -41,11 +41,11 @@ class BaseTestHelper:
 
         return transaction
 
-    def create_account(self, user=None):
+    def create_account(self, user=None, name='default'):
         if user is None:
             user = self.user
 
-        return Account.objects.create(name='default', user=user, current_balance=0)
+        return Account.objects.create(name=name, user=user, current_balance=0)
 
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(kwargs)
@@ -64,3 +64,13 @@ class BaseTestHelper:
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
         return client
+
+    def resolve_by_name(self, name, **kwargs):
+        url = reverse(name, kwargs=kwargs)
+        return resolve(url)
+
+    def assert_has_actions(self, allowed, actions):
+        self.assertEqual(len(allowed), len(actions))
+
+        for allows in allowed:
+            self.assertIn(allows, actions)

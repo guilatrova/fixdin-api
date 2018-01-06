@@ -6,6 +6,11 @@ class HasKind:
     EXPENSE_KIND = 0
     INCOME_KIND = 1
 
+class Account(models.Model):
+    user = models.ForeignKey(User)
+    name = models.CharField(max_length=30)
+    current_balance = models.DecimalField(max_digits=19, decimal_places=2)
+
 class Category(models.Model, HasKind):
     class Meta:
         unique_together = ('user', 'name', 'kind')    
@@ -18,11 +23,6 @@ class Category(models.Model, HasKind):
     name = models.CharField(max_length=70)
     user = models.ForeignKey(User)
     kind = models.PositiveIntegerField(choices=CATEGORY_KINDS)
-
-class Account(models.Model):
-    user = models.ForeignKey(User)
-    name = models.CharField(max_length=30)
-    current_balance = models.DecimalField(max_digits=19, decimal_places=2)
 
 class Transaction(models.Model, HasKind):
 

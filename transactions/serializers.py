@@ -1,11 +1,22 @@
 from rest_framework import serializers
-from transactions.models import Category, Transaction
+from transactions.models import Category, Transaction, Account
 from transactions.factories import create_periodic_transactions
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
 class HasKindContextSerializer():
     def get_kind(self, obj):
         return self.context['kind']
+
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ('name',)
+
+    def validate_name(self, value):
+        if Account.objects.filter(name__iexact=value, user_id=self.context['user_id']).exists():
+            raise serializers.ValidationError('Account with that name already exists')
+
+        return value
 
 class CategorySerializer(serializers.ModelSerializer, HasKindContextSerializer):
     class Meta:
