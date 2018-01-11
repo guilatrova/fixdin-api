@@ -10,7 +10,8 @@ class HasKindContextSerializer():
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ('name',)
+        fields = ('id', 'name', 'current_balance')
+        read_only_fields = ('id', 'current_balance', )
 
     def validate_name(self, value):
         if Account.objects.filter(name__iexact=value, user_id=self.context['user_id']).exists():
