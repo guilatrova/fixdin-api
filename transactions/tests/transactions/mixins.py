@@ -89,7 +89,6 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
-    @skip('Account is setted automatically, later we will disable this and turn on the test')
     def test_user_x_cant_create_transaction_on_user_self_account(self):
         '''
         User can't create a transaction using the credentials from another user.
