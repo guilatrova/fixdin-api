@@ -142,8 +142,7 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
             return super(TransactionViewSet, self).perform_destroy(instance)
 
     def perform_create(self, serializer):
-        account = Account.objects.filter(user_id=self.request.user.id).first()
-        serializer.save(kind=self.kwargs['kind'],account=account)
+        serializer.save(kind=self.kwargs['kind'])
 
 class GenericTransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet, TransactionFilter):
     '''
