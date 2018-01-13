@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 
+class BoundReasons:
+    PERIODIC_TRANSACTION = "PERIODIC",
+    TRANSFER_BETWEEN_ACCOUNTS = "ACCOUNT_TRANSFER"
+
 class HasKind:
     EXPENSE_KIND = 0
     INCOME_KIND = 1
@@ -31,6 +35,11 @@ class Transaction(models.Model, HasKind):
         (HasKind.INCOME_KIND, 'Income')
     )
 
+    BOUND_REASON_CHOICES = (
+        (BoundReasons.PERIODIC_TRANSACTION, "Periodic transaction"),
+        (BoundReasons.TRANSFER_BETWEEN_ACCOUNTS, "Transfer between accounts")
+    )
+
     def __init__(self, *args, **kwargs):
         '''
         Init method used to identify which value (R$) is loaded from database, 
@@ -46,10 +55,11 @@ class Transaction(models.Model, HasKind):
     value = models.DecimalField(max_digits=19, decimal_places=2)
     kind = models.PositiveIntegerField(choices=TRANSACTION_KINDS)
     details = models.CharField(max_length=500, blank=True)   
-    periodic_transaction = models.ForeignKey("Transaction", null=True, on_delete=models.DO_NOTHING)
     priority = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
     deadline = models.PositiveIntegerField(default=0)
     payment_date = models.DateField(null=True, blank=True)
+    bound_transaction = models.ForeignKey("Transaction", null=True, on_delete=models.DO_NOTHING)
+    bound_reason = models.CharField(max_length=20, choices=BOUND_REASON_CHOICES, blank=True)
 
     generic_tag = models.TextField(null=True, blank=True)
     """Generic text field to be used for third party and other stuff"""
