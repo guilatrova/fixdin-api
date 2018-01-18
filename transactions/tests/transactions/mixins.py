@@ -631,3 +631,4 @@ class TransactionPeriodicTestMixin:
             transaction = response.data[i]
             self.assertEqual(transaction['due_date'], expected_dates[i])
             self.assertEqual(transaction['bound_transaction'], response.data[0]['id'])
+            self.assertEqual(transaction['bound_reason'], BoundReasons.PERIODIC_TRANSACTION)

@@ -1,10 +1,11 @@
 from datetime import date
 from calendar import monthrange
 from dateutil.relativedelta import relativedelta
-from transactions.models import Transaction
+from transactions.models import Transaction, BoundReasons
 
 def create_periodic_transactions(**kwargs):
     periodic = kwargs.pop('periodic')
+    kwargs['bound_reason'] = BoundReasons.PERIODIC_TRANSACTION
     transactions_list = []
 
     increment_args = get_increment_args(periodic, periodic['interval'])
