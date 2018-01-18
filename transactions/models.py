@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 class BoundReasons:
-    PERIODIC_TRANSACTION = "PERIODIC",
+    PERIODIC_TRANSACTION = "PERIODIC"
     TRANSFER_BETWEEN_ACCOUNTS = "ACCOUNT_TRANSFER"
 
 class HasKind:
