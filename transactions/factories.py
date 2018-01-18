@@ -21,11 +21,11 @@ def create_periodic_transactions(**kwargs):
     
     #Periodics should point to parent or itself
     parent = Transaction.objects.create(due_date=current_due_date, **kwargs)
-    parent.periodic_transaction_id = parent.id
+    parent.bound_transaction_id = parent.id
     parent.save()
     if 'payment_date' in kwargs:
         kwargs.pop('payment_date') #payment date cant repeat
-    kwargs['periodic_transaction_id'] = parent.id
+    kwargs['bound_transaction_id'] = parent.id
     transactions_list.append(parent)
     current_due_date = current_due_date + relativedelta(**increment_args)
 

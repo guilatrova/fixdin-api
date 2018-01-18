@@ -71,7 +71,7 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
     def update(self, request, *args, **kwargs):
         if request.query_params.get('next', False) == '1':
             instance = self.get_object()
-            next_periodics = Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gte=instance.due_date).order_by('id')
+            next_periodics = Transaction.objects.filter(bound_transaction=instance.bound_transaction, due_date__gte=instance.due_date).order_by('id')
             to_return = self._patch_periodics(request.data, next_periodics)
 
             return Response(to_return)
@@ -81,7 +81,7 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
     def patch_list(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
-            queryset = self.filter_queryset(Transaction.objects.filter(periodic_transaction=periodic)).order_by('id')
+            queryset = self.filter_queryset(Transaction.objects.filter(bound_transaction=periodic)).order_by('id')
             to_return = self._patch_periodics(request.data, queryset)
 
             return Response(to_return)
@@ -128,7 +128,7 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
     def destroy_all_periodics(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
-            Transaction.objects.filter(periodic_transaction=periodic).delete()
+            Transaction.objects.filter(bound_transaction=periodic).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -137,7 +137,7 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         params = self.request.query_params
 
         if params.get('next', False) == '1':
-            Transaction.objects.filter(periodic_transaction=instance.periodic_transaction, due_date__gte=instance.due_date).delete()
+            Transaction.objects.filter(bound_transaction=instance.bound_transaction, due_date__gte=instance.due_date).delete()
         else:
             return super(TransactionViewSet, self).perform_destroy(instance)
 

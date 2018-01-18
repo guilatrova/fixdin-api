@@ -476,7 +476,7 @@ class TransactionPeriodicTestMixin:
         transactions = self.create_periodic(6)
         self.create_transaction()
 
-        url = "{}?periodic_transaction={}".format(self.url, transactions[0].periodic_transaction_id)
+        url = "{}?periodic_transaction={}".format(self.url, transactions[0].bound_transaction_id)
         response = self.client.delete(url, format='json')
 
         #only both 2 random transactions remains
@@ -497,7 +497,7 @@ class TransactionPeriodicTestMixin:
         response = self.client.patch(url, dto, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        updated_transactions = Transaction.objects.filter(periodic_transaction_id=periodic_id).order_by('id')
+        updated_transactions = Transaction.objects.filter(bound_transaction_id=periodic_id).order_by('id')
         for not_modified in updated_transactions[:1]:
             self.assertNotEqual(not_modified.description, new_description)
 
@@ -519,7 +519,7 @@ class TransactionPeriodicTestMixin:
         response = self.client.patch(url, dto, format='json')
         
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        all_periodics = Transaction.objects.filter(periodic_transaction_id=periodic_id)
+        all_periodics = Transaction.objects.filter(bound_transaction_id=periodic_id)
         for periodic in all_periodics:
             self.assertEqual(periodic.description, new_description)
 
@@ -555,7 +555,7 @@ class TransactionPeriodicTestMixin:
         response = self.client.patch(url, dto, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        updated_transactions = Transaction.objects.filter(periodic_transaction_id=periodic_id)
+        updated_transactions = Transaction.objects.filter(bound_transaction_id=periodic_id)
         only_modified = updated_transactions.get(pk=periodic_id)
         self.assertEqual(only_modified.due_date, new_due_date)
         self.assertEqual(only_modified.payment_date, new_payment_date)
@@ -630,4 +630,4 @@ class TransactionPeriodicTestMixin:
         for i in range(len(response.data)):
             transaction = response.data[i]
             self.assertEqual(transaction['due_date'], expected_dates[i])
-            self.assertEqual(transaction['periodic_transaction'], response.data[0]['id'])
+            self.assertEqual(transaction['bound_transaction'], response.data[0]['id'])

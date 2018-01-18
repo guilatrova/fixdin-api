@@ -17,14 +17,14 @@ class TransactionSignalsTestCase(TestCase, BaseTestHelper):
         transactions = self.create_periodic(4)
 
         transactions[0].delete()
-        self.assertEqual(Transaction.objects.filter(periodic_transaction_id=transactions[0].id).count(), 0)
-        self.assertEqual(Transaction.objects.filter(periodic_transaction_id=transactions[1].id).count(), 3)
+        self.assertEqual(Transaction.objects.filter(bound_transaction_id=transactions[0].id).count(), 0)
+        self.assertEqual(Transaction.objects.filter(bound_transaction_id=transactions[1].id).count(), 3)
 
     def test_delete_child_of_periodic_has_no_side_effect(self):
         transactions = self.create_periodic(4)
 
         transactions[1].delete()
-        self.assertEqual(Transaction.objects.filter(periodic_transaction_id=transactions[0].id).count(), 3)
+        self.assertEqual(Transaction.objects.filter(bound_transaction_id=transactions[0].id).count(), 3)
 
     def create_periodic(self, how_many):
         return create_periodic_transactions(
