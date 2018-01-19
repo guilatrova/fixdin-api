@@ -4,9 +4,9 @@ from django.db import transaction as db_transaction
 from rest_framework import viewsets, status, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from transactions.models import Category, Transaction, Account
+from transactions.models import Category, Transaction, Account, BoundReasons, HasKind
 from transactions.filters import TransactionFilter
-from transactions.serializers import CategorySerializer, TransactionSerializer, AccountSerializer
+from transactions.serializers import CategorySerializer, TransactionSerializer, AccountSerializer,  TransferSerializer
 
 class AccountViewSet(viewsets.ModelViewSet):
     serializer_class = AccountSerializer
@@ -22,7 +22,6 @@ class AccountViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, current_balance=0)
-
 
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
@@ -158,3 +157,17 @@ class GenericTransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
+
+class TransferViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    Handles specific transactions: transfers between accounts.
+    """
+    serializer_class = TransferSerializer
+
+    def get_queryset(self):
+        return Transaction.objects.filter(\
+            user_id=self.request.user.id,
+            bound_reason=BoundReasons.TRANSFER_BETWEEN_ACCOUNTS,
+            kind=HasKind.INCOME_KIND) # Just get one of pair 
+
+    

@@ -45,7 +45,7 @@ class AccountUrlTestCase(TestCase, BaseTestHelper):
 
         self.assert_has_actions(['get', 'put', 'patch', 'delete'], resolver.func.actions)
     
-class AccountSerializersTestCase(TestCase, BaseTestHelper):
+class AccountSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
         self.create_account(name='acc01')
