@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import HasKind, BoundReasons
 from transactions.views import TransferViewSet
-from transactions.serializers import AccountSerializer
+from transactions.serializers import TransferSerializer
 from transactions.tests.base_test import BaseTestHelper
 from transactions.factories import create_transfer_between_accounts
 
@@ -32,12 +32,42 @@ class TransferUrlTestCase(TestCase, BaseTestHelper):
 
 class TransferSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
+        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
+        self.account_from = self.create_account(name='from')
+        self.account_to = self.create_account(name='to')
         self.serializer_data = {
-            '': ''
+            'account_from': self.account_from.id,
+            'account_to': self.account_to.id,
+            'value': 100
         }
 
     def test_serializer_validates(self):
-        pass
+        serializer = TransferSerializer(data=self.serializer_data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_account_from_should_exist(self):
+        self.assert_validation_account_non_exists('account_from')
+
+    def test_account_to_should_exist(self):
+        self.assert_validation_account_non_exists('account_to')
+
+    def test_serializer_should_not_allows_same_from_and_to_accounts(self):
+        data = self.serializer_data
+        data['account_to'] = data['account_from']
+
+        serializer = TransferSerializer(data=data)
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('non_field_errors', serializer.errors)
+
+    def assert_validation_account_non_exists(self, key):
+        data = self.serializer_data
+        data[key] = 22
+
+        serializer = TransferSerializer(data=data)
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn(key, serializer.errors)
 
 class TransferFactory(TestCase, BaseTestHelper):
     def setUp(self):
