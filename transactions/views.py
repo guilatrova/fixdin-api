@@ -158,16 +158,36 @@ class GenericTransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
 
-class TransferViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class TransferViewSet(viewsets.ViewSet):
     """
     Handles specific transactions: transfers between accounts.
     """
-    serializer_class = TransferSerializer
-
     def get_queryset(self):
         return Transaction.objects.filter(\
-            user_id=self.request.user.id,
+            account__user_id=self.request.user.id,
             bound_reason=BoundReasons.TRANSFER_BETWEEN_ACCOUNTS,
-            kind=HasKind.INCOME_KIND) # Just get one of pair 
+            kind=HasKind.EXPENSE_KIND) # Get just one of pair (from)
 
-    
+    def get_serializer_context(self):
+        return {
+            'user_id': self.request.user.id
+        }
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        
+        data = []
+        for transaction in queryset:
+            entry = {
+                'account_from': transaction.account.id,
+                'account_to': transaction.bound_transaction.account.id,
+                'value': transaction.value
+            }
+            data.append(entry)
+
+        serializer = TransferSerializer(data=data, context=self.get_serializer_context(), many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    def create(self, *args):
+        pass

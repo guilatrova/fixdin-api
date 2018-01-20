@@ -1,11 +1,11 @@
 from unittest import skip
+from unittest.mock import patch, MagicMock
 import datetime
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from transactions.models import HasKind, BoundReasons
 from transactions.views import TransferViewSet
 from transactions.serializers import TransferSerializer
@@ -92,7 +92,7 @@ class TransferSerializerTestCase(TestCase, BaseTestHelper):
         self.assertIn(key, serializer.errors)
         self.assertIn(partial_message, serializer.errors[key][0])
 
-class TransferFactory(TestCase, BaseTestHelper):
+class TransferFactoryTestCase(TestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
         self.account_from = self.create_account(name='from')
@@ -106,7 +106,7 @@ class TransferFactory(TestCase, BaseTestHelper):
         result = create_transfer_between_accounts(\
             self.account_from.id,
             self.account_to.id,
-            self.user,
+            self.user.id,
             **self.factory_kwargs
         )
 
@@ -127,3 +127,20 @@ class TransferFactory(TestCase, BaseTestHelper):
         for key in self.same_properties_keys:
             self.assertEqual(getattr(expense, key), getattr(income, key))
 
+class TransferApiTestCase(APITestCase, BaseTestHelper):
+    def setUp(self):
+        self.user, token = self.create_user('testuser', email='testuser@test.com')
+        self.client = self.create_authenticated_client(token)
+
+        account_from = self.create_account(name='from')
+        account_to = self.create_account(name='to')
+        self.expense, self.income = create_transfer_between_accounts(account_from.id, account_to.id, self.user.id, value=100)
+
+        self.request = MagicMock(user=self.user)
+        self.view = TransferViewSet(request=self.request)
+
+    def test_api_lists(self):
+        response = self.client.get(reverse('transfers'), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
