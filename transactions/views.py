@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from transactions.models import Category, Transaction, Account, BoundReasons, HasKind
 from transactions.filters import TransactionFilter
 from transactions.serializers import CategorySerializer, TransactionSerializer, AccountSerializer,  TransferSerializer
+from transactions.factories import map_queryset_to_serializer_data
 
 class AccountViewSet(viewsets.ModelViewSet):
     serializer_class = AccountSerializer
@@ -174,17 +175,8 @@ class TransferViewSet(viewsets.ViewSet):
         }
 
     def list(self, request):
-        queryset = self.get_queryset()
-        
-        data = []
-        for transaction in queryset:
-            entry = {
-                'account_from': transaction.account.id,
-                'account_to': transaction.bound_transaction.account.id,
-                'value': transaction.value
-            }
-            data.append(entry)
-
+        queryset = self.get_queryset()        
+        data = map_queryset_to_serializer_data(queryset)
         serializer = TransferSerializer(data=data, context=self.get_serializer_context(), many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

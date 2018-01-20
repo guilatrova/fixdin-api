@@ -21,3 +21,15 @@ def get_category(user_id):
     })
 
     return category
+
+def map_queryset_to_serializer_data(queryset):
+    data = []
+    for transaction in queryset:
+        entry = {
+            'account_from': transaction.account.id,
+            'account_to': transaction.bound_transaction.account.id,
+            'value': transaction.value
+        }
+        data.append(entry)
+    
+    return data
