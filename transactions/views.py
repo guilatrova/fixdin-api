@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.shortcuts import render
 from django.db import transaction as db_transaction
-from rest_framework import viewsets, status, mixins
+from rest_framework import viewsets, status, mixins, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from transactions.models import Category, Transaction, Account, BoundReasons, HasKind
@@ -159,10 +159,13 @@ class GenericTransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
 
-class TransferViewSet(viewsets.ViewSet):
+class TransferViewSet(viewsets.ViewSet, mixins.CreateModelMixin, generics.GenericAPIView):
     """
-    Handles specific transactions: transfers between accounts.
+    Handles CRUD operations for specific transactions: 
+    transfers between accounts.
     """
+    serializer_class = TransferSerializer
+
     def get_queryset(self):
         return Transaction.objects.filter(\
             account__user_id=self.request.user.id,
@@ -180,6 +183,4 @@ class TransferViewSet(viewsets.ViewSet):
         serializer = TransferSerializer(data=data, context=self.get_serializer_context(), many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
-
-    def create(self, *args):
-        pass
+        

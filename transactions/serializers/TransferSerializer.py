@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from transactions.models import Account
+from transactions.factories import create_transfer_between_accounts, map_transaction_to_transfer_data
 
 def validate_account(id, user_id):
     if not Account.objects.filter(pk=id).exists():
@@ -27,3 +28,7 @@ class TransferSerializer(serializers.Serializer):
             raise serializers.ValidationError('You cant perform a transfer from and to same account')
 
         return data
+
+    def create(self, validated_data):
+        expense, income = create_transfer_between_accounts(self.context['user_id'], **validated_data)
+        return map_transaction_to_transfer_data(expense)

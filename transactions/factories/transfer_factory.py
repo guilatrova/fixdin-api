@@ -3,7 +3,9 @@ from django.db import transaction as db_transaction
 import datetime
 
 @db_transaction.atomic
-def create_transfer_between_accounts(from_id, to_id, user_id, **kwargs):
+def create_transfer_between_accounts(user_id, **kwargs):
+    from_id = kwargs.pop('account_from')
+    to_id = kwargs.pop('account_to')
     kwargs['description'] = kwargs['bound_reason'] = BoundReasons.TRANSFER_BETWEEN_ACCOUNTS
     kwargs['payment_date'] = kwargs['due_date'] = datetime.datetime.today()
     kwargs['category'] = get_category(user_id)
@@ -23,13 +25,11 @@ def get_category(user_id):
     return category
 
 def map_queryset_to_serializer_data(queryset):
-    data = []
-    for transaction in queryset:
-        entry = {
-            'account_from': transaction.account.id,
-            'account_to': transaction.bound_transaction.account.id,
-            'value': transaction.value
-        }
-        data.append(entry)
-    
-    return data
+    return [map_transaction_to_transfer_data(x) for x in queryset]
+
+def map_transaction_to_transfer_data(expense):
+    return {
+        'account_from': expense.account.id,
+        'account_to': expense.bound_transaction.account.id,
+        'value': expense.value
+    }

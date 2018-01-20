@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from transactions.models import HasKind, BoundReasons
+from transactions.models import HasKind, BoundReasons, Transaction
 from transactions.views import TransferViewSet
 from transactions.serializers import TransferSerializer
 from transactions.tests.base_test import BaseTestHelper
@@ -98,14 +98,14 @@ class TransferFactoryTestCase(TestCase, BaseTestHelper):
         self.account_from = self.create_account(name='from')
         self.account_to = self.create_account(name='to')
         self.factory_kwargs = {
+            'account_from': self.account_from.id,
+            'account_to': self.account_to.id,
             'value': 100
         }
         self.same_properties_keys = ['value', 'description', 'due_date', 'payment_date', 'bound_reason']
     
     def test_creates_transactions_correctly(self):
         result = create_transfer_between_accounts(\
-            self.account_from.id,
-            self.account_to.id,
             self.user.id,
             **self.factory_kwargs
         )
@@ -132,9 +132,9 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         self.user, token = self.create_user('testuser', email='testuser@test.com')
         self.client = self.create_authenticated_client(token)
 
-        account_from = self.create_account(name='from')
-        account_to = self.create_account(name='to')
-        self.expense, self.income = create_transfer_between_accounts(account_from.id, account_to.id, self.user.id, value=100)
+        self.account_from = self.create_account(name='from')
+        self.account_to = self.create_account(name='to')
+        self.expense, self.income = create_transfer_between_accounts(self.user.id, account_from=self.account_from.id, account_to=self.account_to.id, value=100)
 
         self.request = MagicMock(user=self.user)
         self.view = TransferViewSet(request=self.request)
@@ -144,3 +144,18 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+    # @patch(create_transfer_between_accounts)
+    def test_api_creates(self):
+        data = {
+            'account_from': self.account_from.id,
+            'account_to': self.account_to.id,
+            'value': 100
+        }
+        response = self.client.post(reverse('transfers'), data=data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(float(response.data['value']), 100)
+        self.assertEqual(Transaction.objects.count(), 4) #2 from setup + 2 now
+
+
