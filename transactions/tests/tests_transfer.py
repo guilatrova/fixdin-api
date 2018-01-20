@@ -45,11 +45,9 @@ class TransferFactory(TestCase, BaseTestHelper):
         self.account_from = self.create_account(name='from')
         self.account_to = self.create_account(name='to')
         self.factory_kwargs = {
-            'due_date': datetime.datetime.today(),
-            'description': 'transfer',
             'value': 100
         }
-        self.same_properties_keys = ['value', 'description', 'due_date', 'details', 'payment_date', 'bound_reason']
+        self.same_properties_keys = ['value', 'description', 'due_date', 'payment_date', 'bound_reason']
     
     def test_creates_transactions_correctly(self):
         result = create_transfer_between_accounts(\
@@ -60,15 +58,19 @@ class TransferFactory(TestCase, BaseTestHelper):
         )
 
         self.assertEqual(2, len(result))
-        self.assertEqual(result[0].kind, HasKind.EXPENSE_KIND)
-        self.assertEqual(result[1].kind, HasKind.INCOME_KIND)
 
-        self.assertEqual(result[0].bound_transaction_id, result[1].id)
-        self.assertEqual(result[1].bound_transaction_id, result[0].id)
+        expense, income = result
 
-        self.assertEqual(result[0].due_date, result[0].payment_date)
-        self.assertEqual(result[0].bound_reason, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
+        self.assertEqual(expense.kind, HasKind.EXPENSE_KIND)
+        self.assertEqual(income.kind, HasKind.INCOME_KIND)
+
+        self.assertEqual(expense.bound_transaction_id, income.id)
+        self.assertEqual(income.bound_transaction_id, expense.id)
+
+        self.assertEqual(expense.due_date, expense.payment_date)
+        self.assertEqual(expense.bound_reason, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
+        self.assertEqual(expense.description, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
 
         for key in self.same_properties_keys:
-            self.assertEqual(getattr(result[0], key), getattr(result[1], key))
+            self.assertEqual(getattr(expense, key), getattr(income, key))
 

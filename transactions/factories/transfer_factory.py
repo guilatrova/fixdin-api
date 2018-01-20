@@ -1,10 +1,11 @@
 from transactions.models import Transaction, Category, BoundReasons, HasKind
 from django.db import transaction as db_transaction
+import datetime
 
 @db_transaction.atomic
 def create_transfer_between_accounts(from_id, to_id, user, **kwargs):
-    kwargs['bound_reason'] = BoundReasons.TRANSFER_BETWEEN_ACCOUNTS
-    kwargs['payment_date'] = kwargs['due_date']
+    kwargs['description'] = kwargs['bound_reason'] = BoundReasons.TRANSFER_BETWEEN_ACCOUNTS
+    kwargs['payment_date'] = kwargs['due_date'] = datetime.datetime.today()
     kwargs['category'] = get_category(user)
 
     expense = Transaction.objects.create(account_id=from_id, kind=HasKind.EXPENSE_KIND, **kwargs)
