@@ -11,6 +11,7 @@ def validate_account(id, user_id):
         raise serializers.ValidationError('This account does not belongs to you')
     
 class TransferSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
     account_from = serializers.IntegerField()
     account_to = serializers.IntegerField()
     value = serializers.DecimalField(max_digits=19, decimal_places=2)

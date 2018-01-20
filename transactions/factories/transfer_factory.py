@@ -29,6 +29,7 @@ def map_queryset_to_serializer_data(queryset):
 
 def map_transaction_to_transfer_data(expense):
     return {
+        'id': expense.id,
         'account_from': expense.account.id,
         'account_to': expense.bound_transaction.account.id,
         'value': expense.value

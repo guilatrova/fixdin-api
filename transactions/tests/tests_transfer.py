@@ -19,16 +19,33 @@ class TransferUrlTestCase(TestCase, BaseTestHelper):
 
         self.assertEqual(resolver.func.cls, TransferViewSet)
 
+    def test_resolves_retrieve_url(self):
+        resolver = self.resolve_by_name('transfer', pk=1)
+
+        self.assertEqual(resolver.func.cls, TransferViewSet)
+
     def test_resolves_url_to_list_action(self):
         resolver = self.resolve_by_name('transfers')
 
         self.assertIn('get', resolver.func.actions)
         self.assertEqual('list', resolver.func.actions['get'])
 
+    def test_resolves_url_to_retrieve_action(self):
+        resolver = self.resolve_by_name('transfer', pk=1)
+
+        self.assertIn('get', resolver.func.actions)
+        self.assertEqual('retrieve', resolver.func.actions['get'])        
+
     def test_list_url_only_allows_get_and_post(self):
         resolver = self.resolve_by_name('transfers')
 
         self.assert_has_actions(['get', 'post'], resolver.func.actions)
+
+    # def test_single_url_allows_all_methods_except_post_patch(self):
+    #     """All methods are: GET, PUT and DELETE"""
+    #     resolver = self.resolve_by_name('transfer', pk=1)
+
+    #     self.assert_has_actions(['get', 'delete'], resolver.func.actions)
 
 class TransferSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
@@ -146,6 +163,12 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
+    def test_api_retrieves(self):
+        response = self.client.get(reverse('transfer', kwargs={'pk': self.expense.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.expense.id)
+
     def test_api_creates(self):
         data = {
             'account_from': self.account_from.id,
@@ -155,4 +178,4 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         response = self.client.post(reverse('transfers'), data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 4) #2 from setup + 2 now
+        self.assertEqual(Transaction.objects.count(), 4) #2 from setup + 2 now    

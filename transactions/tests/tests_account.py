@@ -39,11 +39,11 @@ class AccountUrlTestCase(TestCase, BaseTestHelper):
 
         self.assert_has_actions(['get', 'post'], resolver.func.actions)
 
-    def test_single_url_allows_all_methods_except_post(self):
-        """All methods are: GET, PUT, PATCH and DELETE"""
+    def test_single_url_allows_all_methods_except_post_patch(self):
+        """All methods are: GET, PUT and DELETE"""
         resolver = self.resolve_by_name('account', pk=1)
 
-        self.assert_has_actions(['get', 'put', 'patch', 'delete'], resolver.func.actions)
+        self.assert_has_actions(['get', 'put', 'delete'], resolver.func.actions)
     
 class AccountSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
