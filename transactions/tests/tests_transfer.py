@@ -123,6 +123,7 @@ class TransferFactoryTestCase(TestCase, BaseTestHelper):
         self.assertEqual(expense.due_date, expense.payment_date)
         self.assertEqual(expense.bound_reason, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
         self.assertEqual(expense.description, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
+        self.assertEqual(expense.value, 100)
 
         for key in self.same_properties_keys:
             self.assertEqual(getattr(expense, key), getattr(income, key))
@@ -145,7 +146,6 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    # @patch(create_transfer_between_accounts)
     def test_api_creates(self):
         data = {
             'account_from': self.account_from.id,
@@ -155,7 +155,4 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         response = self.client.post(reverse('transfers'), data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(float(response.data['value']), 100)
         self.assertEqual(Transaction.objects.count(), 4) #2 from setup + 2 now
-
-
