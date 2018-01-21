@@ -38,7 +38,7 @@
                 "DjangoDebugging"
             ]
         },
-                {
+        {
             "name": "DjangoTest",
             "type": "python",
             "request": "launch",
@@ -48,9 +48,8 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"transactions"
+                ,"transactions.tests.tests_transfer"
             ],
-            "env": null,
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
