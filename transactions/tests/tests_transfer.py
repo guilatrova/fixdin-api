@@ -45,7 +45,7 @@ class TransferUrlTestCase(TestCase, BaseTestHelper):
         """All methods are: GET, PUT and DELETE"""
         resolver = self.resolve_by_name('transfer', pk=1)
 
-        self.assert_has_actions(['get', 'delete'], resolver.func.actions)
+        self.assert_has_actions(['get', 'put', 'delete'], resolver.func.actions)
 
 class TransferSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
@@ -62,7 +62,8 @@ class TransferSerializerTestCase(TestCase, BaseTestHelper):
             'value': 100
         }
         self.serializer_context = {
-            'user_id': self.user.id
+            'user_id': self.user.id,
+            "request_method": "POST" #By default, some cases may change this
         }
 
     def test_serializer_validates(self):
@@ -185,3 +186,20 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Transaction.objects.count(), 0)
+
+    def test_api_updates(self):
+        data = {
+            'value': 200
+        }
+        response = self.client.put(reverse('transfer', kwargs={'pk': self.expense.id}), data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expense = Transaction.objects.get(pk=self.expense.id)
+        self.assertEqual(expense.value, 200)
+        self.assertEqual(expense.bound_transaction.value, expense.value)
+
+#TO DO: ORIGIN/DESTINY ACCOUNT CANNOT BE CHANGED
+#TO DO: Validates serializer POST without fields
+#TO DO: Validates serializer PUT with fields
+#TO DO: VALUES SHOULD NOT BE EQUAL! Expense has negative value, while income has positive
+#TO DO: Transfer value shoult not be negative

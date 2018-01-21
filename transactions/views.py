@@ -178,7 +178,7 @@ class TransferViewSet(viewsets.ViewSet, mixins.CreateModelMixin, generics.Generi
         try:
             obj = Transaction.objects.get(\
                 Q(id=pk) | Q(bound_transaction_id=pk),
-                Q(account__user_id=self.request.user.id),
+                Q(account__user_id=self.request.user.id), # TO DO: User permission instead
                 Q(bound_reason=BoundReasons.TRANSFER_BETWEEN_ACCOUNTS),
                 Q(kind=HasKind.EXPENSE_KIND)
             )
@@ -191,7 +191,8 @@ class TransferViewSet(viewsets.ViewSet, mixins.CreateModelMixin, generics.Generi
 
     def get_serializer_context(self):
         return {
-            'user_id': self.request.user.id
+            'user_id': self.request.user.id,
+            "request_method": self.request.method
         }    
 
     def list(self, request):
@@ -206,6 +207,15 @@ class TransferViewSet(viewsets.ViewSet, mixins.CreateModelMixin, generics.Generi
         data = map_transaction_to_transfer_data(instance)
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        instance = self.get_object(pk)
+        
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
         return Response(serializer.data)
 
     @db_transaction.atomic
