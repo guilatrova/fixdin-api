@@ -101,6 +101,15 @@ class TransferSerializerTestCase(TestCase, BaseTestHelper):
         self.assert_put_without_key('account_from')
         self.assert_put_without_key()
 
+    def test_serializer_should_not_allows_negative_value(self):
+        data = self.serializer_data
+        data['value'] = -60
+
+        serializer = TransferSerializer(data=data, context=self.serializer_context)
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('value', serializer.errors)
+
     def assert_post_without_key(self, *args):
         data = self.serializer_data.copy()
         for key in args:
@@ -230,7 +239,4 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         self.assertEqual(expense.value, 200)
         self.assertEqual(expense.bound_transaction.value, expense.value)
 
-#TO DO: Validates serializer POST without fields
-#TO DO: Validates serializer PUT with fields
 #TO DO: VALUES SHOULD NOT BE EQUAL! Expense has negative value, while income has positive
-#TO DO: Transfer value shoult not be negative

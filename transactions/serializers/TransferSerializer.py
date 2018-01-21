@@ -25,6 +25,12 @@ class TransferSerializer(serializers.Serializer):
         validate_account(value, self.context['user_id'])
         return value
 
+    def validate_value(self, value):
+        if value < 0:
+            raise serializers.ValidationError('Value should be greater than 0')
+
+        return value
+
     def validate(self, data):
         if self.context['request_method'] == 'PUT':
             if 'account_from' in data or 'account_to' in data:
