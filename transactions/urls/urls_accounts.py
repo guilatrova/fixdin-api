@@ -16,7 +16,7 @@ single_action = {
 account_list = views.AccountViewSet.as_view(list_actions)
 account_single = views.AccountViewSet.as_view(single_action)
 transfer_list = views.TransferViewSet.as_view(list_actions)
-transfer_single = views.TransferViewSet.as_view({'get': 'retrieve'})
+transfer_single = views.TransferViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'})
 
 urlpatterns = [
     #expenses

@@ -41,11 +41,11 @@ class TransferUrlTestCase(TestCase, BaseTestHelper):
 
         self.assert_has_actions(['get', 'post'], resolver.func.actions)
 
-    # def test_single_url_allows_all_methods_except_post_patch(self):
-    #     """All methods are: GET, PUT and DELETE"""
-    #     resolver = self.resolve_by_name('transfer', pk=1)
+    def test_single_url_allows_all_methods_except_post_patch(self):
+        """All methods are: GET, PUT and DELETE"""
+        resolver = self.resolve_by_name('transfer', pk=1)
 
-    #     self.assert_has_actions(['get', 'delete'], resolver.func.actions)
+        self.assert_has_actions(['get', 'delete'], resolver.func.actions)
 
 class TransferSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
@@ -178,4 +178,10 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         response = self.client.post(reverse('transfers'), data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 4) #2 from setup + 2 now    
+        self.assertEqual(Transaction.objects.count(), 4) #2 from setup + 2 now
+
+    def test_api_deletes(self):
+        response = self.client.delete(reverse('transfer', kwargs={'pk': self.expense.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Transaction.objects.count(), 0)

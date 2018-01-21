@@ -174,7 +174,7 @@ class TransferViewSet(viewsets.ViewSet, mixins.CreateModelMixin, generics.Generi
             bound_reason=BoundReasons.TRANSFER_BETWEEN_ACCOUNTS,
             kind=HasKind.EXPENSE_KIND) # Get just one of pair (from)
 
-    def get_object(self, pk):
+    def get_object(self, pk=None):
         try:
             obj = Transaction.objects.get(\
                 Q(id=pk) | Q(bound_transaction_id=pk),
@@ -207,3 +207,10 @@ class TransferViewSet(viewsets.ViewSet, mixins.CreateModelMixin, generics.Generi
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
+
+    @db_transaction.atomic
+    def destroy(self, request, pk=None):
+        instance = self.get_object(pk)
+        instance.bound_transaction.delete()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
