@@ -91,6 +91,15 @@ class TransferSerializerTestCase(TestCase, BaseTestHelper):
         self.assertFalse(serializer.is_valid())
         self.assertIn('non_field_errors', serializer.errors)
 
+    def test_serializer_should_not_allows_accounts_set_on_PUT_request(self):
+        context = self.serializer_context
+        context['request_method'] = 'PUT'
+
+        serializer = TransferSerializer(data=self.serializer_data, context=context)
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('non_field_errors', serializer.errors)        
+
     def assert_validation_account_non_exists(self, key):
         data = self.serializer_data
         data[key] = 22
@@ -198,7 +207,6 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         self.assertEqual(expense.value, 200)
         self.assertEqual(expense.bound_transaction.value, expense.value)
 
-#TO DO: ORIGIN/DESTINY ACCOUNT CANNOT BE CHANGED
 #TO DO: Validates serializer POST without fields
 #TO DO: Validates serializer PUT with fields
 #TO DO: VALUES SHOULD NOT BE EQUAL! Expense has negative value, while income has positive
