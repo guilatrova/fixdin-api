@@ -26,8 +26,9 @@ class TransferSerializer(serializers.Serializer):
         return value
 
     def validate_value(self, value):
-        if value < 0:
-            raise serializers.ValidationError('Value should be greater than 0')
+        if self.context['request_method'] in ['POST', 'PUT']:
+            if value < 0:
+                raise serializers.ValidationError('Value should be greater than 0')
 
         return value
 

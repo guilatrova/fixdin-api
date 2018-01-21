@@ -161,7 +161,7 @@ class TransferFactoryTestCase(TestCase, BaseTestHelper):
             'account_to': self.account_to.id,
             'value': 100
         }
-        self.same_properties_keys = ['value', 'description', 'due_date', 'payment_date', 'bound_reason']
+        self.same_properties_keys = ['description', 'due_date', 'payment_date', 'bound_reason']
     
     def test_creates_transactions_correctly(self):
         result = create_transfer_between_accounts(\
@@ -182,7 +182,9 @@ class TransferFactoryTestCase(TestCase, BaseTestHelper):
         self.assertEqual(expense.due_date, expense.payment_date)
         self.assertEqual(expense.bound_reason, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
         self.assertEqual(expense.description, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
-        self.assertEqual(expense.value, 100)
+        
+        self.assertEqual(expense.value, -100)
+        self.assertEqual(income.value, 100)
 
         for key in self.same_properties_keys:
             self.assertEqual(getattr(expense, key), getattr(income, key))

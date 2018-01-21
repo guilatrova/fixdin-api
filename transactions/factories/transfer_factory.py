@@ -6,12 +6,13 @@ import datetime
 def create_transfer_between_accounts(user_id, **kwargs):
     from_id = kwargs.pop('account_from')
     to_id = kwargs.pop('account_to')
+    value = kwargs.pop('value')
     kwargs['description'] = kwargs['bound_reason'] = BoundReasons.TRANSFER_BETWEEN_ACCOUNTS
     kwargs['payment_date'] = kwargs['due_date'] = datetime.datetime.today()
     kwargs['category'] = get_category(user_id)
 
-    expense = Transaction.objects.create(account_id=from_id, kind=HasKind.EXPENSE_KIND, **kwargs)
-    income = Transaction.objects.create(account_id=to_id, kind=HasKind.INCOME_KIND, bound_transaction=expense, **kwargs)
+    expense = Transaction.objects.create(account_id=from_id, value=-value, kind=HasKind.EXPENSE_KIND, **kwargs)
+    income = Transaction.objects.create(account_id=to_id, value=value, kind=HasKind.INCOME_KIND, bound_transaction=expense, **kwargs)
     expense.bound_transaction = income
     expense.save()
 
