@@ -91,17 +91,32 @@ class TransferSerializerTestCase(TestCase, BaseTestHelper):
         self.assertFalse(serializer.is_valid())
         self.assertIn('non_field_errors', serializer.errors)
 
+    def test_serializer_should_requires_accounts_set_on_POST_request(self):
+        self.assert_post_without_key('account_from')
+        self.assert_post_without_key('account_to')
+        self.assert_post_without_key('account_from', 'account_to')
+
     def test_serializer_should_not_allows_accounts_set_on_PUT_request(self):
         self.assert_put_without_key('account_to')
         self.assert_put_without_key('account_from')
         self.assert_put_without_key()
 
+    def assert_post_without_key(self, *args):
+        data = self.serializer_data.copy()
+        for key in args:
+            data.pop(key)
+
+        serializer = TransferSerializer(data=data, context=self.serializer_context)
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('non_field_errors', serializer.errors)
+
     def assert_put_without_key(self, key=None):
         context = self.serializer_context
-        data = self.serializer_data
+        data = self.serializer_data.copy()
         context['request_method'] = 'PUT'
         if key:
-            data['key'] = None
+            data.pop(key)
 
         serializer = TransferSerializer(data=data, context=context)
 

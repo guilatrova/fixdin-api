@@ -29,7 +29,11 @@ class TransferSerializer(serializers.Serializer):
         if self.context['request_method'] == 'PUT':
             if 'account_from' in data or 'account_to' in data:
                 raise serializers.ValidationError('You cant update accounts in transfer. Instead delete and create another')
+
         elif self.context['request_method'] == 'POST':
+            if 'account_from' not in data or 'account_to' not in data:
+                raise serializers.ValidationError('accounts must be set')
+                
             if data['account_from'] == data['account_to']:
                 raise serializers.ValidationError('You cant perform a transfer from and to same account')
 
