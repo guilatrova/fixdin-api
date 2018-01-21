@@ -55,7 +55,7 @@ class TransferSerializer(serializers.Serializer):
         assert expense.kind == HasKind.EXPENSE_KIND
         income = expense.bound_transaction
 
-        expense.value = validated_data['value']
+        expense.value = -validated_data['value']
         income.value = validated_data['value']
         
         expense.save()

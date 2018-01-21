@@ -238,7 +238,5 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expense = Transaction.objects.get(pk=self.expense.id)
-        self.assertEqual(expense.value, 200)
-        self.assertEqual(expense.bound_transaction.value, expense.value)
-
-#TO DO: VALUES SHOULD NOT BE EQUAL! Expense has negative value, while income has positive
+        self.assertEqual(expense.value, -200)
+        self.assertEqual(expense.bound_transaction.value, 200)
