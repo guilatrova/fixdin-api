@@ -1,11 +1,16 @@
 from django.db import transaction as db_transaction
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from transactions.models import Transaction
 from transactions.filters import TransactionFilter
 from transactions.serializers import TransactionSerializer
+from transactions.permissions import IsNotTransfer
 
 class PeriodicTransactionViewSetMixin:
+    '''
+    Mixin that injects handlers for PUT/DELETE/PATCH periodic transactions
+    '''
     def update(self, request, *args, **kwargs):
         if request.query_params.get('next', False) == '1':
             instance = self.get_object()
@@ -84,6 +89,7 @@ class TransactionViewSet(PeriodicTransactionViewSetMixin, viewsets.ModelViewSet,
     Handles /expenses and /incomes endpoints
     '''
     serializer_class = TransactionSerializer
+    permission_classes = (IsAuthenticated, IsNotTransfer)
 
     def get_serializer_context(self):
         return {

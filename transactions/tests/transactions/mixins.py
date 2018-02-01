@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
-from transactions.factories import create_periodic_transactions
+from transactions.factories import create_periodic_transactions, create_transfer_between_accounts
 
 class TransactionTestMixin:
 
@@ -163,6 +163,14 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Transaction.objects.count(), 1)
 
+    def test_api_cant_manage_transfer(self):
+        other_account = self.create_account(self.user)
+        expense, income = create_transfer_between_accounts(self.user.id, account_from=self.account.id, account_to=other_account.id, value=100)
+        transaction = income if self.value > 0 else expense
+
+        response = self.client.put(self.url + str(transaction.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn('manage transfers', response.data['detail'])
 
     @skip('DISABLED IN DEVELOPMENT PHASE')
     @mock.patch('transactions.views.datetime', side_effect=lambda *args, **kw: date(*args, **kw))    

@@ -198,9 +198,6 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         self.account_to = self.create_account(name='to')
         self.expense, self.income = create_transfer_between_accounts(self.user.id, account_from=self.account_from.id, account_to=self.account_to.id, value=100)
 
-        self.request = MagicMock(user=self.user)
-        self.view = TransferViewSet(request=self.request)
-
     def test_api_lists(self):
         response = self.client.get(reverse('transfers'), format='json')
 
