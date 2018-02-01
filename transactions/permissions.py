@@ -1,7 +1,7 @@
 from rest_framework import permissions
 from transactions.models import BoundReasons
 
-class IsNotTransfer(permissions.BasePermission):
+class IsNotTransferOrIsReadOnly(permissions.BasePermission):
     """
     Object-level permissions to only allow safe methods to transfers kind transactions
     """

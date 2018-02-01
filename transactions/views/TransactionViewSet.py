@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from transactions.models import Transaction
 from transactions.filters import TransactionFilter
 from transactions.serializers import TransactionSerializer
-from transactions.permissions import IsNotTransfer
+from transactions.permissions import IsNotTransferOrIsReadOnly
 
 class PeriodicTransactionViewSetMixin:
     '''
@@ -89,7 +89,7 @@ class TransactionViewSet(PeriodicTransactionViewSetMixin, viewsets.ModelViewSet,
     Handles /expenses and /incomes endpoints
     '''
     serializer_class = TransactionSerializer
-    permission_classes = (IsAuthenticated, IsNotTransfer)
+    permission_classes = (IsAuthenticated, IsNotTransferOrIsReadOnly)
 
     def get_serializer_context(self):
         return {
