@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from transactions.models import Category
+from transactions.models import Account
 from transactions.serializers import AccountSerializer
 
 class AccountViewSet(viewsets.ModelViewSet):

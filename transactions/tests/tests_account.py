@@ -40,10 +40,10 @@ class AccountUrlTestCase(TestCase, BaseTestHelper):
         self.assert_has_actions(['get', 'post'], resolver.func.actions)
 
     def test_single_url_allows_all_methods_except_post_patch(self):
-        """All methods are: GET, PUT and DELETE"""
+        """All methods are: GET and PUT"""
         resolver = self.resolve_by_name('account', pk=1)
 
-        self.assert_has_actions(['get', 'put', 'delete'], resolver.func.actions)
+        self.assert_has_actions(['get', 'put'], resolver.func.actions)
     
 class AccountSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
@@ -69,13 +69,26 @@ class AccountSerializerTestCase(TestCase, BaseTestHelper):
         self.assertFalse(serializer.is_valid())
         self.assertIn('name', serializer.errors)
 
-class AccountTestCase(APITestCase, BaseTestHelper):
+class AccountApiTestCase(APITestCase, BaseTestHelper):
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
         self.client = self.create_authenticated_client(token)
+        self.account = self.create_account() #Now there are 2 accounts because signals creates a default account 
 
-    def test_create_account(self):
+    def test_api_lists(self):
+        response = self.client.get(reverse('accounts'), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_api_retrieves(self):
+        response = self.client.get(reverse('account', kwargs={'pk': self.account.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.account.id)
+
+    def test_api_creates(self):
         dto = {
             'name': 'acc01'
         }
@@ -83,4 +96,14 @@ class AccountTestCase(APITestCase, BaseTestHelper):
         response = self.client.post(reverse('accounts'), dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Account.objects.count(), 2) #By default signals creates a default account
+        self.assertEqual(Account.objects.count(), 3)
+
+    def test_api_updates(self):
+        data = {
+            'name': 'new_name'
+        }
+        response = self.client.put(reverse('account', kwargs={'pk': self.account.id}), data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expense = Account.objects.get(pk=self.account.id)
+        self.assertEqual(expense.name, data['name'])
