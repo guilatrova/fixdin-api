@@ -5,29 +5,7 @@ from transactions.models import Transaction
 from transactions.filters import TransactionFilter
 from transactions.serializers import TransactionSerializer
 
-class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
-    '''
-    Handles /expenses and /incomes endpoints
-    '''
-    serializer_class = TransactionSerializer
-
-    def get_serializer_context(self):
-        return {
-            "kind": self.kwargs['kind'],
-            "user_id": self.request.user.id,
-            "request_method": self.request.method
-        }
-
-    def get_queryset(self):
-        query_filter = { 
-            'account__user_id': self.request.user.id,
-            'kind': self.kwargs['kind'] 
-        }
-        
-        url_query_params = self.get_query_params_filter()  
-        query_filter.update(url_query_params)
-        return Transaction.objects.filter(**query_filter)    
-    
+class PeriodicTransactionViewSetMixin:
     def update(self, request, *args, **kwargs):
         if request.query_params.get('next', False) == '1':
             instance = self.get_object()
@@ -36,7 +14,7 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
 
             return Response(to_return)
         else:
-            return super(TransactionViewSet, self).update(request, *args, **kwargs)
+            return super(PeriodicTransactionViewSetMixin, self).update(request, *args, **kwargs)
 
     def patch_list(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
@@ -99,7 +77,30 @@ class TransactionViewSet(viewsets.ModelViewSet, TransactionFilter):
         if params.get('next', False) == '1':
             Transaction.objects.filter(bound_transaction=instance.bound_transaction, due_date__gte=instance.due_date).delete()
         else:
-            return super(TransactionViewSet, self).perform_destroy(instance)
+            return super(PeriodicTransactionViewSetMixin, self).perform_destroy(instance)
+
+class TransactionViewSet(PeriodicTransactionViewSetMixin, viewsets.ModelViewSet, TransactionFilter):
+    '''
+    Handles /expenses and /incomes endpoints
+    '''
+    serializer_class = TransactionSerializer
+
+    def get_serializer_context(self):
+        return {
+            "kind": self.kwargs['kind'],
+            "user_id": self.request.user.id,
+            "request_method": self.request.method
+        }
+
+    def get_queryset(self):
+        query_filter = { 
+            'account__user_id': self.request.user.id,
+            'kind': self.kwargs['kind'] 
+        }
+        
+        url_query_params = self.get_query_params_filter()  
+        query_filter.update(url_query_params)
+        return Transaction.objects.filter(**query_filter)
 
     def perform_create(self, serializer):
         serializer.save(kind=self.kwargs['kind'])
