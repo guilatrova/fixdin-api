@@ -24,6 +24,11 @@ class TransferUrlTestCase(TestCase, BaseTestHelper):
 
         self.assertEqual(resolver.func.cls, TransferViewSet)
 
+    def test_resolves_list_from_account_url(self):
+        resolver = self.resolve_by_name('account-transfers', pk=1)
+
+        self.assertEqual(resolver.func.cls, TransferViewSet)
+
     def test_resolves_url_to_list_action(self):
         resolver = self.resolve_by_name('transfers')
 
@@ -34,7 +39,13 @@ class TransferUrlTestCase(TestCase, BaseTestHelper):
         resolver = self.resolve_by_name('transfer', pk=1)
 
         self.assertIn('get', resolver.func.actions)
-        self.assertEqual('retrieve', resolver.func.actions['get'])        
+        self.assertEqual('retrieve', resolver.func.actions['get'])
+
+    def test_resolves_url_to_list_from_account_action(self):
+        resolver = self.resolve_by_name('account-transfers', pk=1)
+
+        self.assertIn('get', resolver.func.actions)
+        self.assertEqual('list_from_account', resolver.func.actions['get'])
 
     def test_list_url_only_allows_get_and_post(self):
         resolver = self.resolve_by_name('transfers')
@@ -46,6 +57,11 @@ class TransferUrlTestCase(TestCase, BaseTestHelper):
         resolver = self.resolve_by_name('transfer', pk=1)
 
         self.assert_has_actions(['get', 'put', 'delete'], resolver.func.actions)
+
+    def test_list_from_account_allows_only_get(self):
+        resolver = self.resolve_by_name('account-transfers', pk=1)
+
+        self.assert_has_actions(['get', ], resolver.func.actions)
 
 class TransferSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
@@ -237,3 +253,13 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         expense = Transaction.objects.get(pk=self.expense.id)
         self.assertEqual(expense.value, -200)
         self.assertEqual(expense.bound_transaction.value, 200)
+
+    def test_api_lists_from_account(self):
+        for i in range(1, 4):
+            account_from = self.create_account(name='from_{0}'.format(i))
+            last_expense, last_income = create_transfer_between_accounts(self.user.id, account_from=account_from.id, account_to=self.account_to.id, value=100)
+
+        response = self.client.get(reverse('account-transfers', kwargs={'pk': last_expense.account_id}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], last_expense.id)
