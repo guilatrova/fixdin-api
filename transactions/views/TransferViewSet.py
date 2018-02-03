@@ -49,7 +49,7 @@ class TransferViewSet(viewsets.ViewSet, mixins.CreateModelMixin, generics.Generi
         return Response(serializer.data)
 
     def list_from_account(self, request, pk):
-        queryset = self.get_queryset().filter(account_id=pk)
+        queryset = self.get_queryset().filter(Q(account_id=pk) | Q(bound_transaction__account_id=pk))
         data = map_queryset_to_serializer_data(queryset)
         serializer = self.get_serializer(data=data, many=True)
         serializer.is_valid(raise_exception=True)

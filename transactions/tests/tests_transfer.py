@@ -256,10 +256,13 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
 
     def test_api_lists_from_account(self):
         for i in range(1, 4):
-            account_from = self.create_account(name='from_{0}'.format(i))
-            last_expense, last_income = create_transfer_between_accounts(self.user.id, account_from=account_from.id, account_to=self.account_to.id, value=100)
+            cur_account = self.create_account(name='from_{0}'.format(i))
+            # Test both ways. (Acount receiving or sending)
+            last_origin_expense, last_origin_income = create_transfer_between_accounts(self.user.id, account_from=cur_account.id, account_to=self.account_to.id, value=100)
+            last_dest_expense, last_dest_income = create_transfer_between_accounts(self.user.id, account_from=self.account_to.id, account_to=cur_account.id, value=100)
 
-        response = self.client.get(reverse('account-transfers', kwargs={'pk': last_expense.account_id}))
+        response = self.client.get(reverse('account-transfers', kwargs={'pk': last_origin_expense.account_id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['id'], last_expense.id)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['id'], last_dest_expense.id)
+        self.assertEqual(response.data[1]['id'], last_origin_expense.id)
