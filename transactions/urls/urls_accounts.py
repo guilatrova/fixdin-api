@@ -29,7 +29,6 @@ transfer_list = views.TransferViewSet.as_view(list_actions)
 transfer_single = views.TransferViewSet.as_view(transfer_single_actions)
 
 urlpatterns = [
-    #expenses
     url(r'^$', account_list, name='accounts'),
     url(r'^(?P<pk>\d+)$', account_single, name='account'),
     url(r'^(?P<pk>\d+)/transfers$', account_transfers, name='account-transfers'),
