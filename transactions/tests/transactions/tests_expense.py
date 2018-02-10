@@ -38,7 +38,6 @@ class ExpenseTestCase(APITestCase, TransactionTestMixin, TransactionFilterTestMi
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Transaction.objects.count(), 0)
-        self.assertEqual(0, 2)
 
     def test_list_only_expenses(self):
         '''
