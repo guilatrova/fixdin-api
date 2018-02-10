@@ -264,5 +264,5 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         response = self.client.get(reverse('account-transfers', kwargs={'pk': last_origin_expense.account_id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[0]['id'], last_dest_expense.id)
-        self.assertEqual(response.data[1]['id'], last_origin_expense.id)
+        self.assertIn(last_origin_expense.id, [x['id'] for x in response.data])
+        self.assertIn(last_dest_expense.id, [x['id'] for x in response.data])
