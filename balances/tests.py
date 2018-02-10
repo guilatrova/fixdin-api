@@ -1,6 +1,6 @@
 from unittest import skip
 from unittest.mock import patch
-import datetime
+from datetime import date, datetime
 import calendar
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
@@ -15,7 +15,7 @@ from transactions.models import *
 from transactions.tests.base_test import BaseTestHelper
 from balances.models import PeriodBalance
 
-class BalanceTestCase(TestCase, BaseTestHelper):
+class ApiTestCase(TestCase, BaseTestHelper):
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -66,13 +66,13 @@ class BalanceTestCase(TestCase, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 125)
 
-class BalanceTestCase(TestCase, BaseTestHelper):
+class SignalsTestCase(TestCase, BaseTestHelper):
     '''
     TestCase created to test signals and reactions to PeriodBalance + Account.
     Any insert in Transaction which due date is in current period (aka month) should update Account.current_balance.
     Every other insert in past periods should cascade updating PeriodBalance until arrive current balance in Account.
     '''
-    START_DATE = datetime.date(year=2017, month=1, day=1)
+    START_DATE = date(year=2017, month=1, day=1)
     PERIODS = 4 #A PERIOD IS A MONTH
     TRANSACTIONS_PER_PERIOD = 50 #50*4 = 200
     START_VALUE = 1
@@ -169,12 +169,12 @@ class BalanceTestCase(TestCase, BaseTestHelper):
                 transactions_per_day = int(transactions_per_day)
             
             for day in range(1, days_count+1):
-                current_date = datetime.date(year=current_period.year, month=current_period.month, day=day)
+                current_date = date(year=current_period.year, month=current_period.month, day=day)
                 self.create_multiple_transactions(transactions_per_day, current_date, transaction_value)
 
             if add_remaning_transactions:
                 dif_to_create = self.TRANSACTIONS_PER_PERIOD - (transactions_per_day * days_count)
-                last_day = datetime.date(year=current_period.year, month=current_period.month, day=days_count)
+                last_day = date(year=current_period.year, month=current_period.month, day=days_count)
                 self.create_multiple_transactions(dif_to_create, last_day, transaction_value)
             
             transaction_value = transaction_value * self.VALUE_INCREMENT_MULTIPLIER_PER_PERIOD
@@ -185,7 +185,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
         for period in range(self.PERIODS):
             start = self.START_DATE + relativedelta(months=+period)
             last_day = calendar.monthrange(start.year, start.month)[1]
-            end = datetime.date(year=start.year, month=start.month, day=last_day)
+            end = date(year=start.year, month=start.month, day=last_day)
             closed_value = self.TRANSACTIONS_PER_PERIOD * value
 
             self.create_period_balance(start, end, closed_value)
