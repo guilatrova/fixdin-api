@@ -129,7 +129,7 @@ class BalanceTestCase(TestCase, BaseTestHelper):
 
         self.assert_balances(expected_balances)
 
-    @patch('transactions.signals.balance.trigger_updates')
+    @patch('balances.signals.trigger_updates')
     def test_updated_transaction_with_no_changes_to_value_should_not_trigger_updates(self, mock):
         transaction = Transaction.objects.all().first()
         transaction.description = 'changed only description...'

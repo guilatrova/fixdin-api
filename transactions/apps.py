@@ -4,4 +4,4 @@ class TransactionsConfig(AppConfig):
     name = 'transactions'
 
     def ready(self):
-        from transactions.signals import periodic, balance
+        from transactions import signals

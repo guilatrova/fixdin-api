@@ -1,8 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.db.models import Sum
 from django.dispatch import receiver
-from django.conf import settings
-from transactions.models import Transaction, Account
+from transactions.models import Transaction
 from balances.models import PeriodBalance
 
 DELETED = 0
