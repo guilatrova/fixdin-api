@@ -27,13 +27,44 @@ def deleted_transaction_updates_balance(sender, instance=None, **kwargs):
 
 def trigger_updates(instance, action):
     if instance.payment_date:
-        if is_from_previous_period(instance.payment_date):
-            update_periods_balance_from(instance.payment_date)
+        if is_missing_period(instance.payment_date):
+            create_period_balance_for(instance)
+        elif is_from_previous_period(instance.payment_date):
+            update_periods_balance_from(instance.payment_date)        
 
     update_account_current_balance(instance, action)
 
 def is_from_previous_period(payment_date):
     return PeriodBalance.objects.filter(end_date__gte=payment_date).exists()
+
+def is_missing_period(payment_date):
+    cmp_date = payment_date.date() if isinstance(payment_date, datetime.datetime) else payment_date
+    cur_start, cur_end = get_current_period()
+    start, end = get_period_from(payment_date)
+
+    if not PeriodBalance.objects.filter(start_date=start,end_date=end).exists() and cmp_date < cur_start:
+        return True
+
+    return False
+
+def get_current_period():
+    return get_period_from(datetime.date.today())
+
+def get_period_from(datev):
+    start = datev.replace(day=1)
+    week, days_amount = calendar.monthrange(start.year, start.month)
+    end = start.replace(day=days_amount)
+
+    return (start, end)
+
+def create_period_balance_for(transaction):
+    start, end = get_period_from(transaction.payment_date)
+    PeriodBalance.objects.create(
+        account=transaction.account,
+        start_date=start,
+        end_date=end,
+        closed_value=transaction.value #Since I'm creating specific for this transaction, I can start with value
+    )
 
 def update_periods_balance_from(payment_date):
     balances = PeriodBalance.objects.filter(end_date__gte=payment_date).order_by('end_date')
