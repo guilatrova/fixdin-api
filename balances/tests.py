@@ -136,6 +136,19 @@ class SignalsTestCase(TestCase, BaseTestHelper):
         transaction.save()
 
         self.assertFalse(mock.called)
+
+    @skip('temp')
+    def test_creates_period_when_non_existing(self):
+        expected_start = date(2014, 8, 1)
+        expected_end = date(2014, 8, 31)
+        transaction = self.create_transaction(
+            value=100,
+            due_date=date(2014, 8, 22), 
+            payment_date=date(2014, 8, 22)
+        )
+
+        self.assertTrue(
+            PeriodBalance.objects.filter(start_date=expected_start, end_date=expected_end).exists())
         
     def assert_balances(self, expected_balances):
         balances = PeriodBalance.objects.all()
@@ -192,11 +205,12 @@ class SignalsTestCase(TestCase, BaseTestHelper):
 
             value = value * self.VALUE_INCREMENT_MULTIPLIER_PER_PERIOD
     
-    def create_multiple_transactions(self, how_many, due_date, value):
+    def create_multiple_transactions(self, how_many, date, value):
         for i in range(how_many):
             Transaction.objects.create(
                 account=self.account, 
-                due_date=due_date,
+                due_date=date,
+                payment_date=date,
                 description='unit test',
                 category=self.category,
                 value=value,

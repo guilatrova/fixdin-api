@@ -24,16 +24,17 @@ def deleted_transaction_updates_balance(sender, instance=None, **kwargs):
     trigger_updates(instance, DELETED)
 
 def trigger_updates(instance, action):
-    if is_from_previous_period(instance.due_date):
-        update_periods_balance_from(instance.due_date)
+    if instance.payment_date:
+        if is_from_previous_period(instance.payment_date):
+            update_periods_balance_from(instance.payment_date)
 
     update_account_current_balance(instance, action)
 
-def is_from_previous_period(due_date):
-    return PeriodBalance.objects.filter(end_date__gte=due_date).exists()
+def is_from_previous_period(payment_date):
+    return PeriodBalance.objects.filter(end_date__gte=payment_date).exists()
 
-def update_periods_balance_from(due_date):
-    balances = PeriodBalance.objects.filter(end_date__gte=due_date).order_by('end_date')
+def update_periods_balance_from(payment_date):
+    balances = PeriodBalance.objects.filter(end_date__gte=payment_date).order_by('end_date')
     dif_to_cascade = 0
 
     for balance in balances:
