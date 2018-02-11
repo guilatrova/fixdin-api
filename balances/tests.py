@@ -1,19 +1,44 @@
+import calendar
+from contextlib import contextmanager
 from unittest import skip
 from unittest.mock import patch
 from datetime import date, datetime
-import calendar
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
-from django.db import transaction
+from django.db import transaction as db_transaction
+from django.db.models import signals
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
 from transactions.tests.base_test import BaseTestHelper
 from balances.models import PeriodBalance
+from balances.signals import created_or_updated_transaction_updates_balance, deleted_transaction_updates_balance
+
+@contextmanager
+def balance_signals_disabled():
+    try:
+        signals.post_save.disconnect(
+            created_or_updated_transaction_updates_balance,
+            sender=Transaction
+        )
+        signals.post_delete.disconnect(
+            deleted_transaction_updates_balance,
+            sender=Transaction,
+        )
+        yield
+    finally:
+        signals.post_save.connect(
+            created_or_updated_transaction_updates_balance,
+            sender=Transaction
+        )
+        signals.post_delete.connect(
+            deleted_transaction_updates_balance,
+            sender=Transaction,
+        )
 
 class ApiTestCase(TestCase, BaseTestHelper):
 
@@ -77,11 +102,11 @@ class SignalsTestCase(TestCase, BaseTestHelper):
     TRANSACTIONS_PER_PERIOD = 50 #50*4 = 200
     START_VALUE = 1
     VALUE_INCREMENT_MULTIPLIER_PER_PERIOD = 10
-    PERIOD_BALANCES = [ 50, 500, 5000, 50000]
+    PERIOD_BALANCES = [ 50, 500, 5000, 50000 ]
     SUM_PERIODS = 55550
     
     def setUp(self):        
-        with transaction.atomic():
+        with db_transaction.atomic(), balance_signals_disabled():
             self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
             self.category = self.create_category('default category')        
             self.account = self.create_account()
@@ -170,6 +195,7 @@ class SignalsTestCase(TestCase, BaseTestHelper):
     
     def create_transactions(self):
         transaction_value = self.START_VALUE
+        total_value = 0
 
         for period in range(self.PERIODS):
             current_period = self.START_DATE + relativedelta(months=+period)
@@ -183,14 +209,17 @@ class SignalsTestCase(TestCase, BaseTestHelper):
             
             for day in range(1, days_count+1):
                 current_date = date(year=current_period.year, month=current_period.month, day=day)
-                self.create_multiple_transactions(transactions_per_day, current_date, transaction_value)
+                total_value += self.create_multiple_transactions(transactions_per_day, current_date, transaction_value)
 
             if add_remaning_transactions:
                 dif_to_create = self.TRANSACTIONS_PER_PERIOD - (transactions_per_day * days_count)
                 last_day = date(year=current_period.year, month=current_period.month, day=days_count)
-                self.create_multiple_transactions(dif_to_create, last_day, transaction_value)
-            
+                total_value += self.create_multiple_transactions(dif_to_create, last_day, transaction_value)
+
             transaction_value = transaction_value * self.VALUE_INCREMENT_MULTIPLIER_PER_PERIOD
+
+        self.account.current_balance = total_value
+        self.account.save()
 
     def create_period_balances(self):
         value = self.START_VALUE
@@ -216,6 +245,8 @@ class SignalsTestCase(TestCase, BaseTestHelper):
                 value=value,
                 kind=Transaction.EXPENSE_KIND,
                 details='')
+
+        return value * how_many
 
     def create_period_balance(self, start, end, value):
         PeriodBalance.objects.create(
