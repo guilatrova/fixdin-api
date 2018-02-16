@@ -42,11 +42,13 @@ class Transaction(models.Model, HasKind):
 
     def __init__(self, *args, **kwargs):
         '''
-        Init method used to identify which value (R$) is loaded from database, 
+        Init method used to identify which values are loaded from database, 
         so we can identify if it suffered any changes after that.
         '''
         super(Transaction, self).__init__(*args, **kwargs)
         self.initial_value = self.value
+        self.initial_due_date = self.due_date
+        self.initial_payment_date = self.payment_date
 
     account = models.ForeignKey(Account)
     due_date = models.DateField()

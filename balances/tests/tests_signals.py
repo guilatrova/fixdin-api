@@ -1,22 +1,16 @@
 import calendar
 from contextlib import contextmanager
+from datetime import date, datetime
+from dateutil.relativedelta import relativedelta
 from unittest import skip
 from unittest.mock import patch
-from datetime import date, datetime
-from decimal import Decimal
-from dateutil.relativedelta import relativedelta
 from django.test import TestCase
-from django.contrib.auth.models import User
-from django.urls import reverse
 from django.db import transaction as db_transaction
 from django.db.models import signals
-from rest_framework.test import APITestCase, APIClient
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from transactions.models import *
-from transactions.tests.base_test import BaseTestHelper
 from balances.models import PeriodBalance
 from balances.signals import created_or_updated_transaction_updates_balance, deleted_transaction_updates_balance
+from transactions.tests.base_test import BaseTestHelper
+from transactions.models import *
 
 @contextmanager
 def balance_signals_disabled():
@@ -39,57 +33,6 @@ def balance_signals_disabled():
             deleted_transaction_updates_balance,
             sender=Transaction,
         )
-
-class ApiTestCase(TestCase, BaseTestHelper):
-
-    def setUp(self):
-        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
-
-        self.client = self.create_authenticated_client(token)
-        self.account = self.create_account(self.user)
-        self.category = self.create_category('category')
-
-    def test_get_current_balance(self):
-        '''
-        Get current balance regardless of payed or not, until present date
-        '''
-        self.create_transaction(10)
-        self.create_transaction(10)
-        self.create_transaction(30)
-        self.create_transaction(60)
-        #tomorrow
-        tomorrow = datetime.today() + relativedelta(days=1)
-        self.create_transaction(100, due_date=tomorrow)
-
-        response = self.client.get(reverse('balances'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['balance'], 110)
-
-    def test_get_current_real_balance(self):
-        '''
-        Calculates balance based only in payed transactions
-        '''
-        self.create_transaction(30, payment_date=datetime.today())
-        self.create_transaction(60, payment_date=datetime.today())
-        #not payed
-        self.create_transaction(10)
-        self.create_transaction(10)
-
-        url = reverse('balances') + '?payed=1'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['balance'], 90)
-
-    def test_get_expected_balance_until_date(self):
-        self.create_transaction(30, due_date=datetime(2017, 9, 1), payment_date=datetime.today())
-        self.create_transaction(60, due_date=datetime(2017, 9, 4), payment_date=datetime.today())
-        self.create_transaction(10, due_date=datetime(2017, 9, 15))
-        self.create_transaction(25, due_date=datetime(2017, 9, 30))
-
-        url = reverse('balances') + '?until=2017-09-30'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['balance'], 125)
 
 class SignalsTestCase(TestCase, BaseTestHelper):
     '''
@@ -162,6 +105,7 @@ class SignalsTestCase(TestCase, BaseTestHelper):
 
         self.assertFalse(mock.called)
 
+    @skip('wait for it...')
     def test_creates_period_when_non_existing(self):
         expected_start = date(2014, 8, 1)
         expected_end = date(2014, 8, 31)
@@ -173,7 +117,10 @@ class SignalsTestCase(TestCase, BaseTestHelper):
 
         self.assertTrue(
             PeriodBalance.objects.filter(start_date=expected_start, end_date=expected_end).exists())
-        
+
+    def a(self):
+        pass
+
     def assert_balances(self, expected_balances):
         balances = PeriodBalance.objects.all()
         for i in range(len(self.PERIOD_BALANCES)):
