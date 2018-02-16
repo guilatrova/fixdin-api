@@ -8,9 +8,13 @@ from django.test import TestCase
 from django.db import transaction as db_transaction
 from django.db.models import signals
 from balances.models import PeriodBalance
-from balances.signals import created_or_updated_transaction_updates_balance, deleted_transaction_updates_balance
 from transactions.tests.base_test import BaseTestHelper
 from transactions.models import *
+from balances.signals import (
+    created_or_updated_transaction_updates_balance, 
+    deleted_transaction_updates_balance,
+    requires_updates
+)
 
 @contextmanager
 def balance_signals_disabled():
@@ -35,6 +39,37 @@ def balance_signals_disabled():
         )
 
 class SignalsTestCase(TestCase, BaseTestHelper):
+    def setUp(self):
+        self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
+        self.category = self.create_category('default category')
+        self.account = self.create_account()
+
+    def test_requires_updates_should_returns_true_when_value_changed(self):
+        transaction = self.create_transaction(100)
+        transaction.value = 200
+
+        self.assertTrue(requires_updates(transaction))
+
+    def test_requires_updates_should_returns_true_when_due_date_changed(self):
+        transaction = self.create_transaction(100)
+        transaction.due_date = date(2017, 1, 1)
+
+        self.assertTrue(requires_updates(transaction))
+
+    def test_requires_updates_should_returns_true_when_payment_date_changed(self):
+        transaction = self.create_transaction(100)
+        transaction.payment_date = date(2017, 1, 1)
+
+        self.assertTrue(requires_updates(transaction))
+
+    def test_requires_updates_should_returns_false_when_those_are_unchanged(self):
+        """ 'those' means that any property that isn't 'value', 'due_date' or 'payment_date'. """
+        transaction = self.create_transaction(100)
+        transaction.description = 'changed'
+
+        self.assertFalse(requires_updates(transaction))
+
+class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
     '''
     TestCase created to test signals and reactions to PeriodBalance + Account.
     Any insert in Transaction which due date is in current period (aka month) should update Account.current_balance.
@@ -117,9 +152,6 @@ class SignalsTestCase(TestCase, BaseTestHelper):
 
         self.assertTrue(
             PeriodBalance.objects.filter(start_date=expected_start, end_date=expected_end).exists())
-
-    def a(self):
-        pass
 
     def assert_balances(self, expected_balances):
         balances = PeriodBalance.objects.all()
