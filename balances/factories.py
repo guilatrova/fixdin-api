@@ -13,11 +13,13 @@ def get_period_from(date):
     return (start, end)
 
 def create_period_balance_for(transaction):
-    start, end = get_period_from(transaction.payment_date)
+    start, end = get_period_from(transaction.due_date)
+    real_value = transaction.value if transaction.payment_date else 0    
+
     PeriodBalance.objects.create(
         account=transaction.account,
         start_date=start,
         end_date=end,
         closed_effective_value=transaction.value, #Since I'm creating specific for this transaction, I can start with value
-        closed_real_value=transaction.value
+        closed_real_value=real_value
     )

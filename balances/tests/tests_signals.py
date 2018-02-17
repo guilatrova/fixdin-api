@@ -94,7 +94,7 @@ class FactoryTestCase(TestCase, BaseTestHelper):
         self.category = self.create_category('default category')
         self.account = self.create_account()
 
-    def test_create_period_balance_for_transaction(self):
+    def test_factory_creates(self):
         with balance_signals_disabled():
             transaction = self.create_transaction(
                 value=100,
@@ -111,9 +111,22 @@ class FactoryTestCase(TestCase, BaseTestHelper):
             self.assertEqual(100, just_created.closed_effective_value)
             self.assertEqual(100, just_created.closed_real_value)
 
-        #TODO: create without payment date
-        #TODO: create with payment date belonging to another period than due date
+    def test_factory_creates_without_payment_date(self):
+        transaction = self.create_transaction(
+            value=100,
+            due_date=date(2016, 1, 10)
+        )
 
+        create_period_balance_for(transaction)
+
+        just_created = PeriodBalance.objects.first()
+        self.assertEqual(date(2016, 1, 1), just_created.start_date)
+        self.assertEqual(date(2016, 1, 31), just_created.end_date)
+        self.assertEqual(transaction.account, just_created.account)
+        self.assertEqual(100, just_created.closed_effective_value)
+        self.assertEqual(0, just_created.closed_real_value)
+
+        #TODO: create with payment date belonging to another period than due date
 
 class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
     '''
