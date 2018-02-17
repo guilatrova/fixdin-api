@@ -7,9 +7,7 @@ from transactions.models import Transaction
 from balances.models import PeriodBalance
 from balances.factories import create_period_balance_for
 from balances.services.periods import get_current_period, get_period_from
-from balances.strategies.actions import CREATED, UPDATED, DELETED
-from balances.strategies.CascadeStrategy import CascadeStrategy
-from balances.strategies.CreateStrategy import CreateStrategy
+from balances.strategies import CREATED, UPDATED, DELETED, CascadeStrategy, CreateStrategy
 
 @receiver(post_save, sender=Transaction)
 def created_or_updated_transaction_updates_balance(sender, instance=None, created=False, **kwargs):

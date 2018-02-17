@@ -9,8 +9,7 @@ from django.db.models import signals
 from transactions.tests.base_test import BaseTestHelper
 from transactions.models import *
 from balances.models import PeriodBalance
-from balances.strategies.BaseStrategy import BaseStrategy
-from balances.strategies.actions import UPDATED
+from balances.strategies import UPDATED, BaseStrategy, CreateStrategy
 
 class BaseStrategyTestCase(TestCase, BaseTestHelper):
     
@@ -35,6 +34,14 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper):
         )
 
         self.assertEqual(self.strategy.get_lower_date(), self.strategy.instance.payment_date)
+
+    def test_get_lower_date_payment_none(self):
+        self.mock_transaction_instance(
+            due_date=date(2014, 8, 22), 
+            payment_date=None
+        )
+
+        self.assertEqual(self.strategy.get_lower_date(), self.strategy.instance.due_date)
 
     def test_is_from_previous_period_returns_true(self):
         self.mock_transaction_instance(
@@ -75,6 +82,12 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper):
 
     def mock_transaction_instance(self, **kwargs):
         self.strategy.instance = MagicMock(account=self.account, **kwargs)
+
+class CreateStrategyTestCase(TestCase, BaseTestHelper):
+    def setUp(self):
+        self.user = self.create_user(email='testuser@test.com', password='testing')[0]
+        self.account = self.create_account()
+        self.strategy = BaseStrategy(None, UPDATED)
 
 #TODO: Test everything with payment date null and filled
 #TODO: care about transaction account
