@@ -14,7 +14,6 @@ from balances.signals import (
     created_or_updated_transaction_updates_balance, 
     deleted_transaction_updates_balance,
     requires_updates,
-    is_missing_period
 )
 from balances.factories import create_period_balance_for
 
@@ -69,24 +68,7 @@ class SignalsTestCase(TestCase, BaseTestHelper):
         transaction = self.create_transaction(100)
         transaction.description = 'changed'
 
-        self.assertFalse(requires_updates(transaction))
-
-    def test_is_missing_period_returns_true(self):
-        value = date(2016, 1, 10)
-
-        self.assertTrue(is_missing_period(value))
-
-    def test_is_missing_period_returns_false(self):
-        PeriodBalance.objects.create(
-            account=self.account,
-            start_date=date(2016, 1, 1),
-            end_date=date(2016, 1, 31),
-            closed_effective_value=10,
-            closed_real_value=10,
-        )
-        value = date(2016, 1, 10)
-
-        self.assertFalse(is_missing_period(value))
+        self.assertFalse(requires_updates(transaction))    
 
 class FactoryTestCase(TestCase, BaseTestHelper):
     def setUp(self):
