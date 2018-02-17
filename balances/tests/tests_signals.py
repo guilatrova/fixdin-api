@@ -204,13 +204,13 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
         self.update_first_transaction_from_period(1000, 2)
         expected_balances = [ 50, 1490, 5990, 50990 ]
 
-        self.assert_balances(expected_balances)
+        self.assert_balances(expected_balances, expected_balances)
 
     def test_decrease_transaction_value_from_second_period_assert_next_periods(self):
         self.update_first_transaction_from_period(1, 2)
         expected_balances = [ 50, 491, 4991, 49991]
 
-        self.assert_balances(expected_balances)
+        self.assert_balances(expected_balances, expected_balances)
 
     def test_delete_from_first_period_assert_current_balance(self):
         transaction = Transaction.objects.all().first()
@@ -225,7 +225,7 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
         transaction.delete()
         expected_balances = [ 49, 499, 4999, 49999]
 
-        self.assert_balances(expected_balances)
+        self.assert_balances(expected_balances, expected_balances)
 
     @patch('balances.signals.trigger_updates')
     def test_updated_transaction_with_no_changes_to_value_should_not_trigger_updates(self, mock):
@@ -248,10 +248,11 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
         self.assertTrue(
             PeriodBalance.objects.filter(start_date=expected_start, end_date=expected_end).exists())
 
-    def assert_balances(self, expected_balances):
+    def assert_balances(self, effective_balances, real_values):
         balances = PeriodBalance.objects.all()
         for i in range(len(self.PERIOD_BALANCES)):
-            self.assertEqual(balances[i].closed_effective_value, expected_balances[i])
+            self.assertEqual(balances[i].closed_effective_value, effective_balances[i])
+            self.assertEqual(balances[i].closed_real_value, real_values[i])
 
     def assert_account_balance(self, expected):
         account = Account.objects.get(pk=self.account.id)
