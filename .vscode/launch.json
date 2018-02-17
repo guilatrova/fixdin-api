@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"balances"
+                ,"balances.tests.tests_api.ApiTestCase.test_get_expected_balance_until_date"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [

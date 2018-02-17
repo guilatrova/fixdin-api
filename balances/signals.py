@@ -9,6 +9,7 @@ from balances.factories import create_period_balance_for
 from balances.services.periods import get_current_period, get_period_from
 from balances.strategies.actions import CREATED, UPDATED, DELETED
 from balances.strategies.DifferentialValueStrategy import DifferentialValueStrategy
+from balances.strategies.CreateStrategy import CreateStrategy
 
 @receiver(post_save, sender=Transaction)
 def created_or_updated_transaction_updates_balance(sender, instance=None, created=False, **kwargs):
@@ -26,15 +27,9 @@ def deleted_transaction_updates_balance(sender, instance=None, **kwargs):
     trigger_updates(instance, DELETED)
 
 def trigger_updates(instance, action):
-    strategy = DifferentialValueStrategy(instance, action)
+    strategy_cls = CreateStrategy if action == CREATED else DifferentialValueStrategy
+    strategy = strategy_cls(instance, action)
     strategy.run()
-    # if instance.payment_date:
-    #     if is_missing_period(instance.payment_date):
-    #         create_period_balance_for(instance)
-    #     if is_from_previous_period(instance.payment_date):
-    #         update_periods_balance_from(instance.payment_date)        
-
-    # update_account_current_balance(instance, action)
 
 def requires_updates(transaction):
     attrs = ['value', 'due_date', 'payment_date']

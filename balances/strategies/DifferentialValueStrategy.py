@@ -1,4 +1,5 @@
 from django.db.models import Sum, Case, When, F
+from django.db.models.functions import Coalesce
 from balances.models import PeriodBalance
 from .BaseStrategy import BaseStrategy
 from .actions import CREATED, DELETED, UPDATED
@@ -19,8 +20,8 @@ class DifferentialValueStrategy(BaseStrategy):
             transactions_in_balance = balance.get_transactions()
 
             new_values = transactions_in_balance.aggregate(
-                closed_effective_value=Sum('value'),
-                closed_real_value=Sum(Case(When(payment_date__isnull=False, then=F('value')), default=0))
+                closed_effective_value=Coalesce(Sum('value'), 0),
+                closed_real_value=Coalesce(Sum(Case(When(payment_date__isnull=False, then=F('value')), default=0)), 0)
             )
 
             dif = {

@@ -8,8 +8,10 @@ class BaseStrategy(ABC):
     """
     def __init__(self, instance, action):
         """
-        Instance: Transaction which triggered recalculation
-        Action: CREATED, UPDATED OR DELETED
+        Initializes strategy class
+
+        :param instance: Transaction which triggered recalculation
+        :param action: CREATED, UPDATED OR DELETED
         """
         self.instance = instance
         self.action = action

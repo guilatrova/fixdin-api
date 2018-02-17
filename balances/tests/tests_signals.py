@@ -234,8 +234,7 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
         transaction.save()
 
         self.assertFalse(mock.called)
-
-    @skip('refactoring')
+    
     def test_creates_period_when_non_existing(self):
         expected_start = date(2014, 8, 1)
         expected_end = date(2014, 8, 31)
