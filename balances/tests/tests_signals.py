@@ -126,6 +126,31 @@ class FactoryTestCase(TestCase, BaseTestHelper):
         self.assertEqual(100, just_created.closed_effective_value)
         self.assertEqual(0, just_created.closed_real_value)
 
+    def test_factory_creates_payment_date_belonging_another_period(self):
+        transaction = self.create_transaction(
+            value=100,
+            due_date=date(2016, 1, 10),
+            payment_date=date(2016, 3, 20),
+        )
+
+        create_period_balance_for(transaction)
+
+        jan_period = PeriodBalance.objects.first()
+        mar_period = PeriodBalance.objects.last()
+        self.assertEqual(2, len(PeriodBalance.objects.all()))
+
+        self.assertEqual(date(2016, 1, 1), jan_period.start_date)
+        self.assertEqual(date(2016, 1, 31), jan_period.end_date)
+        self.assertEqual(transaction.account, jan_period.account)
+        self.assertEqual(100, jan_period.closed_effective_value)
+        self.assertEqual(0, jan_period.closed_real_value)
+        
+        self.assertEqual(date(2016, 3, 1), mar_period.start_date)
+        self.assertEqual(date(2016, 3, 31), mar_period.end_date)
+        self.assertEqual(transaction.account, mar_period.account)
+        self.assertEqual(0, mar_period.closed_effective_value)
+        self.assertEqual(100, mar_period.closed_real_value)
+
         #TODO: create with payment date belonging to another period than due date
 
 class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
