@@ -5,6 +5,8 @@ from django.db.models import Sum
 from django.dispatch import receiver
 from transactions.models import Transaction
 from balances.models import PeriodBalance
+from balances.factories import create_period_balance_for
+from balances.services.periods import get_current_period, get_period_from
 
 DELETED = 0
 CREATED = 1
@@ -27,8 +29,8 @@ def deleted_transaction_updates_balance(sender, instance=None, **kwargs):
 
 def trigger_updates(instance, action):
     if instance.payment_date:
-        # if is_missing_period(instance.payment_date):
-        #     create_period_balance_for(instance)
+        if is_missing_period(instance.payment_date):
+            create_period_balance_for(instance)
         if is_from_previous_period(instance.payment_date):
             update_periods_balance_from(instance.payment_date)        
 
@@ -54,25 +56,6 @@ def is_missing_period(date):
         return True
 
     return False
-
-def get_current_period():
-    return get_period_from(datetime.date.today())
-
-def get_period_from(datev):
-    start = datev.replace(day=1)
-    week, days_amount = calendar.monthrange(start.year, start.month)
-    end = start.replace(day=days_amount)
-
-    return (start, end)
-
-def create_period_balance_for(transaction):
-    start, end = get_period_from(transaction.payment_date)
-    PeriodBalance.objects.create(
-        account=transaction.account,
-        start_date=start,
-        end_date=end,
-        closed_effective_value=transaction.value #Since I'm creating specific for this transaction, I can start with value
-    )
 
 def update_periods_balance_from(payment_date):
     balances = PeriodBalance.objects.filter(end_date__gte=payment_date).order_by('end_date')
