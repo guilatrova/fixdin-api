@@ -22,11 +22,14 @@ class BaseStrategy(ABC):
 
         return due_date if not payment_date or due_date < payment_date else payment_date
 
+    def get_periods_of(self, account):
+        return PeriodBalance.objects.filter(account=account)
+
     def is_from_previous_period(self):
         lower_date = self.get_lower_date()
 
         'x means date, brackets periods: [...x..x..x][..x.....x."]"....'
-        return PeriodBalance.objects.filter(end_date__gte=lower_date).exists()
+        return self.get_periods_of(self.instance.account).filter(end_date__gte=lower_date).exists()
 
     @abstractmethod
     def update_previous_periods(self):

@@ -45,9 +45,28 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper):
 
         self.assertTrue(self.strategy.is_from_previous_period())
 
-    def create_period_balance(self, start, end):
+    def test_is_from_previous_period_returns_false(self):
+        self.mock_transaction_instance(
+            due_date=date(2018, 2, 22), 
+            payment_date=None
+        )
+        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31))
+
+        self.assertFalse(self.strategy.is_from_previous_period())
+
+    def test_is_from_previous_period_another_account_returns_false(self):
+        another_account = self.create_account(name='another')
+        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31), another_account)
+        self.mock_transaction_instance(
+            due_date=date(2018, 1, 22),
+            payment_date=date(2018, 1, 22)
+        )
+
+        self.assertFalse(self.strategy.is_from_previous_period())
+
+    def create_period_balance(self, start, end, account=None):
         PeriodBalance.objects.create(
-            account=self.account,
+            account=account or self.account,
             start_date=start,
             end_date=end,
             closed_effective_value=0,
@@ -55,9 +74,10 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper):
         )
 
     def mock_transaction_instance(self, **kwargs):
-        self.strategy.instance = MagicMock(**kwargs)
+        self.strategy.instance = MagicMock(account=self.account, **kwargs)
 
-    #care about transaction account
+#TODO: Test everything with payment date null and filled
+#TODO: care about transaction account
 
 # class StrategyTestCase(TestCase, BaseTestHelper):
 #     def setUp(self):
