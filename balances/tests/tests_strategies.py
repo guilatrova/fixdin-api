@@ -18,32 +18,44 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper):
     def setUp(self):
         self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
         self.account = self.create_account()
-        self.strategy = BaseStrategy(MagicMock(), UPDATED)
+        self.strategy = BaseStrategy(None, UPDATED)
 
     def test_get_due_lower_date(self):
-        self.strategy.instance.due_date = date(2014, 8, 22)
-        self.strategy.instance.payment_date = date(2017, 1, 1)
+        self.mock_transaction_instance(
+            due_date=date(2014, 8, 22), 
+            payment_date=date(2017, 1, 1)
+        )
 
         self.assertEqual(self.strategy.get_lower_date(), self.strategy.instance.due_date)
     
     def test_get_payment_lower_date(self):
-        self.strategy.instance.due_date = date(2014, 8, 22)
-        self.strategy.instance.payment_date = date(2010, 1, 1)
+        self.mock_transaction_instance(
+            due_date=date(2014, 8, 22), 
+            payment_date=date(2010, 1, 1)
+        )
 
         self.assertEqual(self.strategy.get_lower_date(), self.strategy.instance.payment_date)
 
     def test_is_from_previous_period_returns_true(self):
-        self.strategy.instance.due_date = date(2018, 1, 22)
-        self.strategy.instance.payment_date = None
+        self.mock_transaction_instance(
+            due_date=date(2018, 1, 22), 
+            payment_date=None
+        )    
+        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31))
+
+        self.assertTrue(self.strategy.is_from_previous_period())
+
+    def create_period_balance(self, start, end):
         PeriodBalance.objects.create(
             account=self.account,
-            start_date=date(2018, 1, 1),
-            end_date=date(2018, 1, 31),
+            start_date=start,
+            end_date=end,
             closed_effective_value=0,
             closed_real_value=0
         )
-        self.assertTrue(self.strategy.is_from_previous_period())
 
+    def mock_transaction_instance(self, **kwargs):
+        self.strategy.instance = MagicMock(**kwargs)
 
     #care about transaction account
 
