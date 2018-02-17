@@ -4,7 +4,7 @@ from balances.models import PeriodBalance
 from .BaseStrategy import BaseStrategy
 from .actions import CREATED, DELETED, UPDATED
 
-class DifferentialValueStrategy(BaseStrategy):
+class CascadeStrategy(BaseStrategy):
     """
     Strategy triggered to update values with no changes to any dates.
     e.g. User changed value from R$ 10 to R$ 15.

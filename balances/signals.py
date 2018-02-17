@@ -8,7 +8,7 @@ from balances.models import PeriodBalance
 from balances.factories import create_period_balance_for
 from balances.services.periods import get_current_period, get_period_from
 from balances.strategies.actions import CREATED, UPDATED, DELETED
-from balances.strategies.DifferentialValueStrategy import DifferentialValueStrategy
+from balances.strategies.CascadeStrategy import CascadeStrategy
 from balances.strategies.CreateStrategy import CreateStrategy
 
 @receiver(post_save, sender=Transaction)
@@ -27,7 +27,7 @@ def deleted_transaction_updates_balance(sender, instance=None, **kwargs):
     trigger_updates(instance, DELETED)
 
 def trigger_updates(instance, action):
-    strategy_cls = CreateStrategy if action == CREATED else DifferentialValueStrategy
+    strategy_cls = CreateStrategy if action == CREATED else CascadeStrategy
     strategy = strategy_cls(instance, action)
     strategy.run()
 

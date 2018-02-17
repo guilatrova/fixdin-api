@@ -2,10 +2,14 @@ import datetime
 from balances.models import PeriodBalance
 from balances.services.periods import get_current_period, get_period_from
 from balances.factories import create_period_balance_for
-from .DifferentialValueStrategy import DifferentialValueStrategy
+from .CascadeStrategy import CascadeStrategy
 from .actions import CREATED
 
-class CreateStrategy(DifferentialValueStrategy):
+class CreateStrategy(CascadeStrategy):
+    """
+    Exclusive strategy to be triggered when a new transaction is created.
+    It creates a period if missing, cascade updating all PeriodBalances when needed and also current balance.
+    """
     def __init__(self, instance, action):
         super().__init__(instance, action)
         assert action == CREATED, 'CreateStrategy only accepts create action'
