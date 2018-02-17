@@ -95,31 +95,21 @@ class FactoryTestCase(TestCase, BaseTestHelper):
         self.account = self.create_account()
 
     def test_factory_creates(self):
-        with balance_signals_disabled():
-            transaction = self.create_transaction(
-                value=100,
-                due_date=date(2016, 1, 10),
-                payment_date=date(2016, 1, 10)
-            )
+        transaction = self.create_transaction(100, date(2016, 1, 10), date(2016, 1, 10))
+        create_period_balance_for(transaction)
 
-            create_period_balance_for(transaction)
-
-            just_created = PeriodBalance.objects.first()
-            self.assert_period(
-                just_created,
-                date(2016, 1, 1),
-                date(2016, 1, 31),
-                account=transaction.account,
-                closed_effective_value=100,
-                closed_real_value=100
-            )
-
-    def test_factory_creates_without_payment_date(self):
-        transaction = self.create_transaction(
-            value=100,
-            due_date=date(2016, 1, 10)
+        just_created = PeriodBalance.objects.first()
+        self.assert_period(
+            just_created,
+            date(2016, 1, 1),
+            date(2016, 1, 31),
+            account=transaction.account,
+            closed_effective_value=100,
+            closed_real_value=100
         )
 
+    def test_factory_creates_without_payment_date(self):
+        transaction = self.create_transaction(100, date(2016, 1, 10))
         create_period_balance_for(transaction)
 
         just_created = PeriodBalance.objects.first()
@@ -133,12 +123,7 @@ class FactoryTestCase(TestCase, BaseTestHelper):
         )
 
     def test_factory_creates_payment_date_belonging_another_period(self):
-        transaction = self.create_transaction(
-            value=100,
-            due_date=date(2016, 1, 10),
-            payment_date=date(2016, 3, 20),
-        )
-
+        transaction = self.create_transaction(100, date(2016, 1, 10), date(2016, 3, 20))
         create_period_balance_for(transaction)
 
         jan_period = PeriodBalance.objects.first()
@@ -164,6 +149,14 @@ class FactoryTestCase(TestCase, BaseTestHelper):
             closed_real_value=100
         )
         
+    def create_transaction(self, value, due_date, payment_date=None):
+        with balance_signals_disabled():
+            return super().create_transaction(
+                value=value,
+                due_date=due_date,
+                payment_date=payment_date,
+            )
+
     def assert_period(self, period, start, end, **kwargs):
         self.assertEqual(period.start_date, start)
         self.assertEqual(period.end_date, end)
