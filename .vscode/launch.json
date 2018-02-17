@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"balances.tests.tests_api.ApiTestCase.test_get_expected_balance_until_date"
+                ,"balances.tests.tests_strategies.CreateStrategyTestCase.test_is_from_previous_period_checks_missing_period"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [

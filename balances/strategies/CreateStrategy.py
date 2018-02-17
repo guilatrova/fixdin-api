@@ -1,7 +1,7 @@
 import datetime
 from balances.models import PeriodBalance
 from balances.services.periods import get_current_period, get_period_from
-from balances.factories import create_period_balance_for
+from balances import factories
 from .CascadeStrategy import CascadeStrategy
 from .actions import CREATED
 
@@ -25,7 +25,7 @@ class CreateStrategy(CascadeStrategy):
 
     def is_from_previous_period(self):
         if self.is_missing_period():
-            create_period_balance_for(self.instance)
+            factories.create_period_balance_for(self.instance)
             return True
         
         return super().is_from_previous_period()
