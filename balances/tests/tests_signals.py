@@ -178,7 +178,7 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
     PERIOD_BALANCES = [ 50, 500, 5000, 50000 ]
     SUM_PERIODS = 55550
     
-    def setUp(self):        
+    def setUp(self):
         with db_transaction.atomic(), balance_signals_disabled():
             self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
             self.category = self.create_category('default category')        
@@ -235,6 +235,7 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
 
         self.assertFalse(mock.called)
 
+    @skip('refactoring')
     def test_creates_period_when_non_existing(self):
         expected_start = date(2014, 8, 1)
         expected_end = date(2014, 8, 31)
