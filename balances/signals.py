@@ -45,10 +45,10 @@ def requires_updates(transaction):
 def is_from_previous_period(payment_date):
     return PeriodBalance.objects.filter(end_date__gte=payment_date).exists()
 
-def is_missing_period(payment_date):
-    cmp_date = payment_date.date() if isinstance(payment_date, datetime.datetime) else payment_date
+def is_missing_period(date):
+    cmp_date = date.date() if isinstance(date, datetime.datetime) else date
     cur_start, cur_end = get_current_period()
-    start, end = get_period_from(payment_date)
+    start, end = get_period_from(date)
 
     if not PeriodBalance.objects.filter(start_date=start,end_date=end).exists() and cmp_date < cur_start:
         return True
@@ -71,7 +71,7 @@ def create_period_balance_for(transaction):
         account=transaction.account,
         start_date=start,
         end_date=end,
-        closed_value=transaction.value #Since I'm creating specific for this transaction, I can start with value
+        closed_effective_value=transaction.value #Since I'm creating specific for this transaction, I can start with value
     )
 
 def update_periods_balance_from(payment_date):
@@ -81,10 +81,10 @@ def update_periods_balance_from(payment_date):
     for balance in balances:
         transactions_in_balance = balance.get_transactions()
 
-        new_closed_value = transactions_in_balance.aggregate(closed_value=Sum('value'))['closed_value']
-        dif = new_closed_value - balance.closed_value
+        new_closed_effective_value = transactions_in_balance.aggregate(closed_effective_value=Sum('value'))['closed_effective_value']
+        dif = new_closed_effective_value - balance.closed_effective_value
 
-        balance.closed_value = new_closed_value + dif_to_cascade
+        balance.closed_effective_value = new_closed_effective_value + dif_to_cascade
 
         dif_to_cascade = dif_to_cascade + dif
         balance.save()        
