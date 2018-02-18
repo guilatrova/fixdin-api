@@ -19,9 +19,10 @@ class CreateStrategy(CascadeStrategy):
         cmp_date = date.date() if isinstance(date, datetime.datetime) else date
         cur_start, cur_end = get_current_period()
         start, end = get_period_from(date)
+        periods = self.get_periods_of(self.instance.account)
 
         return (cmp_date < cur_start and 
-            not PeriodBalance.objects.filter(start_date=start,end_date=end).exists())
+            not periods.filter(start_date=start,end_date=end).exists())
 
     def is_from_previous_period(self):
         if self.is_missing_period():

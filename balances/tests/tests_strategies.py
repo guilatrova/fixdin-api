@@ -11,7 +11,21 @@ from transactions.models import *
 from balances.models import PeriodBalance
 from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy
 
-class BaseStrategyTestCase(TestCase, BaseTestHelper):
+class StrategyTestHelper:
+    def create_period_balance(self, start, end, account=None):
+        PeriodBalance.objects.create(
+            account=account or self.account,
+            start_date=start,
+            end_date=end,
+            closed_effective_value=0,
+            closed_real_value=0
+        )
+
+    def mock_transaction_instance(self, **kwargs):
+        self.strategy.instance = MagicMock(account=self.account, **kwargs)
+
+
+class BaseStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
     
     @patch.multiple(BaseStrategy, __abstractmethods__=set()) #Allow instantiate abstract class
     def setUp(self):
@@ -71,19 +85,7 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper):
 
         self.assertFalse(self.strategy.is_from_previous_period())
 
-    def create_period_balance(self, start, end, account=None):
-        PeriodBalance.objects.create(
-            account=account or self.account,
-            start_date=start,
-            end_date=end,
-            closed_effective_value=0,
-            closed_real_value=0
-        )
-
-    def mock_transaction_instance(self, **kwargs):
-        self.strategy.instance = MagicMock(account=self.account, **kwargs)
-
-class CreateStrategyTestCase(TestCase, BaseTestHelper):
+class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
     def setUp(self):
         self.user = self.create_user(email='testuser@test.com', password='testing')[0]
         self.account = self.create_account()
@@ -95,11 +97,33 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper):
             self.assertTrue(self.strategy.is_from_previous_period())
             self.assertTrue(mock.called)
 
-    def mock_transaction_instance(self, **kwargs):
-        self.strategy.instance = MagicMock(
-            account=self.account,
-            **kwargs
+    def test_is_missing_period_returns_true(self):
+        self.mock_transaction_instance(
+            due_date=date(2017, 8, 22),
+            payment_date=date(2017, 8, 22)
         )
+
+        self.assertTrue(self.strategy.is_missing_period())
+
+    def test_is_missing_period_returns_false_current_period(self):
+        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31))
+        self.mock_transaction_instance(
+            due_date=date.today(),
+            payment_date=date.today()
+        )
+
+        self.assertFalse(self.strategy.is_missing_period())
+
+    def test_is_missing_period_another_account(self):
+        another_account = self.create_account(name='another')
+        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31), another_account)
+        self.mock_transaction_instance(
+            due_date=date(2018, 1, 22),
+            payment_date=date(2018, 1, 22)
+        )
+
+        #only existent for another account
+        self.assertTrue(self.strategy.is_missing_period())
 
 #TODO: Test everything with payment date null and filled
 #TODO: care about transaction account

@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"balances.tests.tests_strategies.CreateStrategyTestCase.test_is_from_previous_period_checks_missing_period"
+                ,"balances.tests.tests_strategies.CreateStrategyTestCase"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
