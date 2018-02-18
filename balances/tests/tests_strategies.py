@@ -9,7 +9,7 @@ from django.db.models import signals
 from transactions.tests.base_test import BaseTestHelper
 from transactions.models import *
 from balances.models import PeriodBalance
-from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy
+from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy, CascadeStrategy
 
 class StrategyTestHelper:
     def create_period_balance(self, start, end, account=None):
@@ -23,7 +23,6 @@ class StrategyTestHelper:
 
     def mock_transaction_instance(self, **kwargs):
         self.strategy.instance = MagicMock(account=self.account, **kwargs)
-
 
 class BaseStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
     
@@ -125,8 +124,11 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
         #only existent for another account
         self.assertTrue(self.strategy.is_missing_period())
 
-#TODO: Test everything with payment date null and filled
-#TODO: care about transaction account
+class CascadeStrategy(TestCase, BaseTestHelper, StrategyTestHelper):
+    def setUp(self):
+        self.user = self.create_user(email='testuser@test.com', password='testing')[0]
+        self.account = self.create_account()
+        self.strategy = CascadeStrategy(None, CREATED)
 
 # class StrategyTestCase(TestCase, BaseTestHelper):
 #     def setUp(self):
