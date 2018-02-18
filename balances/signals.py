@@ -11,6 +11,7 @@ from balances.strategies import CREATED, UPDATED, DELETED
 
 @receiver(post_save, sender=Transaction)
 def created_or_updated_transaction_updates_balance(sender, instance=None, created=False, **kwargs):
+    _strip_time_from_dates(instance)
     if not created:
         action = UPDATED
         if not requires_updates(instance):
@@ -26,7 +27,6 @@ def deleted_transaction_updates_balance(sender, instance=None, **kwargs):
 
 @db_transaction.atomic
 def trigger_updates(instance, action):
-    _fix_dates(instance)
     strategy = create_strategy(action, instance)
     strategy.run()
 
@@ -38,15 +38,15 @@ def requires_updates(transaction):
 
     return False
 
-def _fix_dates(transaction):
+def _strip_time_from_dates(transaction):
     """
     Strip time of transaction dates.
     Sometimes because of tests some dates are in format "datetime" and others "date", which causes issues.
     """
-    def _fix(attr):
+    def strip(attr):
         val = getattr(transaction, attr)
         if isinstance(val, datetime.datetime):
             setattr(transaction, attr, val.date())    
 
-    _fix('due_date')
-    _fix('payment_date')
+    for attr in ['due_date', 'payment_date', 'initial_due_date', 'initial_payment_date']:
+        strip(attr)

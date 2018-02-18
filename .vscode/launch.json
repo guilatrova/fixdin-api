@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"balances.tests.tests_signals.FactoryTestCase"
+                ,"balances.tests.tests_signals"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [

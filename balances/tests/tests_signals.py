@@ -75,7 +75,7 @@ class FactoryTestCase(TestCase, BaseTestHelper):
             closed_real_value=0
         )
 
-    def test_factory_creates_payment_date_belonging_another_period(self):
+    def test_factory_creates_both_dates(self):
         transaction = self.create_transaction(100, date(2016, 1, 10), date(2016, 3, 20))
         create_period_balance_for(transaction, [date(2016, 1, 10), date(2016, 3, 20)])
 
