@@ -7,6 +7,7 @@ from transactions.tests.base_test import BaseTestHelper
 from transactions.models import Transaction
 from balances.models import PeriodBalance
 from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy, CascadeStrategy
+from balances.tests.helpers import PeriodBalanceWithTransactionsFactory
 
 class StrategyTestHelper:
     def create_period_balance(self, start, end, account=None):
@@ -89,6 +90,7 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
     
     @patch('balances.factories.create_period_balance_for', side_effect=None)
     def test_is_from_previous_period_checks_missing_period(self, ignore_mock):
+        self.mock_transaction_instance()
         with patch.object(self.strategy, 'is_missing_period', return_value=True) as mock:
             self.assertTrue(self.strategy.is_from_previous_period())
             self.assertTrue(mock.called)
@@ -99,7 +101,7 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
             payment_date=date(2017, 8, 22)
         )
 
-        self.assertTrue(self.strategy.is_missing_period())
+        self.assertTrue(self.strategy.is_missing_period(self.account))
 
     def test_is_missing_period_returns_false_current_period(self):
         self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31))
@@ -108,7 +110,7 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
             payment_date=date.today()
         )
 
-        self.assertFalse(self.strategy.is_missing_period())
+        self.assertFalse(self.strategy.is_missing_period(self.account))
 
     def test_is_missing_period_another_account(self):
         another_account = self.create_account(name='another')
@@ -119,13 +121,4 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
         )
 
         #only existent for another account
-        self.assertTrue(self.strategy.is_missing_period())
-
-class CascadeStrategy(TestCase, BaseTestHelper, StrategyTestHelper):
-    def setUp(self):
-        self.user = self.create_user(email='testuser@test.com', password='testing')[0]
-        self.account = self.create_account()
-        # self.strategy = CascadeStrategy(None, CREATED)
-
-    def test_update_previous_periods(self):
-        pass
+        self.assertTrue(self.strategy.is_missing_period(self.account))

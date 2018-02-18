@@ -1,5 +1,4 @@
 import datetime
-from balances.models import PeriodBalance
 from balances.services.periods import get_current_period, get_period_from
 from balances import factories
 from .CascadeStrategy import CascadeStrategy
@@ -14,18 +13,18 @@ class CreateStrategy(CascadeStrategy):
         super().__init__(instance, action)
         assert action == CREATED, 'CreateStrategy only accepts create action'
 
-    def is_missing_period(self):
+    def is_missing_period(self, account):
         date = self.get_lower_date()
         cmp_date = date.date() if isinstance(date, datetime.datetime) else date
         cur_start, cur_end = get_current_period()
         start, end = get_period_from(date)
-        periods = self.get_periods_of(self.instance.account)
+        periods = self.get_periods_of(account)
 
         return (cmp_date < cur_start and 
             not periods.filter(start_date=start,end_date=end).exists())
 
     def is_from_previous_period(self):
-        if self.is_missing_period():
+        if self.is_missing_period(self.instance.account):
             factories.create_period_balance_for(self.instance)
             return True
         

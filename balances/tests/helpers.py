@@ -79,7 +79,8 @@ class PeriodBalanceWithTransactionsFactory:
 
             transaction_value = transaction_value * self.VALUE_INCREMENT_MULTIPLIER_PER_PERIOD
 
-        self.account.current_balance = total_value
+        self.account.current_effective_balance = total_value
+        self.account.current_real_balance = total_value
         self.account.save()
     
     def create_period_balances(self):

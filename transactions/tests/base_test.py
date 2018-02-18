@@ -45,7 +45,7 @@ class BaseTestHelper:
         if user is None:
             user = self.user
 
-        return Account.objects.create(name=name, user=user, current_balance=0)
+        return Account.objects.create(name=name, user=user, current_effective_balance=0, current_real_balance=0)
 
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(kwargs)

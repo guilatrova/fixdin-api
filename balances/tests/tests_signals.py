@@ -120,7 +120,7 @@ class FactoryTestCase(TestCase, BaseTestHelper):
 class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
     '''
     TestCase created to test signals and reactions to PeriodBalance + Account.
-    Any insert in Transaction which due date is in current period (aka month) should update Account.current_balance.
+    Any insert in Transaction which due date is in current period (aka month) should update Account balance.
     Every other insert in past periods should cascade updating PeriodBalance until arrive current balance in Account.
     '''
     START_DATE = date(year=2017, month=1, day=1)
@@ -142,14 +142,14 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
 
         expected_balance = self.SUM_PERIODS - old_value + new_value
 
-        self.assert_account_balance(expected_balance)
+        self.assert_account_balance(expected_balance, expected_balance)
 
     def test_decrease_transaction_value_from_second_period_assert_current_balance(self):
         old_value, new_value = self.update_first_transaction_from_period(1, 2)
 
         expected_balance = self.SUM_PERIODS - old_value + new_value
 
-        self.assert_account_balance(expected_balance)
+        self.assert_account_balance(expected_balance, expected_balance)
 
     def test_increase_transaction_value_from_second_period_assert_next_periods(self):
         self.update_first_transaction_from_period(1000, 2)
@@ -169,7 +169,7 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
 
         expected_balance = self.SUM_PERIODS - transaction.value
 
-        self.assert_account_balance(expected_balance)
+        self.assert_account_balance(expected_balance, expected_balance)
 
     def test_delete_from_first_period_assert_next_periods(self):
         transaction = Transaction.objects.all().first()
@@ -204,9 +204,10 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
             self.assertEqual(balances[i].closed_effective_value, effective_balances[i])
             self.assertEqual(balances[i].closed_real_value, real_values[i])
 
-    def assert_account_balance(self, expected):
+    def assert_account_balance(self, effective_expected, real_expected):
         account = Account.objects.get(pk=self.account.id)
-        self.assertEqual(account.current_balance, expected)
+        self.assertEqual(account.current_effective_balance, effective_expected)
+        self.assertEqual(account.current_real_balance, real_expected)
 
     def update_first_transaction_from_period(self, new_value, period):
         date = self.START_DATE + relativedelta(months=+period-1)

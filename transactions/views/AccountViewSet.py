@@ -15,4 +15,4 @@ class AccountViewSet(viewsets.ModelViewSet):
         }
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user, current_balance=0)
+        serializer.save(user=self.request.user, current_effective_balance=0, current_real_balance=0)

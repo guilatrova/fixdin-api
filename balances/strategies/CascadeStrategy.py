@@ -10,10 +10,10 @@ class CascadeStrategy(BaseStrategy):
     e.g. User changed value from R$ 10 to R$ 15.
     """
 
-    def update_previous_periods(self):
+    def update_previous_periods(self, account):
         start_from = self.get_lower_date()
 
-        balances = PeriodBalance.objects.filter(end_date__gte=start_from).order_by('end_date')
+        balances = self.get_periods_of(account).filter(end_date__gte=start_from).order_by('end_date')
         dif_to_cascade = { 'effective': 0, 'real': 0 }
 
         for balance in balances:
@@ -35,17 +35,22 @@ class CascadeStrategy(BaseStrategy):
             dif_to_cascade['effective'] += dif['effective']
             dif_to_cascade['real'] += dif['real']
 
-            balance.save() 
+            balance.save()
         
     def update_current_balance(self, instance, action):
         account = instance.account
+        real_value = instance.value if instance.payment_date else 0
 
         if action == DELETED:
-            account.current_balance = account.current_balance - instance.value        
+            account.current_effective_balance -= instance.value
+            account.current_real_balance -= real_value
         elif action == CREATED:
-            account.current_balance = account.current_balance + instance.value
+            account.current_effective_balance += instance.value
+            account.current_real_balance += real_value
         else:
             dif = instance.initial_value - instance.value
-            account.current_balance = account.current_balance - dif
+            real_dif = (instance.initial_value if instance.initial_payment_date else 0) - real_value
+            account.current_effective_balance -= dif #If is an income it will sum
+            account.current_real_balance -= real_dif
 
         account.save()

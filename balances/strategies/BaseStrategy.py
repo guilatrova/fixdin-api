@@ -32,7 +32,7 @@ class BaseStrategy(ABC):
         return self.get_periods_of(self.instance.account).filter(end_date__gte=lower_date).exists()
 
     @abstractmethod
-    def update_previous_periods(self):
+    def update_previous_periods(self, account):
         pass
 
     @abstractmethod
@@ -41,6 +41,6 @@ class BaseStrategy(ABC):
 
     def run(self):
         if self.is_from_previous_period():
-            self.update_previous_periods()
+            self.update_previous_periods(self.instance.account)
 
         self.update_current_balance(self.instance, self.action)

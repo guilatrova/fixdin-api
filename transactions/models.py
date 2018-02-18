@@ -13,7 +13,8 @@ class HasKind:
 class Account(models.Model):
     user = models.ForeignKey(User)
     name = models.CharField(max_length=30)
-    current_balance = models.DecimalField(max_digits=19, decimal_places=2)
+    current_real_balance = models.DecimalField(max_digits=19, decimal_places=2)
+    current_effective_balance = models.DecimalField(max_digits=19, decimal_places=2)
 
 class Category(models.Model, HasKind):
     class Meta:
@@ -49,6 +50,7 @@ class Transaction(models.Model, HasKind):
         self.initial_value = self.value
         self.initial_due_date = self.due_date
         self.initial_payment_date = self.payment_date
+        self.initial_account = self.account
 
     account = models.ForeignKey(Account)
     due_date = models.DateField()

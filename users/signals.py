@@ -8,4 +8,4 @@ from transactions.models import Account
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         ExpiringToken.objects.create(user=instance)
-        Account.objects.create(user=instance, name='default', current_balance=0)
+        Account.objects.create(user=instance, name='default', current_effective_balance=0, current_real_balance=0)
