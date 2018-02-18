@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock
 from transactions.tests.base_test import BaseTestHelper
 from transactions.models import Transaction, Account
 from balances.models import PeriodBalance
-from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy, CascadeStrategy
+from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy, CascadeStrategy, ChangedAccountStrategy
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory
 
 class StrategyTestHelper:
@@ -146,7 +146,36 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
         self.assertEqual(effective, account.current_effective_balance)
         self.assertEqual(real, account.current_real_balance)
 
+class ChangedAccountStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
+    def setUp(self):
+        self.user = self.create_user(email='testuser@test.com', password='testing')[0]
+        self.account = self.create_account(current_effective_balance=100, current_real_balance=100)
+        self.another_account = self.create_account(name='other', current_effective_balance=100, current_real_balance=100)
+        self.strategy = ChangedAccountStrategy(None, UPDATED)
+        
+    def test_get_lower_date_compare_old_dates(self):
+        self.mock_transaction_instance(
+            initial_due_date=date(2017, 1, 1),
+            initial_payment_date=date(2016, 5, 1),
+            due_date=date(2016, 12, 1),
+            payment_date=date(2016, 12, 1)
+        )
+
+        self.assertEqual(self.strategy.get_lower_date(), self.strategy.instance.initial_payment_date)
+
+    def test_get_lower_date_compare_none_dates(self):
+        self.mock_transaction_instance(
+            initial_due_date=date(2016, 5, 1),
+            initial_payment_date=date(2017, 1, 1),
+            due_date=date(2016, 12, 1),
+            payment_date=None
+        )
+
+        self.assertEqual(self.strategy.get_lower_date(), self.strategy.instance.initial_due_date)
+
+    # def test_is_from_previous_period
 
 #TODO: CREATE TRANSACTION TO FUTURE DATE
 #TODO: SETUP PAYMENT TO FUTURE DATE
 #TODO: PAYED PAST DATE
+#TODO: DUEDATE AND PAYMENTDATE DIFFERENT PERIODS

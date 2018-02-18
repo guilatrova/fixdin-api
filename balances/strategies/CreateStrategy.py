@@ -9,9 +9,6 @@ class CreateStrategy(CascadeStrategy):
     Exclusive strategy to be triggered when a new transaction is created.
     It creates a period if missing, cascade updating all PeriodBalances when needed and also current balance.
     """
-    def __init__(self, instance, action):
-        super().__init__(instance, action)
-        assert action == CREATED, 'CreateStrategy only accepts create action'
 
     def is_missing_period(self, account):
         date = self.get_lower_date()

@@ -1,17 +1,23 @@
 from .CreateStrategy import CreateStrategy
 from .actions import UPDATED
 
+#We inherit from Create because it may be changed to an account without a PeriodBalance, so it will be created if needed
 class ChangedAccountStrategy(CreateStrategy):
     """
     Exclusive strategy to be triggered when user changes any transaction
     from account A to B.
     e.g. User changed transaction gas from account 'wallet' to 'bank'.
     """
-    
-    def __init__(self, instance, action):
-        super().__init__(instance, action)
-        assert action == UPDATED, 'ChangedAccountStrategy only accepts update action'
-        assert instance.initial_account is not None and instance.initial_account != instance.account, 'Account must be changed to use this strategy'
+
+    def get_lower_date(self):
+        def get_lower(x, y):
+            if x and y:
+                return x if x < y else y
+            return x or y
+
+        lower_payment = get_lower(self.instance.initial_payment_date, self.instance.payment_date)
+        lower_due = get_lower(self.instance.initial_due_date, self.instance.due_date)
+        return get_lower(lower_due, lower_payment)
 
     def run(self):
         if self.is_from_previous_period():
@@ -25,7 +31,7 @@ class ChangedAccountStrategy(CreateStrategy):
         self._update_balance_new_account(instance, instance.account)
 
     def _update_balance_initial_account(self, instance, initial_account):
-        #User may have changed values and dates too, so is import to consider initial values
+        #User may have changed values and dates too, so is import to consider initial values here
         real_value = instance.initial_value if instance.initial_payment_date else 0
 
         initial_account.current_effective_balance = initial_account.current_effective_balance - instance.initial_value
