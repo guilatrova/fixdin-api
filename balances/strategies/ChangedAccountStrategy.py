@@ -1,22 +1,12 @@
 from .CreateStrategy import CreateStrategy
 
-#We inherit from Create because it may be changed to an account without a PeriodBalance, so it will be created if needed
+
 class ChangedAccountStrategy(CreateStrategy):
     """
     Exclusive strategy to be triggered when user changes any transaction
     from account A to B.
     e.g. User changed transaction gas from account 'wallet' to 'bank'.
     """
-
-    def get_lower_date(self):
-        def get_lower(x, y):
-            if x and y:
-                return x if x < y else y
-            return x or y
-
-        lower_payment = get_lower(self.instance.initial_payment_date, self.instance.payment_date)
-        lower_due = get_lower(self.instance.initial_due_date, self.instance.due_date)
-        return get_lower(lower_due, lower_payment)
 
     def run(self):
         if self.is_from_previous_period():

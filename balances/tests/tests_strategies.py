@@ -20,7 +20,14 @@ class StrategyTestHelper:
         )
 
     def mock_transaction_instance(self, **kwargs):
+        if 'value' in kwargs:
+            kwargs.update({ 'real_value': kwargs['value'] if kwargs['payment_date'] else 0 })
         self.strategy.instance = MagicMock(account=self.account, **kwargs)
+
+    def assert_account_balances(self, effective, real):
+        account = Account.objects.get(pk=self.account.id)
+        self.assertEqual(effective, account.current_effective_balance)
+        self.assertEqual(real, account.current_real_balance)
 
 class BaseStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
     
@@ -139,12 +146,7 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
             value=100
         )
         self.strategy.update_current_balance(self.strategy.instance, self.strategy.action)
-        self.assert_account_balances(200, 100)
-
-    def assert_account_balances(self, effective, real):
-        account = Account.objects.get(pk=self.account.id)
-        self.assertEqual(effective, account.current_effective_balance)
-        self.assertEqual(real, account.current_real_balance)
+        self.assert_account_balances(200, 100)    
 
 class UpdateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):    
     def setUp(self):
@@ -172,6 +174,18 @@ class UpdateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
         )
 
         self.assertEqual(self.strategy.get_lower_date(), self.strategy.instance.initial_due_date)
+
+    def test_update_current_balance(self):
+        self.mock_transaction_instance(
+            initial_due_date=date(2017, 1, 1),
+            initial_payment_date=date(2017, 1, 1),
+            initial_value=100,
+            due_date=date(2017, 1, 1),
+            payment_date=date(2017, 1, 1),
+            value=150
+        )
+        self.strategy.update_current_balance(self.strategy.instance)
+        self.assert_account_balances(150, 150)
 
     # def test_is_from_previous_period
 

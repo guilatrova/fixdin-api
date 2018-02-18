@@ -18,8 +18,8 @@ class UpdateStrategy(CreateStrategy):
         lower_due = get_lower(self.instance.initial_due_date, self.instance.due_date)
         return get_lower(lower_due, lower_payment)
 
-    def update_current_balance(self, instance, action):
-        account = instance.account        
+    def update_current_balance(self, instance, action=None):
+        account = instance.account
 
         dif = instance.initial_value - instance.value
         real_dif = (instance.initial_value if instance.initial_payment_date else 0) - instance.real_value
