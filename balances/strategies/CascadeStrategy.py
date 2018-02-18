@@ -44,9 +44,6 @@ class CascadeStrategy(BaseStrategy):
         if action == DELETED:
             account.current_effective_balance -= instance.value
             account.current_real_balance -= real_value
-        elif action == CREATED:
-            account.current_effective_balance += instance.value
-            account.current_real_balance += real_value
         else:
             dif = instance.initial_value - instance.value
             real_dif = (instance.initial_value if instance.initial_payment_date else 0) - real_value

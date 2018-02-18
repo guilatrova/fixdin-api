@@ -41,11 +41,11 @@ class BaseTestHelper:
 
         return transaction
 
-    def create_account(self, user=None, name='default'):
+    def create_account(self, user=None, name='default', current_effective_balance=0, current_real_balance=0):
         if user is None:
             user = self.user
 
-        return Account.objects.create(name=name, user=user, current_effective_balance=0, current_real_balance=0)
+        return Account.objects.create(name=name, user=user, current_effective_balance=current_effective_balance, current_real_balance=current_real_balance)
 
     def create_user(self, name='testuser', **kwargs):
         user = User.objects.create_user(kwargs)

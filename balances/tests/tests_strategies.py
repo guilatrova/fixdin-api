@@ -4,7 +4,7 @@ from django.test import TestCase
 from unittest import skip
 from unittest.mock import patch, MagicMock
 from transactions.tests.base_test import BaseTestHelper
-from transactions.models import Transaction
+from transactions.models import Transaction, Account
 from balances.models import PeriodBalance
 from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy, CascadeStrategy
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory
@@ -85,7 +85,7 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
 class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
     def setUp(self):
         self.user = self.create_user(email='testuser@test.com', password='testing')[0]
-        self.account = self.create_account()
+        self.account = self.create_account(current_effective_balance=100, current_real_balance=100)
         self.strategy = CreateStrategy(None, CREATED)
     
     @patch('balances.factories.create_period_balance_for', side_effect=None)
@@ -122,3 +122,31 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
 
         #only existent for another account
         self.assertTrue(self.strategy.is_missing_period(self.account))
+
+    def test_update_current_balance(self):
+        self.mock_transaction_instance(
+            due_date=date.today(),
+            payment_date=date.today(),
+            value=100
+        )
+        self.strategy.update_current_balance(self.strategy.instance, self.strategy.action)
+        self.assert_account_balances(200, 200)
+
+    def test_update_current_balance_without_payment_date(self):
+        self.mock_transaction_instance(
+            due_date=date.today(),
+            payment_date=None,
+            value=100
+        )
+        self.strategy.update_current_balance(self.strategy.instance, self.strategy.action)
+        self.assert_account_balances(200, 100)
+
+    def assert_account_balances(self, effective, real):
+        account = Account.objects.get(pk=self.account.id)
+        self.assertEqual(effective, account.current_effective_balance)
+        self.assertEqual(real, account.current_real_balance)
+
+
+#TODO: CREATE TRANSACTION TO FUTURE DATE
+#TODO: SETUP PAYMENT TO FUTURE DATE
+#TODO: PAYED PAST DATE

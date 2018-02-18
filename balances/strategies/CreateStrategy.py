@@ -29,3 +29,12 @@ class CreateStrategy(CascadeStrategy):
             return True
         
         return super().is_from_previous_period()
+
+    def update_current_balance(self, instance, action):
+        account = instance.account
+        real_value = instance.value if instance.payment_date else 0
+
+        account.current_effective_balance += instance.value
+        account.current_real_balance += real_value
+
+        account.save()
