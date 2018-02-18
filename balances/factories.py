@@ -12,9 +12,8 @@ def create_period_balance_for(transaction):
 
 def _create_period_balance_for_period(transaction, period):
     start, end = period
-    real_value = transaction.value if transaction.payment_date else 0
 
-    _create(transaction.account, start, end, transaction.value, real_value)
+    _create(transaction.account, start, end, transaction.value, transaction.real_value)
 
 def _create_period_balances_for_different_periods(transaction, due_period, payment_period):
     due_start, due_end = due_period
