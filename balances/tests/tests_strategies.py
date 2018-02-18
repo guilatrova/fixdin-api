@@ -105,28 +105,30 @@ class CreateStrategyTestCase(StrategyTestMixin, TestCase, BaseTestHelper):
     @patch('balances.factories.create_period_balance_for', side_effect=None)
     def test_is_from_previous_period_checks_missing_period(self, ignore_mock):
         self.mock_transaction_instance()
-        with patch.object(self.strategy, 'is_missing_period', return_value=True) as mock:
+        with patch.object(self.strategy, 'check_missing_periods', return_value=True) as mock:
             self.assertTrue(self.strategy.is_from_previous_period())
             self.assertTrue(mock.called)
 
-    def test_is_missing_period_returns_true(self):
+    def test_check_missing_periods_returns_both_dates(self):
         self.mock_transaction_instance(
             due_date=date(2017, 8, 22),
-            payment_date=date(2017, 8, 22)
+            payment_date=date(2017, 8, 23)
         )
+        expected = [date(2017, 8, 22), date(2017, 8, 23)]
 
-        self.assertTrue(self.strategy.is_missing_period(self.account))
+        self.assertEqual(expected, 
+            self.strategy.check_missing_periods(self.account))
 
-    def test_is_missing_period_returns_false_current_period(self):
+    def test_check_missing_periods_returns_false_current_period(self):
         self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31))
         self.mock_transaction_instance(
             due_date=date.today(),
             payment_date=date.today()
         )
 
-        self.assertFalse(self.strategy.is_missing_period(self.account))
+        self.assertFalse(self.strategy.check_missing_periods(self.account))
 
-    def test_is_missing_period_another_account(self):
+    def test_check_missing_periods_another_account(self):
         another_account = self.create_account(name='another')
         self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31), another_account)
         self.mock_transaction_instance(
@@ -135,7 +137,7 @@ class CreateStrategyTestCase(StrategyTestMixin, TestCase, BaseTestHelper):
         )
 
         #only existent for another account
-        self.assertTrue(self.strategy.is_missing_period(self.account))
+        self.assertTrue(self.strategy.check_missing_periods(self.account))
 
     def test_update_current_balance(self):
         self.mock_transaction_instance(

@@ -9,19 +9,37 @@ class CreateStrategy(CascadeStrategy):
     It creates a period if missing, cascade updating all PeriodBalances when needed and also current balance.
     """
 
-    def is_missing_period(self, account):
-        date = self.get_lower_date()
-        cmp_date = date.date() if isinstance(date, datetime.datetime) else date
+    def check_missing_periods(self, account):
+        missing_due = self._check_is_missing_period(account, self.instance.due_date)
+        missing_payment = self._check_is_missing_period(account, self.instance.payment_date)
+
+        if missing_due and missing_payment:
+            return [self.instance.due_date, self.instance.payment_date]
+        
+        if missing_due:
+            return [self.instance.due_date]
+
+        if missing_payment:
+            return [self.instance.payment_date]
+
+        return False
+
+    def _check_is_missing_period(self, account, date):
+        if date is None:
+            return False
+
+        date = date.date() if isinstance(date, datetime.datetime) else date
         cur_start, cur_end = get_current_period()
         start, end = get_period_from(date)
         periods = self.get_periods_of(account)
 
-        return (cmp_date < cur_start and 
+        return (date < cur_start and 
             not periods.filter(start_date=start,end_date=end).exists())
 
     def is_from_previous_period(self):
-        if self.is_missing_period(self.instance.account):
-            factories.create_period_balance_for(self.instance)
+        missing_periods = self.check_missing_periods(self.instance.account)
+        if missing_periods:
+            factories.create_period_balance_for(self.instance, missing_periods)
             return True
         
         return super().is_from_previous_period()

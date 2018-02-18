@@ -49,7 +49,7 @@ class FactoryTestCase(TestCase, BaseTestHelper):
 
     def test_factory_creates(self):
         transaction = self.create_transaction(100, date(2016, 1, 10), date(2016, 1, 10))
-        create_period_balance_for(transaction)
+        create_period_balance_for(transaction, [date(2016, 1, 10)])
 
         just_created = PeriodBalance.objects.first()
         self.assert_period(
@@ -63,7 +63,7 @@ class FactoryTestCase(TestCase, BaseTestHelper):
 
     def test_factory_creates_without_payment_date(self):
         transaction = self.create_transaction(100, date(2016, 1, 10))
-        create_period_balance_for(transaction)
+        create_period_balance_for(transaction, [date(2016, 1, 10)])
 
         just_created = PeriodBalance.objects.first()
         self.assert_period(
@@ -77,7 +77,7 @@ class FactoryTestCase(TestCase, BaseTestHelper):
 
     def test_factory_creates_payment_date_belonging_another_period(self):
         transaction = self.create_transaction(100, date(2016, 1, 10), date(2016, 3, 20))
-        create_period_balance_for(transaction)
+        create_period_balance_for(transaction, [date(2016, 1, 10), date(2016, 3, 20)])
 
         jan_period = PeriodBalance.objects.first()
         mar_period = PeriodBalance.objects.last()
@@ -218,4 +218,6 @@ class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
 
         return transaction.initial_value, new_value
 
-    #TODO: TEST UPDATING A DATA TO A PAST PERIOD
+    #TODO: TEST UPDATING BOTH DATES TO A UNEXISTENT PAST PERIOD
+    #TODO: TEST UPDATING BOTH DATES TO A UNEXISTENT PAST DIFFERENT PERIODS
+    #TODO: TEST UPDATING ONE DATE TO UNEXISTENT PAST PERIOD WHILE PRESERVING ANOTHER PERIOD

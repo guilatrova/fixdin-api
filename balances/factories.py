@@ -1,29 +1,20 @@
 from balances.models import PeriodBalance
 from balances.services.periods import get_period_from
 
-def create_period_balance_for(transaction):
-    due_period = get_period_from(transaction.due_date)
-    payment_period = get_period_from(transaction.payment_date)
+def create_period_balance_for(transaction, dates):
+    result = []
+    for date in dates:
+        period = get_period_from(date)
+        result.append(_create_period_balance_for_period(transaction, period))
 
-    if due_period == payment_period or payment_period is None:
-        return _create_period_balance_for_period(transaction, due_period)
-    else:
-        return _create_period_balances_for_different_periods(transaction, due_period, payment_period)
+    return result
 
 def _create_period_balance_for_period(transaction, period):
     start, end = period
-
-    _create(transaction.account, start, end, transaction.value, transaction.real_value)
-
-def _create_period_balances_for_different_periods(transaction, due_period, payment_period):
-    due_start, due_end = due_period
-    payment_start, payment_end = payment_period
-
-    _create(transaction.account, due_start, due_end, transaction.value, 0)
-    _create(transaction.account, payment_start, payment_end, 0, transaction.value)
+    return _create(transaction.account, start, end, transaction.value, transaction.real_value)
 
 def _create(account, start, end, effective_value, real_value):
-    PeriodBalance.objects.create(
+    return PeriodBalance.objects.create(
         account=account,
         start_date=start,
         end_date=end,

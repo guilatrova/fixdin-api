@@ -1,7 +1,6 @@
-from .CreateStrategy import CreateStrategy
+from .UpdateStrategy import UpdateStrategy
 
-
-class ChangedAccountStrategy(CreateStrategy):
+class ChangedAccountStrategy(UpdateStrategy):
     """
     Exclusive strategy to be triggered when user changes any transaction
     from account A to B.
