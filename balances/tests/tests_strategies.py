@@ -1,13 +1,10 @@
-import calendar
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
+from django.test import TestCase
 from unittest import skip
 from unittest.mock import patch, MagicMock
-from django.test import TestCase
-from django.db import transaction as db_transaction
-from django.db.models import signals
 from transactions.tests.base_test import BaseTestHelper
-from transactions.models import *
+from transactions.models import Transaction
 from balances.models import PeriodBalance
 from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy, CascadeStrategy
 
@@ -128,24 +125,7 @@ class CascadeStrategy(TestCase, BaseTestHelper, StrategyTestHelper):
     def setUp(self):
         self.user = self.create_user(email='testuser@test.com', password='testing')[0]
         self.account = self.create_account()
-        self.strategy = CascadeStrategy(None, CREATED)
+        # self.strategy = CascadeStrategy(None, CREATED)
 
-# class StrategyTestCase(TestCase, BaseTestHelper):
-#     def setUp(self):
-#         self.strategy = 
-
-#     def test_is_missing_period_returns_true(self):
-#         value = date(2016, 1, 10)
-#         self.assertTrue(is_missing_period(value))
-
-#     def test_is_missing_period_returns_false(self):
-#         PeriodBalance.objects.create(
-#             account=self.account,
-#             start_date=date(2016, 1, 1),
-#             end_date=date(2016, 1, 31),
-#             closed_effective_value=10,
-#             closed_real_value=10,
-#         )
-#         value = date(2016, 1, 10)
-
-#         self.assertFalse(is_missing_period(value))
+    def test_update_previous_periods(self):
+        pass

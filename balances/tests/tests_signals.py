@@ -1,44 +1,14 @@
-import calendar
-from contextlib import contextmanager
-from datetime import date, datetime
+from datetime import date
 from dateutil.relativedelta import relativedelta
+from django.test import TestCase
 from unittest import skip
 from unittest.mock import patch
-from django.test import TestCase
-from django.db import transaction as db_transaction
-from django.db.models import signals
-from balances.models import PeriodBalance
 from transactions.tests.base_test import BaseTestHelper
-from transactions.models import *
-from balances.signals import (
-    created_or_updated_transaction_updates_balance, 
-    deleted_transaction_updates_balance,
-    requires_updates,
-)
+from transactions.models import Transaction, Account
+from balances.models import PeriodBalance
+from balances.signals import requires_updates
 from balances.factories import create_period_balance_for
-from balances.tests.helpers import PeriodBalanceWithTransactionsFactory
-
-@contextmanager
-def balance_signals_disabled():
-    try:
-        signals.post_save.disconnect(
-            created_or_updated_transaction_updates_balance,
-            sender=Transaction
-        )
-        signals.post_delete.disconnect(
-            deleted_transaction_updates_balance,
-            sender=Transaction,
-        )
-        yield
-    finally:
-        signals.post_save.connect(
-            created_or_updated_transaction_updates_balance,
-            sender=Transaction
-        )
-        signals.post_delete.connect(
-            deleted_transaction_updates_balance,
-            sender=Transaction,
-        )
+from balances.tests.helpers import PeriodBalanceWithTransactionsFactory, balance_signals_disabled
 
 class SignalsTestCase(TestCase, BaseTestHelper):
     def setUp(self):
