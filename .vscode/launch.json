@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"balances.tests.tests_strategies.ChangedAccountStrategyTestCase"
+                ,"balances.tests.tests_signals.FactoryTestCase"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [

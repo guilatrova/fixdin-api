@@ -11,7 +11,10 @@ def create_period_balance_for(transaction, dates):
 
 def _create_period_balance_for_period(transaction, period):
     start, end = period
-    return _create(transaction.account, start, end, transaction.value, transaction.real_value)
+    value = transaction.value if transaction.due_date >= start and transaction.due_date <= end else 0
+    real_value = transaction.value if transaction.payment_date and transaction.payment_date >= start and transaction.payment_date <= end else 0
+
+    return _create(transaction.account, start, end, value, real_value)
 
 def _create(account, start, end, effective_value, real_value):
     return PeriodBalance.objects.create(
