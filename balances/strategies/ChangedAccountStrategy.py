@@ -1,5 +1,4 @@
 from .CreateStrategy import CreateStrategy
-from .actions import UPDATED
 
 #We inherit from Create because it may be changed to an account without a PeriodBalance, so it will be created if needed
 class ChangedAccountStrategy(CreateStrategy):

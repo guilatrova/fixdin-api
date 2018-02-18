@@ -64,6 +64,10 @@ class Transaction(models.Model, HasKind):
     payment_date = models.DateField(null=True, blank=True) # TO DO: Find out why both null and blank
     bound_transaction = models.ForeignKey("Transaction", null=True, on_delete=models.DO_NOTHING)
     bound_reason = models.CharField(max_length=20, choices=BOUND_REASON_CHOICES, blank=True)
-
     generic_tag = models.TextField(null=True, blank=True)
     """Generic text field to be used for third party and other stuff"""
+
+    @property
+    def real_value(self):
+        """Gets the real value of transaction"""
+        return self.value if self.payment_date else 0
