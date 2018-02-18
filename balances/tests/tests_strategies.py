@@ -6,10 +6,16 @@ from unittest.mock import patch, MagicMock
 from transactions.tests.base_test import BaseTestHelper
 from transactions.models import Transaction, Account
 from balances.models import PeriodBalance
-from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy, CascadeStrategy, ChangedAccountStrategy, UpdateStrategy
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory
+from balances.strategies import (
+    BaseStrategy,
+    CreateStrategy,
+    ChangedAccountStrategy, 
+    UpdateStrategy, 
+    DeleteStrategy
+)
 
-class StrategyTestHelper:
+class StrategyTestMixin:
     def setUp(self):
         self.user = self.create_user(email='testuser@test.com', password='testing')[0]
         self.account = self.create_account(current_effective_balance=100, current_real_balance=100)
@@ -34,7 +40,7 @@ class StrategyTestHelper:
         self.assertEqual(effective, account.current_effective_balance)
         self.assertEqual(real, account.current_real_balance)
 
-class BaseStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):
+class BaseStrategyTestCase(StrategyTestMixin, TestCase, BaseTestHelper):
     strategy_cls = BaseStrategy
 
     @patch.multiple(BaseStrategy, __abstractmethods__=set()) #Allow instantiate abstract class
@@ -93,7 +99,7 @@ class BaseStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):
 
         self.assertFalse(self.strategy.is_from_previous_period())
 
-class CreateStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):
+class CreateStrategyTestCase(StrategyTestMixin, TestCase, BaseTestHelper):
     strategy_cls = CreateStrategy
     
     @patch('balances.factories.create_period_balance_for', side_effect=None)
@@ -149,7 +155,7 @@ class CreateStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):
         self.strategy.update_current_balance(self.strategy.instance)
         self.assert_account_balances(200, 100)    
 
-class UpdateStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):    
+class UpdateStrategyTestCase(StrategyTestMixin, TestCase, BaseTestHelper):
     strategy_cls = UpdateStrategy
 
     def setUp(self):
@@ -222,7 +228,18 @@ class UpdateStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):
             value=100
         )
 
-# class DeleteStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):    
+class DeleteStrategyTestCase(StrategyTestMixin, TestCase, BaseTestHelper):
+    strategy_cls = DeleteStrategy
+
+    def test_update_current_balance(self):
+        self.mock_transaction_instance(
+            due_date=date(2017, 1, 1),
+            payment_date=date(2017, 1, 1),
+            value=50
+        )
+
+        self.strategy.update_current_balance(self.strategy.instance)
+        self.assert_account_balances(50, 50)
 
 #TODO: CREATE TRANSACTION TO FUTURE DATE
 #TODO: SETUP PAYMENT TO FUTURE DATE
