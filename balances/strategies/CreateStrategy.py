@@ -27,8 +27,7 @@ class CreateStrategy(CascadeStrategy):
     def _check_is_missing_period(self, account, date):
         if date is None:
             return False
-
-        date = date.date() if isinstance(date, datetime.datetime) else date
+                
         cur_start, cur_end = get_current_period()
         start, end = get_period_from(date)
         periods = self.get_periods_of(account)
