@@ -33,13 +33,4 @@ class CascadeStrategy(BaseStrategy):
             dif_to_cascade['effective'] += dif['effective']
             dif_to_cascade['real'] += dif['real']
 
-            balance.save()
-        
-    def update_current_balance(self, instance):
-        account = instance.account
-
-        # #if action == DELETED:
-        account.current_effective_balance -= instance.value
-        account.current_real_balance -= instance.real_value
-
-        account.save()
+            balance.save()        

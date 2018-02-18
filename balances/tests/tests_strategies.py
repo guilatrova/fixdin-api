@@ -211,6 +211,16 @@ class UpdateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
         self.strategy.update_current_balance(self.strategy.instance)
         self.assert_account_balances(80, 80)
 
+    def test_changed_due_date_to_past(self):
+        self.mock_transaction_instance(
+            initial_due_date=date(2017, 1, 1),
+            initial_payment_date=date(2017, 1, 1),
+            initial_value=100,
+            due_date=date(2016, 12, 1), #PAST
+            payment_date=date(2017, 1, 1),
+            value=100
+        )
+
 #TODO: CREATE TRANSACTION TO FUTURE DATE
 #TODO: SETUP PAYMENT TO FUTURE DATE
 #TODO: PAYED PAST DATE
