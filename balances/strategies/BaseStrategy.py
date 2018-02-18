@@ -6,15 +6,13 @@ class BaseStrategy(ABC):
     Base strategy class that aims to be inherited for classes that
     handles calculation of previous PeriodBalances and current account balances.
     """
-    def __init__(self, instance, action):
+    def __init__(self, instance):
         """
         Initializes strategy class
 
         :param instance: Transaction which triggered recalculation
-        :param action: CREATED, UPDATED OR DELETED
         """
-        self.instance = instance
-        self.action = action
+        self.instance = instance        
 
     def get_lower_date(self):
         due_date = self.instance.due_date
@@ -43,4 +41,4 @@ class BaseStrategy(ABC):
         if self.is_from_previous_period():
             self.update_previous_periods(self.instance.account)
 
-        self.update_current_balance(self.instance, self.action)
+        self.update_current_balance(self.instance)

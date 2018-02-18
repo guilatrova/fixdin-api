@@ -2,7 +2,6 @@ import datetime
 from balances.services.periods import get_current_period, get_period_from
 from balances import factories
 from .CascadeStrategy import CascadeStrategy
-from .actions import CREATED
 
 class CreateStrategy(CascadeStrategy):
     """
@@ -27,7 +26,7 @@ class CreateStrategy(CascadeStrategy):
         
         return super().is_from_previous_period()
 
-    def update_current_balance(self, instance, action):
+    def update_current_balance(self, instance):
         account = instance.account
         real_value = instance.value if instance.payment_date else 0
 

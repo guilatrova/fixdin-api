@@ -2,12 +2,10 @@ from django.db.models import Sum, Case, When, F
 from django.db.models.functions import Coalesce
 from balances.models import PeriodBalance
 from .BaseStrategy import BaseStrategy
-from .actions import CREATED, DELETED, UPDATED
 
 class CascadeStrategy(BaseStrategy):
     """
-    Strategy triggered to update values with no changes to any dates.
-    e.g. User changed value from R$ 10 to R$ 15.
+    Default implementation for update_previous_periods
     """
 
     def update_previous_periods(self, account):
@@ -37,17 +35,12 @@ class CascadeStrategy(BaseStrategy):
 
             balance.save()
         
-    def update_current_balance(self, instance, action):
+    def update_current_balance(self, instance):
         account = instance.account
         real_value = instance.value if instance.payment_date else 0
 
-        if action == DELETED:
-            account.current_effective_balance -= instance.value
-            account.current_real_balance -= real_value
-        else:
-            dif = instance.initial_value - instance.value
-            real_dif = (instance.initial_value if instance.initial_payment_date else 0) - real_value
-            account.current_effective_balance -= dif #If is an income it will sum
-            account.current_real_balance -= real_dif
+        # #if action == DELETED:
+        account.current_effective_balance -= instance.value
+        account.current_real_balance -= real_value
 
         account.save()

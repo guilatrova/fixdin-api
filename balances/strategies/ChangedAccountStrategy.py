@@ -13,9 +13,9 @@ class ChangedAccountStrategy(CreateStrategy):
             self.update_previous_periods(self.instance.initial_account)
             self.update_previous_periods(self.instance.account)
 
-        self.update_current_balance(self.instance, self.action)
+        self.update_current_balance(self.instance)
 
-    def update_current_balance(self, instance, action):
+    def update_current_balance(self, instance):
         self._update_balance_initial_account(instance, instance.initial_account)
         self._update_balance_new_account(instance, instance.account)
 

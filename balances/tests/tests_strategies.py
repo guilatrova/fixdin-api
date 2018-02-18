@@ -35,7 +35,7 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
     def setUp(self):
         self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
         self.account = self.create_account()
-        self.strategy = BaseStrategy(None, UPDATED)
+        self.strategy = BaseStrategy(None)
 
     def test_get_due_lower_date(self):
         self.mock_transaction_instance(
@@ -93,7 +93,7 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
     def setUp(self):
         self.user = self.create_user(email='testuser@test.com', password='testing')[0]
         self.account = self.create_account(current_effective_balance=100, current_real_balance=100)
-        self.strategy = CreateStrategy(None, CREATED)
+        self.strategy = CreateStrategy(None)
     
     @patch('balances.factories.create_period_balance_for', side_effect=None)
     def test_is_from_previous_period_checks_missing_period(self, ignore_mock):
@@ -136,7 +136,7 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
             payment_date=date.today(),
             value=100
         )
-        self.strategy.update_current_balance(self.strategy.instance, self.strategy.action)
+        self.strategy.update_current_balance(self.strategy.instance)
         self.assert_account_balances(200, 200)
 
     def test_update_current_balance_without_payment_date(self):
@@ -145,7 +145,7 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
             payment_date=None,
             value=100
         )
-        self.strategy.update_current_balance(self.strategy.instance, self.strategy.action)
+        self.strategy.update_current_balance(self.strategy.instance)
         self.assert_account_balances(200, 100)    
 
 class UpdateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):    
@@ -153,7 +153,7 @@ class UpdateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
         self.user = self.create_user(email='testuser@test.com', password='testing')[0]
         self.account = self.create_account(current_effective_balance=100, current_real_balance=100)
         self.another_account = self.create_account(name='other', current_effective_balance=100, current_real_balance=100)
-        self.strategy = UpdateStrategy(None, UPDATED)
+        self.strategy = UpdateStrategy(None)
 
     def test_get_lower_date_compare_old_dates(self):
         self.mock_transaction_instance(
