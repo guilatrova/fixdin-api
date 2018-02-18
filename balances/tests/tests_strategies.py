@@ -242,8 +242,3 @@ class DeleteStrategyTestCase(StrategyTestMixin, TestCase, BaseTestHelper):
 
         self.strategy.update_current_balance(self.strategy.instance)
         self.assert_account_balances(50, 50)
-
-#TODO: CREATE TRANSACTION TO FUTURE DATE
-#TODO: SETUP PAYMENT TO FUTURE DATE
-#TODO: PAYED PAST DATE
-#TODO: DUEDATE AND PAYMENTDATE DIFFERENT PERIODS
