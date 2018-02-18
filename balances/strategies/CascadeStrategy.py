@@ -33,4 +33,4 @@ class CascadeStrategy(BaseStrategy):
             dif_to_cascade['effective'] += dif['effective']
             dif_to_cascade['real'] += dif['real']
 
-            balance.save()        
+            balance.save()

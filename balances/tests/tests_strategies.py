@@ -10,6 +10,11 @@ from balances.strategies import CREATED, UPDATED, BaseStrategy, CreateStrategy, 
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory
 
 class StrategyTestHelper:
+    def setUp(self):
+        self.user = self.create_user(email='testuser@test.com', password='testing')[0]
+        self.account = self.create_account(current_effective_balance=100, current_real_balance=100)
+        self.strategy = self.strategy_cls(None)
+
     def create_period_balance(self, start, end, account=None):
         PeriodBalance.objects.create(
             account=account or self.account,
@@ -29,13 +34,12 @@ class StrategyTestHelper:
         self.assertEqual(effective, account.current_effective_balance)
         self.assertEqual(real, account.current_real_balance)
 
-class BaseStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
-    
+class BaseStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):
+    strategy_cls = BaseStrategy
+
     @patch.multiple(BaseStrategy, __abstractmethods__=set()) #Allow instantiate abstract class
     def setUp(self):
-        self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
-        self.account = self.create_account()
-        self.strategy = BaseStrategy(None)
+        super().setUp()
 
     def test_get_due_lower_date(self):
         self.mock_transaction_instance(
@@ -89,11 +93,8 @@ class BaseStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
 
         self.assertFalse(self.strategy.is_from_previous_period())
 
-class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
-    def setUp(self):
-        self.user = self.create_user(email='testuser@test.com', password='testing')[0]
-        self.account = self.create_account(current_effective_balance=100, current_real_balance=100)
-        self.strategy = CreateStrategy(None)
+class CreateStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):
+    strategy_cls = CreateStrategy
     
     @patch('balances.factories.create_period_balance_for', side_effect=None)
     def test_is_from_previous_period_checks_missing_period(self, ignore_mock):
@@ -148,12 +149,12 @@ class CreateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
         self.strategy.update_current_balance(self.strategy.instance)
         self.assert_account_balances(200, 100)    
 
-class UpdateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):    
+class UpdateStrategyTestCase(StrategyTestHelper, TestCase, BaseTestHelper):    
+    strategy_cls = UpdateStrategy
+
     def setUp(self):
-        self.user = self.create_user(email='testuser@test.com', password='testing')[0]
-        self.account = self.create_account(current_effective_balance=100, current_real_balance=100)
+        super().setUp()
         self.another_account = self.create_account(name='other', current_effective_balance=100, current_real_balance=100)
-        self.strategy = UpdateStrategy(None)
 
     def test_get_lower_date_compare_old_dates(self):
         self.mock_transaction_instance(
@@ -220,6 +221,8 @@ class UpdateStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):
             payment_date=date(2017, 1, 1),
             value=100
         )
+
+# class DeleteStrategyTestCase(TestCase, BaseTestHelper, StrategyTestHelper):    
 
 #TODO: CREATE TRANSACTION TO FUTURE DATE
 #TODO: SETUP PAYMENT TO FUTURE DATE
