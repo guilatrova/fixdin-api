@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from transactions.models import Transaction, Account
 
 class PeriodBalance(models.Model):
@@ -11,5 +12,6 @@ class PeriodBalance(models.Model):
 
     def get_transactions(self):
         return Transaction.objects.filter(
-            due_date__gte=self.start_date,
-            due_date__lte=self.end_date)
+            Q(due_date__gte=self.start_date, due_date__lte=self.end_date) |
+            Q(payment_date__gte=self.start_date, payment_date__lte=self.end_date)
+        )

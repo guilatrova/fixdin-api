@@ -50,13 +50,24 @@ class CalculatorTestCase(TestCase, BaseTestHelper):
         self.account = self.create_account(self.user)
         self.category = self.create_category('category')
 
-    def test_calculates_account_current_real_balance(self):
+    def test_calculates_account_current_balance(self):
         self.create_period_balance(date(2017, 12, 1), date(2017, 12, 31), 100, 70)
         self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31), 50, 70)
-        self.assertEqual(
-            calculator.calculate_account_current_real_balance(self.account.id),
-            140
-        )
+
+        result = calculator.calculate_account_current_balance(self.account.id)
+
+        self.assertEqual(result['effective'], 150)
+        self.assertEqual(result['real'], 140)
+
+    def test_calculates_account_current_balance_regarding_current_period(self):
+        self.create_period_balance(date(2017, 12, 1), date(2017, 12, 31), 100, 70)
+        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31), 50, 70)
+        self.create_transaction(300, due_date=date.today(), payment_date=date.today())
+
+        result = calculator.calculate_account_current_balance(self.account.id)
+
+        self.assertEqual(result['effective'], 450)
+        self.assertEqual(result['real'], 440)
         
     def create_period_balance(self, start, end, effective, real):
         PeriodBalance.objects.create(
@@ -66,7 +77,6 @@ class CalculatorTestCase(TestCase, BaseTestHelper):
             closed_effective_value=effective,
             closed_real_value=real            
         )
-
 
 class FactoryTestCase(TestCase, BaseTestHelper):
     def setUp(self):
