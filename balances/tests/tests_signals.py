@@ -9,6 +9,7 @@ from balances.models import PeriodBalance
 from balances.signals import requires_updates
 from balances.factories import create_period_balance_for
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory, balance_signals_disabled
+from balances.services import calculator
 
 class SignalsTestCase(TestCase, BaseTestHelper):
     def setUp(self):
@@ -40,6 +41,32 @@ class SignalsTestCase(TestCase, BaseTestHelper):
         transaction.description = 'changed'
 
         self.assertFalse(requires_updates(transaction))    
+
+class CalculatorTestCase(TestCase, BaseTestHelper):
+    def setUp(self):
+        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
+
+        self.client = self.create_authenticated_client(token)
+        self.account = self.create_account(self.user)
+        self.category = self.create_category('category')
+
+    def test_calculates_account_current_real_balance(self):
+        self.create_period_balance(date(2017, 12, 1), date(2017, 12, 31), 100, 70)
+        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31), 50, 70)
+        self.assertEqual(
+            calculator.calculate_account_current_real_balance(self.account.id),
+            140
+        )
+        
+    def create_period_balance(self, start, end, effective, real):
+        PeriodBalance.objects.create(
+            account=self.account,
+            start_date=start,
+            end_date=end,
+            closed_effective_value=effective,
+            closed_real_value=real            
+        )
+
 
 class FactoryTestCase(TestCase, BaseTestHelper):
     def setUp(self):
