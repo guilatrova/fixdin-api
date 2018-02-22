@@ -1,3 +1,4 @@
+from datetime import date
 from unittest import skip
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -48,7 +49,7 @@ class AccountUrlTestCase(TestCase, BaseTestHelper):
 class AccountSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
-        self.create_account(name='acc01')
+        self.account = self.create_account(name='acc01')
         self.serializer_data = {
             'name': 'acc02'
         }
@@ -68,6 +69,12 @@ class AccountSerializerTestCase(TestCase, BaseTestHelper):
 
         self.assertFalse(serializer.is_valid())
         self.assertIn('name', serializer.errors)
+
+    def test_serializer_calculates_balance(self):
+        self.category = self.create_category('any')
+        self.create_transaction(100, payment_date=date.today())
+        serializer = AccountSerializer(self.account)
+        self.assertEqual(100, serializer.data['current_balance'])
 
 class AccountApiTestCase(APITestCase, BaseTestHelper):
 
