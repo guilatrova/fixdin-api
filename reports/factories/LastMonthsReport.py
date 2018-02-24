@@ -1,3 +1,4 @@
+from itertools import takewhile
 from django.db.models import Q, Sum, Case, When, F
 from django.db.models.functions import Coalesce, TruncMonth, TruncYear
 from datetime import datetime
@@ -15,22 +16,28 @@ class LastMonthsReportFactory:
         self.months = months
 
     def generate_report(self):
-        report = self._get_query()
+        report = list(self._get_query())
+        self._add_missing_periods(report)
 
-        return list(report)
+        return report
         
-    # def _add_missing_periods(self, data):
-    #     cur_date = self.get_start_date()
-    #     end_date = self.get_end_date()
-    #     completed = []
+    def _add_missing_periods(self, data):
+        cur_date = self.get_start_date()
+        end_date = self.get_end_date()
+        expected_dates = []
 
-    #     while cur_date < end_date:
-    #         if             
+        while cur_date < end_date:
+            expected_dates.append(cur_date.date())
+            cur_date += relativedelta(months=1)
 
-    #         completed.append({ "date": cur_date, "expenses": expenses, "incomes": incomes, "total": total })
-    #         cur_date = cur_date + relativedelta(months=1)
-
-    #     return completed      
+        if len(expected_dates) > len(data):
+            for i in range(len(expected_dates)):
+                item = data[i]
+                if item['date'] != expected_dates[i]:
+                    data.insert(i, { "date": expected_dates[i], "effective_expenses": 0, "effective_incomes": 0, "real_expenses": 0, "real_incomes": 0, "effective_total": 0})
+        
+        assert len(expected_dates) == len(data), \
+            "Amount of rows should match amount of expected periods. Periods: {} Rows: {}".format(len(expected_dates), len(data))
 
     def _get_query(self):
         start_date = self.get_start_date()

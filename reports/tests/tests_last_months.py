@@ -104,17 +104,17 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 28))
     def test_gets_amounts_expent_in_last_13_months_filtered_by_payed(self, mocked_start_date, mocked_end_date):
         #Incomes
-        self.create_transaction(50, due_date=datetime(2017, 1, 5), payment_date=datetime(2017, 2, 5), category=self.income_category) #Payed one month later only
-        self.create_transaction(20, due_date=datetime(2017, 1, 10), payment_date=datetime(2017, 1, 8), category=self.income_category)
+        self.create_transaction(50, due_date=datetime(2017, 1, 5),  payment_date=datetime(2017, 2, 5),  category=self.income_category) #Payed one month later only
+        self.create_transaction(20, due_date=datetime(2017, 1, 10), payment_date=datetime(2017, 1, 8),  category=self.income_category)
         self.create_transaction(30, due_date=datetime(2017, 2, 15), payment_date=datetime(2017, 2, 15), category=self.income_category)
 
         #Expenses
-        self.create_transaction(-10, due_date=datetime(2017, 1, 6), payment_date=datetime(2017, 2, 6), category=self.expense_category) #Payed one month later only
+        self.create_transaction(-10, due_date=datetime(2017, 1, 6),  payment_date=datetime(2017, 2, 6),  category=self.expense_category) #Payed one month later only
         self.create_transaction(-30, due_date=datetime(2017, 2, 15), payment_date=datetime(2017, 2, 20), category=self.expense_category)
 
         expected_list = [
-            { "period": "2017-01", "effective_expenses":   0, "effective_incomes": 20, "effective_total": 20 },
-            { "period": "2017-02", "effective_expenses": -40, "effective_incomes": 80, "effective_total": 40 },
+            { "period": "2017-01", "effective_expenses": -10, "effective_incomes": 70, "real_expenses": 0, "real_incomes": 20, "effective_total": 60 },
+            { "period": "2017-02", "effective_expenses": -30, "effective_incomes": 30, "real_expenses": -40, "real_incomes": 80, "effective_total": 0 },
         ]
 
         url = reverse('last-months') + '?payed=1'
