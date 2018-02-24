@@ -23,8 +23,8 @@ class TransferViewSet(viewsets.ViewSet, mixins.CreateModelMixin, generics.Generi
     def get_object(self, pk=None):
         try:
             obj = Transaction.objects.get(\
-                Q(id=pk) | Q(bound_transaction_id=pk),
-                Q(account__user_id=self.request.user.id), # TO DO: User permission instead
+                Q(id=pk) | Q(bound_transaction_id=pk),#TODO: rename old todos to be "TODO" format
+                Q(account__user_id=self.request.user.id), # TODO: User permission instead
                 Q(bound_reason=BoundReasons.TRANSFER_BETWEEN_ACCOUNTS),
                 Q(kind=HasKind.EXPENSE_KIND)
             )

@@ -61,7 +61,7 @@ class Transaction(models.Model, HasKind):
     details = models.CharField(max_length=500, blank=True)   
     priority = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
     deadline = models.PositiveIntegerField(default=0)
-    payment_date = models.DateField(null=True, blank=True) # TO DO: Find out why both null and blank
+    payment_date = models.DateField(null=True, blank=True) # TODO: Find out why both null and blank
     bound_transaction = models.ForeignKey("Transaction", null=True, on_delete=models.DO_NOTHING)
     bound_reason = models.CharField(max_length=20, choices=BOUND_REASON_CHOICES, blank=True)
     generic_tag = models.TextField(null=True, blank=True)
