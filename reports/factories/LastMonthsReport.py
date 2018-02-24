@@ -46,8 +46,12 @@ class LastMonthsReportFactory:
         sum_kind_payed = lambda kind : sum_when(kind=kind, payment_date__month=F('date'))
 
         #TruncMonth cares about year too
-        return Transaction.objects.\
-                filter(account__user_id=self.user_id, due_date__gte=start_date).\
+        transactions = Transaction.objects.filter(
+            Q(account__user_id=self.user_id),
+            Q(due_date__gte=start_date) | Q(payment_date__gte=start_date)
+        )
+
+        return transactions.\
                 annotate(date=TruncMonth('due_date')).\
                 values('date').\
                 annotate(
