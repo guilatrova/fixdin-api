@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"transactions.tests.tests_account"
+                ,"reports"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [

@@ -28,7 +28,7 @@ def _calculate_open_balance(account_id):
             Q(payment_date__gte=start, payment_date__lte=end)
         ).\
         aggregate(
-            effective=Coalesce(Sum('value'), 0),
+            effective=Coalesce(Sum('value'), 0), #TODO: quando cair num payment date não vai calcular um valor falso aqui? devo validar o due_date
             real=Coalesce(Sum(Case(When(payment_date__isnull=False, then=F('value')), default=0)), 0)
         )
     
