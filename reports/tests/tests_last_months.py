@@ -22,7 +22,7 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
     
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
-    def test_gets_amounts_expent_in_last_13_months(self, mock_start_date, mock_end_date):
+    def test_gets_amounts_expent_in_last_months(self, mock_start_date, mock_end_date):
         '''
         Creates 2 transactions/month in a range of 14 months. 
         Then asserts that first month is not retrieved, but all others are
@@ -64,7 +64,7 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
         
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
-    def test_gets_0_when_theres_no_transactions_expent_in_last_13_months(self, mocked_start_date, mocked_end_date):
+    def test_gets_0_when_theres_no_transactions_expent_in_last_months(self, mocked_start_date, mocked_end_date):
         '''
         Creates 1 transactions/month in a range of 6 months, skipping 1. 
         Then asserts that all months was filled.
@@ -102,7 +102,7 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
     
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_start_date', return_value=datetime(2017, 1, 1))
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 28))
-    def test_gets_amounts_expent_in_last_13_months_filtered_by_payed(self, mocked_start_date, mocked_end_date):
+    def test_gets_amounts_expent_in_last_months_with_overdue(self, mocked_start_date, mocked_end_date):
         #Incomes
         self.create_transaction(50, due_date=datetime(2017, 1, 5),  payment_date=datetime(2017, 2, 5),  category=self.income_category) #Payed one month later only
         self.create_transaction(20, due_date=datetime(2017, 1, 10), payment_date=datetime(2017, 1, 8),  category=self.income_category)
@@ -131,25 +131,7 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
             self.assertEqual(float(actual[i]["effective_expenses"]), float(expected[i]["effective_expenses"]))
             self.assertEqual(float(actual[i]["effective_total"]), float(expected[i]["effective_total"]))
 
-class LastMonthsFactoryTestCase(TestCase, BaseTestHelper):
-
-    # @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
-    # @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 1))
-    # def test_aggregate_transactions(self, mocked_start, mocked_end):
-    #     data = [
-    #         { "date": datetime(2016, 12, 1).date(), "kind": Transaction.EXPENSE_KIND, "effective_total": -20 },
-    #         { "date": datetime(2016, 12, 1).date(), "kind": Transaction.INCOME_KIND,  "effective_total": 30 },
-    #         { "date": datetime(2017,  1, 1).date(), "kind": Transaction.EXPENSE_KIND, "effective_total": -50 },            
-    #         { "date": datetime(2017,  1, 1).date(), "kind": Transaction.INCOME_KIND,  "effective_total": 10 }
-    #     ]
-    #     expected = [
-    #         { "date": datetime(2016, 12, 1), "effective_expenses": -20, "effective_incomes": 30, "effective_total": 10 },
-    #         { "date": datetime(2017,  1, 1), "effective_expenses": -50, "effective_incomes": 10, "effective_total": -40 },
-    #     ]
-
-    #     report_factory = LastMonthsReportFactory(0, 13)
-    #     report = report_factory.aggregate_transactions(data)        
-    #     self.assertEqual(report, expected)
+class LastMonthsFactoryTestCase(TestCase, BaseTestHelper):    
 
     def test_generates_reports_filtered_by_user(self):
         user_id = self.create_user_with_transaction('user', 100)

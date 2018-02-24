@@ -6,20 +6,14 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from transactions.models import Transaction
 from reports.serializers import LastMonthsSerializer, PendingSerializer, ValuesByCategorySerializer
-from reports.factories.LastMonthsReport import LastMonthsReportFactory, LastMonthsPayedReportFactory
+from reports.factories.LastMonthsReport import LastMonthsReportFactory
 from reports.factories.PendingReport import PendingExpensesReportFactory, PendingIncomesReportFactory
 from reports.factories.ValuesByCategoryReport import ValuesByCategoryReportFactory
 
 class LastMonthsAPIView(APIView):
 
     def get(self, request, format='json'):
-        payed_filter = request.query_params.get('payed', 0)
-
-        if payed_filter == '1':
-            report = LastMonthsPayedReportFactory(request.user.id, 13).generate_report()
-        else:
-            report = LastMonthsReportFactory(request.user.id, 13).generate_report()
-
+        report = LastMonthsReportFactory(request.user.id, 13).generate_report()
         serialized = LastMonthsSerializer(report, many=True).data
         return Response(serialized)
 
