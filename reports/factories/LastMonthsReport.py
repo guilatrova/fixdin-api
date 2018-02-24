@@ -18,6 +18,19 @@ class LastMonthsReportFactory:
         report = self._get_query()
 
         return list(report)
+        
+    # def _add_missing_periods(self, data):
+    #     cur_date = self.get_start_date()
+    #     end_date = self.get_end_date()
+    #     completed = []
+
+    #     while cur_date < end_date:
+    #         if             
+
+    #         completed.append({ "date": cur_date, "expenses": expenses, "incomes": incomes, "total": total })
+    #         cur_date = cur_date + relativedelta(months=1)
+
+    #     return completed      
 
     def _get_query(self):
         start_date = self.get_start_date()
@@ -35,7 +48,7 @@ class LastMonthsReportFactory:
                     effective_incomes=sum_kind(HasKind.INCOME_KIND),
                     real_expenses=sum_kind_payed(HasKind.EXPENSE_KIND),
                     real_incomes=sum_kind_payed(HasKind.INCOME_KIND),
-                    total=Sum('value')
+                    effective_total=Sum('value')
                 ).\
                 order_by('date')
 

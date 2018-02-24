@@ -41,19 +41,19 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
 
         expected_list = [
             #2016-11 is ignored, but is $20, $10, -$10
-            { "period":'2016-12', "effective_expenses":  -40, "effective_incomes":  20, "total":  -20 },
-            { "period":'2017-01', "effective_expenses":  -60, "effective_incomes":  30, "total":  -30 },
-            { "period":'2017-02', "effective_expenses":  -80, "effective_incomes":  40, "total":  -40 },
-            { "period":'2017-03', "effective_expenses": -100, "effective_incomes":  50, "total":  -50 },
-            { "period":'2017-04', "effective_expenses": -120, "effective_incomes":  60, "total":  -60 },
-            { "period":'2017-05', "effective_expenses": -140, "effective_incomes":  70, "total":  -70 },
-            { "period":'2017-06', "effective_expenses": -160, "effective_incomes":  80, "total":  -80 },
-            { "period":'2017-07', "effective_expenses": -180, "effective_incomes":  90, "total":  -90 },
-            { "period":'2017-08', "effective_expenses": -200, "effective_incomes": 100, "total": -100 },
-            { "period":'2017-09', "effective_expenses": -220, "effective_incomes": 110, "total": -110 },
-            { "period":'2017-10', "effective_expenses": -240, "effective_incomes": 120, "total": -120 },
-            { "period":'2017-11', "effective_expenses": -260, "effective_incomes": 130, "total": -130 },
-            { "period":"2017-12", "effective_expenses": -280, "effective_incomes": 140, "total": -140 },
+            { "period":'2016-12', "effective_expenses":  -40, "effective_incomes":  20, "effective_total":  -20 },
+            { "period":'2017-01', "effective_expenses":  -60, "effective_incomes":  30, "effective_total":  -30 },
+            { "period":'2017-02', "effective_expenses":  -80, "effective_incomes":  40, "effective_total":  -40 },
+            { "period":'2017-03', "effective_expenses": -100, "effective_incomes":  50, "effective_total":  -50 },
+            { "period":'2017-04', "effective_expenses": -120, "effective_incomes":  60, "effective_total":  -60 },
+            { "period":'2017-05', "effective_expenses": -140, "effective_incomes":  70, "effective_total":  -70 },
+            { "period":'2017-06', "effective_expenses": -160, "effective_incomes":  80, "effective_total":  -80 },
+            { "period":'2017-07', "effective_expenses": -180, "effective_incomes":  90, "effective_total":  -90 },
+            { "period":'2017-08', "effective_expenses": -200, "effective_incomes": 100, "effective_total": -100 },
+            { "period":'2017-09', "effective_expenses": -220, "effective_incomes": 110, "effective_total": -110 },
+            { "period":'2017-10', "effective_expenses": -240, "effective_incomes": 120, "effective_total": -120 },
+            { "period":'2017-11', "effective_expenses": -260, "effective_incomes": 130, "effective_total": -130 },
+            { "period":"2017-12", "effective_expenses": -280, "effective_incomes": 140, "effective_total": -140 },
         ]
 
         response = self.client.get(reverse('last-months'), format='json')
@@ -79,19 +79,19 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
             cumulative_value = cumulative_value + 10
 
         expected_list = [
-            { "period":'2016-12', "effective_expenses": 0, "effective_incomes": 10, "total": 10 },
-            { "period":'2017-01', "effective_expenses": 0, "effective_incomes": 0, "total": 0 },
-            { "period":'2017-02', "effective_expenses": 0, "effective_incomes": 20, "total": 20 },
-            { "period":'2017-03', "effective_expenses": 0, "effective_incomes": 0, "total": 0 },
-            { "period":'2017-04', "effective_expenses": 0, "effective_incomes": 30, "total": 30 },
-            { "period":'2017-05', "effective_expenses": 0, "effective_incomes": 0, "total": 0 },
-            { "period":'2017-06', "effective_expenses": 0, "effective_incomes": 40, "total": 40 },
-            { "period":'2017-07', "effective_expenses": 0, "effective_incomes": 0, "total": 0 },
-            { "period":'2017-08', "effective_expenses": 0, "effective_incomes": 50, "total": 50 },
-            { "period":'2017-09', "effective_expenses": 0, "effective_incomes": 0, "total": 0 },
-            { "period":'2017-10', "effective_expenses": 0, "effective_incomes": 60, "total": 60 },
-            { "period":'2017-11', "effective_expenses": 0, "effective_incomes": 0, "total": 0 },
-            { "period":"2017-12", "effective_expenses": 0, "effective_incomes": 70, "total": 70 },
+            { "period":'2016-12', "effective_expenses": 0, "effective_incomes": 10, "effective_total": 10 },
+            { "period":'2017-01', "effective_expenses": 0, "effective_incomes": 0, "effective_total": 0 },
+            { "period":'2017-02', "effective_expenses": 0, "effective_incomes": 20, "effective_total": 20 },
+            { "period":'2017-03', "effective_expenses": 0, "effective_incomes": 0, "effective_total": 0 },
+            { "period":'2017-04', "effective_expenses": 0, "effective_incomes": 30, "effective_total": 30 },
+            { "period":'2017-05', "effective_expenses": 0, "effective_incomes": 0, "effective_total": 0 },
+            { "period":'2017-06', "effective_expenses": 0, "effective_incomes": 40, "effective_total": 40 },
+            { "period":'2017-07', "effective_expenses": 0, "effective_incomes": 0, "effective_total": 0 },
+            { "period":'2017-08', "effective_expenses": 0, "effective_incomes": 50, "effective_total": 50 },
+            { "period":'2017-09', "effective_expenses": 0, "effective_incomes": 0, "effective_total": 0 },
+            { "period":'2017-10', "effective_expenses": 0, "effective_incomes": 60, "effective_total": 60 },
+            { "period":'2017-11', "effective_expenses": 0, "effective_incomes": 0, "effective_total": 0 },
+            { "period":"2017-12", "effective_expenses": 0, "effective_incomes": 70, "effective_total": 70 },
         ]
 
         response = self.client.get(reverse('last-months'), format='json')
@@ -113,8 +113,8 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
         self.create_transaction(-30, due_date=datetime(2017, 2, 15), payment_date=datetime(2017, 2, 20), category=self.expense_category)
 
         expected_list = [
-            { "period": "2017-01", "effective_expenses":   0, "effective_incomes": 20, "total": 20 },
-            { "period": "2017-02", "effective_expenses": -40, "effective_incomes": 80, "total": 40 },
+            { "period": "2017-01", "effective_expenses":   0, "effective_incomes": 20, "effective_total": 20 },
+            { "period": "2017-02", "effective_expenses": -40, "effective_incomes": 80, "effective_total": 40 },
         ]
 
         url = reverse('last-months') + '?payed=1'
@@ -129,7 +129,7 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
             self.assertEqual(actual[i]['period'], expected[i]['period'])
             self.assertEqual(float(actual[i]["effective_incomes"]), float(expected[i]["effective_incomes"]))
             self.assertEqual(float(actual[i]["effective_expenses"]), float(expected[i]["effective_expenses"]))
-            self.assertEqual(float(actual[i]["total"]), float(expected[i]["total"]))
+            self.assertEqual(float(actual[i]["effective_total"]), float(expected[i]["effective_total"]))
 
 class LastMonthsFactoryTestCase(TestCase, BaseTestHelper):
 
@@ -137,14 +137,14 @@ class LastMonthsFactoryTestCase(TestCase, BaseTestHelper):
     # @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_end_date', return_value=datetime(2017, 2, 1))
     # def test_aggregate_transactions(self, mocked_start, mocked_end):
     #     data = [
-    #         { "date": datetime(2016, 12, 1).date(), "kind": Transaction.EXPENSE_KIND, "total": -20 },
-    #         { "date": datetime(2016, 12, 1).date(), "kind": Transaction.INCOME_KIND,  "total": 30 },
-    #         { "date": datetime(2017,  1, 1).date(), "kind": Transaction.EXPENSE_KIND, "total": -50 },            
-    #         { "date": datetime(2017,  1, 1).date(), "kind": Transaction.INCOME_KIND,  "total": 10 }
+    #         { "date": datetime(2016, 12, 1).date(), "kind": Transaction.EXPENSE_KIND, "effective_total": -20 },
+    #         { "date": datetime(2016, 12, 1).date(), "kind": Transaction.INCOME_KIND,  "effective_total": 30 },
+    #         { "date": datetime(2017,  1, 1).date(), "kind": Transaction.EXPENSE_KIND, "effective_total": -50 },            
+    #         { "date": datetime(2017,  1, 1).date(), "kind": Transaction.INCOME_KIND,  "effective_total": 10 }
     #     ]
     #     expected = [
-    #         { "date": datetime(2016, 12, 1), "effective_expenses": -20, "effective_incomes": 30, "total": 10 },
-    #         { "date": datetime(2017,  1, 1), "effective_expenses": -50, "effective_incomes": 10, "total": -40 },
+    #         { "date": datetime(2016, 12, 1), "effective_expenses": -20, "effective_incomes": 30, "effective_total": 10 },
+    #         { "date": datetime(2017,  1, 1), "effective_expenses": -50, "effective_incomes": 10, "effective_total": -40 },
     #     ]
 
     #     report_factory = LastMonthsReportFactory(0, 13)
@@ -159,7 +159,7 @@ class LastMonthsFactoryTestCase(TestCase, BaseTestHelper):
         query = report_factory._get_query()
         data = list(query)        
 
-        self.assertEqual(data[0]["total"], 100)
+        self.assertEqual(data[0]["effective_total"], 100)
 
     def create_user_with_transaction(self, name, value):
         user, token = self.create_user(name, email=name+'@test.com', password='pass')
