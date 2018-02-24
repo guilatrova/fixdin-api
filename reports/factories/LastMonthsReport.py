@@ -1,6 +1,6 @@
 from itertools import takewhile
 from django.db.models import Q, Sum, Case, When, F
-from django.db.models.functions import Coalesce, TruncMonth, TruncYear
+from django.db.models.functions import Coalesce, TruncMonth, ExtractMonth, ExtractYear
 from datetime import datetime
 import calendar
 from dateutil.relativedelta import relativedelta
@@ -50,6 +50,14 @@ class LastMonthsReportFactory:
             Q(account__user_id=self.user_id),
             Q(due_date__gte=start_date) | Q(payment_date__gte=start_date)
         )
+        due = transactions.annotate(date=TruncMonth('due_date'))
+        payed = transactions.filter(payment_date__isnull=False)\
+            .exclude(
+                payment_date__month=ExtractMonth('due_date'),
+                payment_date__year=ExtractYear('due_date')
+                )\
+            .annotate(date=TruncMonth('payment_date'))
+        all = due.union(payed, all=True)
 
         return transactions.\
                 annotate(date=TruncMonth('due_date')).\
