@@ -1,7 +1,8 @@
-from itertools import takewhile
+from datetime import datetime, date
+from collections import defaultdict
+from functools import reduce
 from django.db.models import Q, Sum, Case, When, F, Value, CharField
 from django.db.models.functions import Coalesce, TruncMonth, ExtractMonth, ExtractYear
-from datetime import datetime
 import calendar
 from dateutil.relativedelta import relativedelta
 from transactions.models import Transaction, HasKind
@@ -16,11 +17,37 @@ class LastMonthsReportFactory:
         self.months = months
 
     def generate_report(self):
-        report = list(self._get_query())
+        data = list(self._get_query())
+        report = self._merge_union(data)
         self._add_missing_periods(report)
 
         return report
-        
+
+    def _merge_union(self, data):
+        merged = []
+        for row in data:
+            def filter_date(x): return x['date'] == row['date']
+
+            if not any(row['date'] == x['date'] for x in merged):
+                same_periods = list(filter(filter_date, data))
+                if len(same_periods) > 1:
+                    result = self._sum_dict(same_periods)
+                else:
+                    result = same_periods[0]
+                merged.append(result)
+
+        return merged
+
+    def _sum_dict(self, lst):
+        ret = defaultdict(int)
+        for d in lst:
+            for k, v in d.items():
+                if (isinstance(v, date)):
+                    ret[k] = v
+                else:
+                    ret[k] += v
+        return dict(ret)
+
     def _add_missing_periods(self, data):
         cur_date = self.get_start_date()
         end_date = self.get_end_date()
@@ -61,17 +88,20 @@ class LastMonthsReportFactory:
 
     def _sum_queryset(self, field, queryset):
         sum_when = lambda **kwargs : Coalesce(Sum(Case(When(then=F('value'), **kwargs), default=0)), 0)
-        sum_kind = lambda kind : sum_when(kind=kind, due_date__month=ExtractMonth('date'), due_date__year=ExtractYear('date'))
-        sum_kind_payed = lambda kind : sum_when(kind=kind, payment_date__month=ExtractMonth('date'), payment_date__year=ExtractYear('date'))
+        sum_effective = lambda **kwargs : sum_when(**kwargs, due_date__month=ExtractMonth('date'), due_date__year=ExtractYear('date'))
+        sum_real = lambda **kwargs : sum_when(**kwargs, payment_date__month=ExtractMonth('date'), payment_date__year=ExtractYear('date'))
+        sum_kind = lambda kind : sum_effective(kind=kind)
+        sum_kind_payed = lambda kind : sum_real(kind=kind)
 
         return queryset.annotate(date=TruncMonth(field))\
-            .values('date').\
-            annotate(
+            .values('date')\
+            .annotate(
                 effective_expenses=sum_kind(HasKind.EXPENSE_KIND),
                 effective_incomes=sum_kind(HasKind.INCOME_KIND),
                 real_expenses=sum_kind_payed(HasKind.EXPENSE_KIND),
                 real_incomes=sum_kind_payed(HasKind.INCOME_KIND),
-                effective_total=Sum('value')
+                effective_total=sum_effective(),
+                real_total=sum_real()
             )            
 
     def get_start_date(self):
