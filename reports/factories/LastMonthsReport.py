@@ -40,15 +40,14 @@ class LastMonthsReportFactory:
             Q(account__user_id=self.user_id),
             Q(due_date__gte=start_date) | Q(payment_date__gte=start_date)
         )
-        due = transactions
-        payed = transactions.filter(payment_date__isnull=False)\
+        payed_out_due = transactions.filter(payment_date__isnull=False)\
             .exclude(
                 payment_date__month=ExtractMonth('due_date'),
                 payment_date__year=ExtractYear('due_date')
             )
 
-        due_result = self._sum_queryset('due_date', due)
-        payed_result = self._sum_queryset('payment_date', payed)
+        due_result = self._sum_queryset('due_date', transactions)
+        payed_result = self._sum_queryset('payment_date', payed_out_due)
 
         return due_result.union(payed_result).order_by('date')        
 
@@ -73,21 +72,19 @@ class LastMonthsReportFactory:
 
     def _merge_union(self, data):
         merged = []
-        for row in data:
-            def filter_date(x): return x['date'] == row['date']
+        not_merged = lambda date : not any(date == x['date'] for x in merged)
+        filter_date = lambda date : lambda x : x['date'] == date
 
-            if not any(row['date'] == x['date'] for x in merged):
-                same_periods = list(filter(filter_date, data))
-                if len(same_periods) > 1:
-                    result = self._sum_dict(same_periods)
-                else:
-                    result = same_periods[0]
+        for row in data:
+            if not_merged(row['date']):
+                same_periods = filter(filter_date(row['date']), data)
+                result = self._sum_dicts(same_periods)
                 merged.append(result)
 
         return merged
 
     @staticmethod
-    def _sum_dict(dicts):
+    def _sum_dicts(dicts):
         ret = defaultdict(int)
         for d in dicts:
             for k, v in d.items():
