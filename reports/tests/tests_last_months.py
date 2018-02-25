@@ -19,6 +19,19 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
         self.account = self.create_account(self.user)
         self.expense_category = self.create_category('expense-cat')
         self.income_category = self.create_category('income-cat', kind=Category.INCOME_KIND)
+
+    def test_gets_last_12_months_by_default(self):
+        response = self.client.get(reverse('last-months'), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 13)
+
+    def test_gets_last_2_months(self):
+        response = self.client.get(reverse('last-months') + '?months=2', format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3) #2 past + current = 3
+
     
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))

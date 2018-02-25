@@ -105,7 +105,7 @@ class LastMonthsReportFactory:
 
         if len(expected_dates) > len(data):
             for i in range(len(expected_dates)):
-                item = data[i]
+                item = data[i] if len(data) > i else { 'date': None }
                 if item['date'] != expected_dates[i]:
                     data.insert(i, { "date": expected_dates[i], "effective_expenses": 0, "effective_incomes": 0, "real_expenses": 0, "real_incomes": 0, "effective_total": 0, "real_total": 0})
         

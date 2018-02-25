@@ -13,7 +13,8 @@ from reports.factories.ValuesByCategoryReport import ValuesByCategoryReportFacto
 class LastMonthsAPIView(APIView):
 
     def get(self, request, format='json'):
-        report = LastMonthsReportFactory(request.user.id, 13).generate_report()
+        months_length = int(request.query_params.get('months', 12)) #12 past + current = 13
+        report = LastMonthsReportFactory(request.user.id, months_length).generate_report()
         serialized = LastMonthsSerializer(report, many=True).data
         return Response(serialized)
 
