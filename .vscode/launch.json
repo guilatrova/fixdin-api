@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"reports.tests.tests_last_months.LastMonthsAPITestCase.test_gets_amounts_expent_in_last_months_with_overdue"
+                ,"reports"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
