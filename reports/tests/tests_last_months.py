@@ -32,6 +32,9 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3) #2 past + current = 3
 
+    @skip('undone')
+    def test_gets_last_months_ignores_futures_periods(self):
+        pass
     
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_start_date', return_value=datetime(2016, 12, 1))
     @mock.patch('reports.factories.LastMonthsReport.LastMonthsReportFactory.get_end_date', return_value=datetime(2017, 12, 31))
@@ -136,6 +139,7 @@ class LastMonthsAPITestCase(TestCase, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         self.assertActualExpected(response.data, expected_list)
+    
 
     def assertActualExpected(self, actual, expected):
         for i in range(len(actual)):
