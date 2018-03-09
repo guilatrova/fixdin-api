@@ -48,7 +48,7 @@ class LastMonthsReportFactory:
         due_result = self._sum_queryset('due_date', due)
         payed_result = self._sum_queryset('payment_date', payed_out_due)
 
-        return due_result.union(payed_result).order_by('date')        
+        return due_result.union(payed_result).order_by('date')
 
     def _sum_queryset(self, field, queryset):
         sum_when = lambda **kwargs : Coalesce(Sum(Case(When(then=F('value'), **kwargs), default=0)), 0)
