@@ -1,13 +1,14 @@
 from django.db.models.functions import TruncMonth
+from datetime import date
 from dateutil.relativedelta import relativedelta
-from transactions.models import Transaction, HasKind
 from common import dates_utils
 from itertools import groupby
+from transactions.models import Transaction, HasKind
 
 class NextExpensesService:
     def __init__(self, user_id, from_date, until_date):
         self.user_id = user_id
-        self.from_date = from_date
+        self.from_date = date(from_date.year, from_date.month, 1)
         self.until_date = dates_utils.get_last_day_of(until_date)
 
     def generate_data(self):

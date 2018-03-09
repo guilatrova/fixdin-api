@@ -1,6 +1,8 @@
 from django.test import TestCase
+from django.urls import reverse
 from datetime import date
 from unittest import skip
+from unittest.mock import patch, MagicMock
 from rest_framework import status
 from transactions.tests.base_test import BaseTestHelperFactory
 from paymentorders.services import NextExpensesService
@@ -8,22 +10,55 @@ from paymentorders.views import PaymentOrderAPIView
 
 class PaymentOrderUrlTestCase(TestCase, BaseTestHelperFactory):
     def test_resolves_get_url(self):
-        resolver = self.resolve_by_name('payment-orders')
+        resolver = self.resolve_by_name('payment-orders')        
         self.assertEqual(resolver.func.cls, PaymentOrderAPIView)
 
 class PaymentOrderApiTestCase(TestCase, BaseTestHelperFactory):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user, token = cls.create_user(email='testuser@test.com', password='testing')
+        cls.user, cls.token = cls.create_user(email='testuser@test.com', password='testing')
         cls.category = cls.create_category('category')
         cls.account = cls.create_account()
         cls.create_transaction(-100, 'user', due_date=date(2018, 1, 1))
-        cls.client = cls.create_authenticated_client(token)
 
-    @skip('not yet')
-    def test_api_get(self):
-        self.client.get(reverse('payment-orders'))
+    def setUp(self):
+        self.client = self.create_authenticated_client(self.token)
+    
+    @skip('not now')
+    @patch('paymentorders.views.NextExpensesService', return_value=MagicMock())
+    def test_api_creates_service_correctly(self, mock):
+        with patch.object(mock, 'generate_data', return_value=[]) as method_mock:
+            response = self.client.get(reverse('payment-orders'))
+            mock.assert_called_with(self.user.id, date(2018, 1, 1), date(2018, 2, 1))
+
+class PaymentOrderViewsTestCase(TestCase, BaseTestHelperFactory):
+
+    def setUp(self):
+        self.user = MagicMock(id=5)
+    
+    @patch('paymentorders.views.NextExpensesService', return_value=MagicMock())    
+    def test_creates_service_correctly_with_params(self, service_mock):        
+        view, request = self.create_view_with_request({'from':'2018-01-01', 'until':'2018-02-01'})
+        
+        view.get(request)
+
+        service_mock.assert_called_with(self.user.id, date(2018, 1, 1), date(2018, 2, 1))
+
+    @patch('paymentorders.views.date', side_effect=lambda *args, **kw: date(*args, **kw))
+    @patch('paymentorders.views.NextExpensesService', return_value=MagicMock())
+    def test_creates_service_correctly_without_params(self, service_mock, date_mock):
+        mocked_today = date(2017, 1, 5)
+        date_mock.today.return_value = mocked_today
+        view, request = self.create_view_with_request()
+        
+        view.get(request)
+
+        service_mock.assert_called_with(self.user.id, date(2017, 1, 5), date(2017, 2, 5))
+
+    def create_view_with_request(self, query_params={}):
+        mock_request = MagicMock(self.user, user=self.user, query_params=query_params)
+        return PaymentOrderAPIView(request=mock_request), mock_request
 
 class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
 
@@ -69,7 +104,7 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
         self.assertEqual(data[2].date, date(2018, 3, 1))
 
     def test_service_gets_correctly_dates(self):
-        service = NextExpensesService(self.user.id, date(2018, 1, 1), date(2018, 4, 1))
+        service = NextExpensesService(self.user.id, date(2018, 1, 30), date(2018, 4, 1))
         self.assertEqual(service._get_dates(), [
             date(2018, 1, 1),
             date(2018, 2, 1),

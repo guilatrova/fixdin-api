@@ -20,7 +20,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return super(UserViewSet, self).get_permissions()
 
-
 class AuthAPIView(views.APIView):
     permission_classes = []
 
