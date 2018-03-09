@@ -14,7 +14,7 @@ class PaymentOrderAPIView(APIView):
             self._get_until_date()
         )
         data = service.generate_data()
-        return Response({ 'transactions': [] })
+        return Response({ 'transactions': data })
 
     def _get_from_date(self):
         if 'from' in self.request.query_params:

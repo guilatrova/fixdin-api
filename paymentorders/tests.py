@@ -18,19 +18,22 @@ class PaymentOrderApiTestCase(TestCase, BaseTestHelperFactory):
     @classmethod
     def setUpTestData(cls):
         cls.user, cls.token = cls.create_user(email='testuser@test.com', password='testing')
-        cls.category = cls.create_category('category')
-        cls.account = cls.create_account()
-        cls.create_transaction(-100, 'user', due_date=date(2018, 1, 1))
 
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
     
-    @skip('not now')
-    @patch('paymentorders.views.NextExpensesService', return_value=MagicMock())
-    def test_api_creates_service_correctly(self, mock):
-        with patch.object(mock, 'generate_data', return_value=[]) as method_mock:
-            response = self.client.get(reverse('payment-orders'))
-            mock.assert_called_with(self.user.id, date(2018, 1, 1), date(2018, 2, 1))
+    @patch('paymentorders.views.NextExpensesService.generate_data', return_value=[])
+    def test_api_get_replies_empty_array(self, mock):        
+        response = self.client.get(reverse('payment-orders'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, { 'transactions': [] })
+
+    @patch('paymentorders.views.NextExpensesService.generate_data', return_value=[ { 'id': 1},  { 'id': 2}])
+    def test_api_get_replies_array(self, mock):        
+        response = self.client.get(reverse('payment-orders'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, { 'transactions': [ {'id':1}, {'id':2}] })
+        
 
 class PaymentOrderViewsTestCase(TestCase, BaseTestHelperFactory):
 
@@ -48,8 +51,7 @@ class PaymentOrderViewsTestCase(TestCase, BaseTestHelperFactory):
     @patch('paymentorders.views.date', side_effect=lambda *args, **kw: date(*args, **kw))
     @patch('paymentorders.views.NextExpensesService', return_value=MagicMock())
     def test_creates_service_correctly_without_params(self, service_mock, date_mock):
-        mocked_today = date(2017, 1, 5)
-        date_mock.today.return_value = mocked_today
+        date_mock.today.return_value = date(2017, 1, 5)
         view, request = self.create_view_with_request()
         
         view.get(request)
