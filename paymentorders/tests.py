@@ -1,26 +1,18 @@
 from django.test import TestCase
-from paymentorders.services import NextExpensesService
-from datetime import date, datetime
-from decimal import Decimal
-from dateutil.relativedelta import relativedelta
-from django.test import TestCase
-from django.contrib.auth.models import User
-from django.urls import reverse
-from rest_framework.test import APITestCase, APIClient
-from rest_framework import status
-from rest_framework.authtoken.models import Token
+from datetime import date
 from unittest import skip
-from transactions.models import *
+from rest_framework import status
 from transactions.tests.base_test import BaseTestHelperFactory
+from paymentorders.services import NextExpensesService
 from paymentorders.views import PaymentOrderAPIView
 
 class PaymentOrderUrlTestCase(TestCase, BaseTestHelperFactory):
     def test_resolves_get_url(self):
         resolver = self.resolve_by_name('payment-orders')
-
         self.assertEqual(resolver.func.cls, PaymentOrderAPIView)
 
 class PaymentOrderApiTestCase(TestCase, BaseTestHelperFactory):
+
     @classmethod
     def setUpTestData(cls):
         cls.user, token = cls.create_user(email='testuser@test.com', password='testing')
@@ -33,7 +25,6 @@ class PaymentOrderApiTestCase(TestCase, BaseTestHelperFactory):
     def test_api_get(self):
         self.client.get(reverse('payment-orders'))
 
-
 class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
 
     @classmethod
@@ -45,9 +36,6 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
         cls.other_user, other_user_token = cls.create_user('other', email='other@test.com', password='other')
         cls.other_category = cls.create_category('other', user=cls.other_user)
         cls.other_account = cls.create_account(cls.other_user)
-
-    def setUp(self):
-        pass
 
     def test_returns_transactions_from_user(self):
         self.create_transaction(-100, 'user', due_date=date(2018, 1, 1))
