@@ -23,9 +23,12 @@ urlpatterns = [
     url(r'^api/v1/balances/', include('balances.urls')),
     url(r'^api/v1/reports/', include('reports.urls')),
     url(r'^api/v1/integrations/', include('integrations.urls')),
+
     url(r'^api/v1/accounts/', include('transactions.urls.urls_accounts')),
     url(r'^api/v1/transactions/', include('transactions.urls.urls_transaction'), name='transactions'),
     url(r'^api/v1/incomes/', include('transactions.urls.urls_transaction_kind'), kwargs={'kind': Transaction.INCOME_KIND}, name='incomes'),
     url(r'^api/v1/expenses/', include('transactions.urls.urls_transaction_kind'), kwargs={'kind': Transaction.EXPENSE_KIND}, name='expenses'),
     url(r'^api/v1/categories/', include('transactions.urls.urls_category')),
+
+    url(r'^api/v1/payment-orders/', include('paymentorders.urls')),
 ]

@@ -71,6 +71,10 @@ class BaseTestHelperFactory:
 
         return client
 
+    def resolve_by_name(self, name, **kwargs):
+        url = reverse(name, kwargs=kwargs)
+        return resolve(url)
+
 class BaseTestHelper:
     '''
     Class used to create some resources to backup tests

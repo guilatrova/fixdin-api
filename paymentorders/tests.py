@@ -1,6 +1,5 @@
 from django.test import TestCase
 from paymentorders.services import NextExpensesService
-
 from datetime import date, datetime
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
@@ -13,6 +12,27 @@ from rest_framework.authtoken.models import Token
 from unittest import skip
 from transactions.models import *
 from transactions.tests.base_test import BaseTestHelperFactory
+from paymentorders.views import PaymentOrderAPIView
+
+class PaymentOrderUrlTestCase(TestCase, BaseTestHelperFactory):
+    def test_resolves_get_url(self):
+        resolver = self.resolve_by_name('payment-orders')
+
+        self.assertEqual(resolver.func.cls, PaymentOrderAPIView)
+
+class PaymentOrderApiTestCase(TestCase, BaseTestHelperFactory):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user, token = cls.create_user(email='testuser@test.com', password='testing')
+        cls.category = cls.create_category('category')
+        cls.account = cls.create_account()
+        cls.create_transaction(-100, 'user', due_date=date(2018, 1, 1))
+        cls.client = cls.create_authenticated_client(token)
+
+    @skip('not yet')
+    def test_api_get(self):
+        self.client.get(reverse('payment-orders'))
+
 
 class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
 
