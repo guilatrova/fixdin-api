@@ -22,19 +22,18 @@ class PaymentOrderApiTestCase(TestCase, BaseTestHelperFactory):
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
     
-    @patch('paymentorders.views.NextExpensesService.generate_data', return_value=[])
+    @patch('paymentorders.views.PaymentOrderAPIView._get_transactions', return_value=[])
     def test_api_get_replies_empty_array(self, mock):        
         response = self.client.get(reverse('payment-orders'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, { 'transactions': [] })
-
-    @patch('paymentorders.views.NextExpensesService.generate_data', return_value=[ { 'id': 1},  { 'id': 2}])
-    def test_api_get_replies_array(self, mock):        
+        self.assertEqual(response.data, [])
+    
+    @patch('paymentorders.views.PaymentOrderAPIView._get_transactions', return_value=[ { 'id': 1},  { 'id': 2}])
+    def test_api_get_replies_array(self, mock):
         response = self.client.get(reverse('payment-orders'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, { 'transactions': [ {'id':1}, {'id':2}] })
+        self.assertEqual(response.data, [ {'id':1}, {'id':2} ])
         
-
 class PaymentOrderViewsTestCase(TestCase, BaseTestHelperFactory):
 
     def setUp(self):
@@ -123,9 +122,9 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
         data = service.generate_data()
 
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0][date(2018, 1, 1)], [ t1 ])
-        self.assertEqual(data[0][date(2018, 2, 1)], [ t2 ])
-        self.assertEqual(data[0][date(2018, 3, 1)], [ t3 ])
+        self.assertEqual(data[0]['2018-01-01'], [ t1 ])
+        self.assertEqual(data[0]['2018-02-01'], [ t2 ])
+        self.assertEqual(data[0]['2018-03-01'], [ t3 ])
 
     def test_returns_transactions_groupped_by_description_as_list(self):
         t1 = self.create_transaction(-100, 'shoes', due_date=date(2018, 1, 5))
@@ -137,9 +136,9 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
         data = service.generate_data()
 
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0][date(2018, 1, 1)], [ t1, t2 ])
-        self.assertEqual(data[0][date(2018, 2, 1)], [ t3 ])
-        self.assertEqual(data[0][date(2018, 3, 1)], [ t4 ])
+        self.assertEqual(data[0]['2018-01-01'], [ t1, t2 ])
+        self.assertEqual(data[0]['2018-02-01'], [ t3 ])
+        self.assertEqual(data[0]['2018-03-01'], [ t4 ])
 
     def test_returns_several_transactions_groupped_by_description_as_list(self):
         #shoes
@@ -154,11 +153,11 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
         data = service.generate_data()
 
         self.assertEqual(len(data), 2)
-        self.assertEqual(data[1][date(2018, 1, 1)], [ shoes1, shoes2 ])
-        self.assertEqual(data[1][date(2018, 2, 1)], [ shoes3 ])
-        self.assertEqual(data[1][date(2018, 3, 1)], [ ])
-        self.assertEqual(data[1][date(2018, 4, 1)], [ ])
-        self.assertEqual(data[0][date(2018, 1, 1)], [ hat1 ])
-        self.assertEqual(data[0][date(2018, 2, 1)], [  ])
-        self.assertEqual(data[0][date(2018, 3, 1)], [  ])
-        self.assertEqual(data[0][date(2018, 4, 1)], [ hat2 ])
+        self.assertEqual(data[1]['2018-01-01'], [ shoes1, shoes2 ])
+        self.assertEqual(data[1]['2018-02-01'], [ shoes3 ])
+        self.assertEqual(data[1]['2018-03-01'], [ ])
+        self.assertEqual(data[1]['2018-04-01'], [ ])
+        self.assertEqual(data[0]['2018-01-01'], [ hat1 ])
+        self.assertEqual(data[0]['2018-02-01'], [  ])
+        self.assertEqual(data[0]['2018-03-01'], [  ])
+        self.assertEqual(data[0]['2018-04-01'], [ hat2 ])

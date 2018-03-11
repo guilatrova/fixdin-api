@@ -38,7 +38,7 @@ class NextExpensesService:
         for group in groupped:
             group_date = {}
             for date in dates:
-                group_date[date] = [ transaction for transaction in group if transaction.date == date ]
+                group_date[date.strftime('%Y-%m-%d')] = [ transaction for transaction in group if transaction.date == date ]
             result.append(group_date)
 
         return result
