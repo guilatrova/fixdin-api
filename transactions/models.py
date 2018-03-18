@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
+from transactions.managers import TransactionsQuerySet
 
 class BoundReasons:
     PERIODIC_TRANSACTION = "PERIODIC"
@@ -30,6 +31,7 @@ class Category(models.Model, HasKind):
     kind = models.PositiveIntegerField(choices=CATEGORY_KINDS)
 
 class Transaction(models.Model, HasKind):
+    objects = TransactionsQuerySet.as_manager()
 
     TRANSACTION_KINDS = (
         (HasKind.EXPENSE_KIND, 'Expense'),

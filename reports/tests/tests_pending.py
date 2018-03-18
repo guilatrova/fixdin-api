@@ -130,7 +130,7 @@ class PendingExpensesFactoryTestCase(TestCase, BaseTestHelper):
         self.assertEqual(user_data[0].value, -100)
         self.assertEqual(other_user_data[0].value, -20)
 
-    def test_generates_incomes_report_filtetered_by_user(self):
+    def test_generates_incomes_report_filtered_by_user(self):
         user_id = self.create_user_with_transaction('user', 800)
         other_user_id = self.create_user_with_transaction('other_user', 70)
 

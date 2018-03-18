@@ -11,7 +11,4 @@ class PeriodBalance(models.Model):
     closed_real_value = models.DecimalField(max_digits=19, decimal_places=2)
 
     def get_transactions(self):
-        return Transaction.objects.filter(
-            Q(due_date__gte=self.start_date, due_date__lte=self.end_date) |
-            Q(payment_date__gte=self.start_date, payment_date__lte=self.end_date)
-        )
+        return Transaction.objects.in_date_range(self.start_date, self.end_date)
