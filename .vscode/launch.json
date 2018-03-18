@@ -48,7 +48,7 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"paymentorders"
+                ,"balances"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [

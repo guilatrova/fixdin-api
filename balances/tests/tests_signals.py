@@ -9,7 +9,6 @@ from balances.models import PeriodBalance
 from balances.signals import requires_updates
 from balances.factories import create_period_balance_for
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory, balance_signals_disabled
-from balances.services import calculator
 
 class SignalsTestCase(TestCase, BaseTestHelper):
     def setUp(self):
@@ -41,118 +40,6 @@ class SignalsTestCase(TestCase, BaseTestHelper):
         transaction.description = 'changed'
 
         self.assertFalse(requires_updates(transaction))    
-
-class CalculatorTestCase(TestCase, BaseTestHelper):
-    def setUp(self):
-        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
-
-        self.client = self.create_authenticated_client(token)
-        self.account = self.create_account(self.user)
-        self.category = self.create_category('category')
-
-    def test_calculates_account_current_balance(self):
-        self.create_period_balance(date(2017, 12, 1), date(2017, 12, 31), 100, 70)
-        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31), 50, 70)
-
-        result = calculator.calculate_account_current_balance(self.account.id)
-
-        self.assertEqual(result['effective'], 150)
-        self.assertEqual(result['real'], 140)
-
-    def test_calculates_account_current_balance_regarding_current_period(self):
-        self.create_period_balance(date(2017, 12, 1), date(2017, 12, 31), 100, 70)
-        self.create_period_balance(date(2018, 1, 1), date(2018, 1, 31), 50, 70)
-        self.create_transaction(300, due_date=date.today(), payment_date=date.today())
-
-        result = calculator.calculate_account_current_balance(self.account.id)
-
-        self.assertEqual(result['effective'], 450)
-        self.assertEqual(result['real'], 440)
-        
-    def create_period_balance(self, start, end, effective, real):
-        PeriodBalance.objects.create(
-            account=self.account,
-            start_date=start,
-            end_date=end,
-            closed_effective_value=effective,
-            closed_real_value=real            
-        )
-
-class FactoryTestCase(TestCase, BaseTestHelper):
-    def setUp(self):
-        self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
-        self.category = self.create_category('default category')
-        self.account = self.create_account()
-
-    def test_factory_creates(self):
-        transaction = self.create_transaction(100, date(2016, 1, 10), date(2016, 1, 10))
-        create_period_balance_for(transaction, [date(2016, 1, 10)])
-
-        just_created = PeriodBalance.objects.first()
-        self.assert_period(
-            just_created,
-            date(2016, 1, 1),
-            date(2016, 1, 31),
-            account=transaction.account,
-            closed_effective_value=100,
-            closed_real_value=100
-        )
-
-    def test_factory_creates_without_payment_date(self):
-        transaction = self.create_transaction(100, date(2016, 1, 10))
-        create_period_balance_for(transaction, [date(2016, 1, 10)])
-
-        just_created = PeriodBalance.objects.first()
-        self.assert_period(
-            just_created,
-            date(2016, 1, 1),
-            date(2016, 1, 31),
-            account=transaction.account,
-            closed_effective_value=100,
-            closed_real_value=0
-        )
-
-    def test_factory_creates_both_dates(self):
-        transaction = self.create_transaction(100, date(2016, 1, 10), date(2016, 3, 20))
-        create_period_balance_for(transaction, [date(2016, 1, 10), date(2016, 3, 20)])
-
-        jan_period = PeriodBalance.objects.first()
-        mar_period = PeriodBalance.objects.last()
-
-        self.assertEqual(2, len(PeriodBalance.objects.all()))
-
-        self.assert_period(
-            jan_period,
-            date(2016, 1, 1),
-            date(2016, 1, 31),
-            account=transaction.account,
-            closed_effective_value=100,
-            closed_real_value=0
-        )
-
-        self.assert_period(
-            mar_period,
-            date(2016, 3, 1),
-            date(2016, 3, 31),
-            account=transaction.account,
-            closed_effective_value=0,
-            closed_real_value=100
-        )
-        
-    def create_transaction(self, value, due_date, payment_date=None):
-        with balance_signals_disabled():
-            return super().create_transaction(
-                value=value,
-                due_date=due_date,
-                payment_date=payment_date,
-            )
-
-    def assert_period(self, period, start, end, **kwargs):
-        self.assertEqual(period.start_date, start)
-        self.assertEqual(period.end_date, end)
-
-        for key, val in kwargs.items():
-            self.assertEqual(getattr(period, key), val)
 
 class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
     '''
