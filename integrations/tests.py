@@ -12,6 +12,7 @@ from integrations.services.CPFLSyncService import CPFL_SyncService, CPFL
 from integrations.models import SyncHistory, IntegrationSettings, Integration, CPFL_Settings
 from integrations.serializers import ServiceSettingsSerializer
 from integrations import views
+from common.tests_helpers import UrlsTestHelper
 
 CONTAS_RECUPERADAS_MOCK = [
     {
@@ -210,7 +211,7 @@ class CPFL_SyncServiceIntegrationTestCase(TestCase, BaseTestHelper):
         self.assertEqual(history_result.status, SyncHistory.SUCCESS)
         self.assertEqual(created, 2)
 
-class IntegrationsUrlsTestCase(TestCase):
+class IntegrationsUrlsTestCase(TestCase, UrlsTestHelper):
 
     def test_resolves_list_url(self):
         resolver = self.resolve_by_name('integrations')
@@ -225,11 +226,7 @@ class IntegrationsUrlsTestCase(TestCase):
     def test_resolves_list_history_service_url(self):
         resolver = self.resolve_by_name('integrations-service-histories', name_id="cpfl")
 
-        self.assertEqual(resolver.func.cls, views.ListIntegrationServiceHistoryAPIView)    
-
-    def resolve_by_name(self, name, **kwargs): 
-        url = reverse(name, kwargs=kwargs)
-        return resolve(url)
+        self.assertEqual(resolver.func.cls, views.ListIntegrationServiceHistoryAPIView)
 
 class IntegrationsViewsTestCase(TestCase):
 

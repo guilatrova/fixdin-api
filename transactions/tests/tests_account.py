@@ -10,8 +10,9 @@ from transactions.views import AccountViewSet
 from transactions.models import Account
 from transactions.serializers import AccountSerializer
 from transactions.tests.base_test import BaseTestHelper
+from common.tests_helpers import UrlsTestHelper
 
-class AccountUrlTestCase(TestCase, BaseTestHelper):
+class AccountUrlTestCase(TestCase, BaseTestHelper, UrlsTestHelper):
 
     def test_resolves_list_url(self):
         resolver = self.resolve_by_name('accounts')

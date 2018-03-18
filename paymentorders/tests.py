@@ -7,8 +7,9 @@ from rest_framework import status
 from transactions.tests.base_test import BaseTestHelperFactory
 from paymentorders.services import NextExpensesService
 from paymentorders.views import PaymentOrderAPIView
+from common.tests_helpers import UrlsTestHelper
 
-class PaymentOrderUrlTestCase(TestCase, BaseTestHelperFactory):
+class PaymentOrderUrlTestCase(TestCase, BaseTestHelperFactory, UrlsTestHelper):
     def test_resolves_get_url(self):
         resolver = self.resolve_by_name('payment-orders')        
         self.assertEqual(resolver.func.cls, PaymentOrderAPIView)

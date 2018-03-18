@@ -11,8 +11,9 @@ from transactions.views import TransferViewSet
 from transactions.serializers import TransferSerializer
 from transactions.tests.base_test import BaseTestHelper
 from transactions.factories import create_transfer_between_accounts
+from common.tests_helpers import UrlsTestHelper
 
-class TransferUrlTestCase(TestCase, BaseTestHelper):
+class TransferUrlTestCase(TestCase, BaseTestHelper, UrlsTestHelper):
 
     def test_resolves_list_url(self):
         resolver = self.resolve_by_name('transfers')

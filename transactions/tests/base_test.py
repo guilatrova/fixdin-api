@@ -70,11 +70,7 @@ class BaseTestHelperFactory:
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
         return client
-
-    def resolve_by_name(self, name, **kwargs):
-        url = reverse(name, kwargs=kwargs)
-        return resolve(url)
-
+        
 class BaseTestHelper:
     '''
     Class used to create some resources to backup tests
@@ -131,12 +127,3 @@ class BaseTestHelper:
 
         return client
 
-    def resolve_by_name(self, name, **kwargs):
-        url = reverse(name, kwargs=kwargs)
-        return resolve(url)
-
-    def assert_has_actions(self, allowed, actions):
-        self.assertEqual(len(allowed), len(actions))
-
-        for allows in allowed:
-            self.assertIn(allows, actions)
