@@ -4,20 +4,23 @@ from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
+from unittest.mock import patch
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
-from transactions.tests.base_test import BaseTestHelper
+from transactions.tests.base_test import BaseTestHelperFactory
 
-class ApiTestCase(TestCase, BaseTestHelper):
+class ApiIntegrationTestCase(TestCase, BaseTestHelperFactory):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user, cls.token = cls.create_user(email='testuser@test.com', password='testing')
+        cls.account = cls.create_account(cls.user)
+        cls.category = cls.create_category('category')
 
     def setUp(self):
-        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
-
-        self.client = self.create_authenticated_client(token)
-        self.account = self.create_account(self.user)
-        self.category = self.create_category('category')
+        self.client = self.create_authenticated_client(self.token)
 
     def test_get_current_balance(self):
         '''
@@ -60,3 +63,21 @@ class ApiTestCase(TestCase, BaseTestHelper):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 125)
+
+    @patch('balances.queries.date', side_effect=lambda *args, **kw: date(*args, **kw))
+    def test_get_total_pending_incomes(self, mock_date):
+        mock_date.today.return_value = datetime(2018, 3, 1)
+        #ignoreds
+        self.create_transaction(-100, due_date=datetime(2018, 3, 1))
+        self.create_transaction(100, due_date=datetime(2018, 3, 2))
+        self.create_transaction(100, due_date=datetime(2018, 3, 1), payment_date=datetime(2018, 3, 1))
+        #considered
+        self.create_transaction(100, due_date=datetime(2018, 3, 1))
+        self.create_transaction(200, due_date=datetime(2018, 2, 1))
+
+        response = self.client.get(reverse('pending-incomes-balance'))
+        self.assert_response(response, 300)
+
+    def assert_response(self, response, balance):
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['balance'], balance)
