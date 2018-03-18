@@ -30,7 +30,9 @@ class ValuesByCategoryReportFactory:
         return fixed
 
     def _get_query(self):
-        return Transaction.objects.filter(kind=self.filters['kind'], account__user_id=self.user_id)\
+        return Transaction.objects\
+                .owned_by(self.user_id)\
+                .filter(kind=self.filters['kind'])\
                 .values('category_id')\
                 .annotate(total=Sum('value'))\
                 .order_by('category_id')

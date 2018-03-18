@@ -20,13 +20,9 @@ def calculate_account_current_balance(account_id):
 def _calculate_open_balance(account_id):
     start, end = periods.get_current_period()
 
-    #TODO: create manager for this date stuff:
     return Transaction.objects.\
         filter(account_id=account_id).\
-        filter(
-            Q(due_date__gte=start, due_date__lte=end) | 
-            Q(payment_date__gte=start, payment_date__lte=end)
-        ).\
+        in_date_range(start, end).\
         aggregate(
             effective=Coalesce(Sum('value'), 0), #TODO: quando cair num payment date não vai calcular um valor falso aqui? devo validar o due_date
             real=Coalesce(Sum(Case(When(payment_date__isnull=False, then=F('value')), default=0)), 0)
