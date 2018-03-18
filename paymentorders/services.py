@@ -17,10 +17,9 @@ class NextExpensesService:
 
     def _generate_queryset(self):
         return Transaction.objects.\
+            owned_by(self.user_id).\
+            expires_between(self.from_date, self.until_date).\
             filter(
-                account__user_id=self.user_id,
-                due_date__gte=self.from_date,
-                due_date__lte=self.until_date,
                 kind=HasKind.EXPENSE_KIND
             ).annotate(
                 date=TruncMonth('due_date')

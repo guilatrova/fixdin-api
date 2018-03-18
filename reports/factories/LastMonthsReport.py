@@ -37,7 +37,7 @@ class LastMonthsReportFactory:
         start_date = self.get_start_date()
         end_date = self.get_end_date()
         
-        user_transactions = Transaction.objects.filter(account__user_id=self.user_id)
+        user_transactions = Transaction.objects.owned_by(self.user_id)
         due = user_transactions.filter(due_date__range=[start_date, end_date])
         payed_out_due = user_transactions.filter(payment_date__range=[start_date, end_date])\
             .exclude(
