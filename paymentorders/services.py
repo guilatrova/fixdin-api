@@ -31,7 +31,7 @@ class NextExpensesService:
         dates = self._get_dates()
         data = list(queryset)
 
-        for key, group in groupby(data, lambda x: x.description):
+        for key, group in groupby(data, lambda x: x.description + str(x.account_id)):
             groupped.append(list(group))
         
         for group in groupped:
