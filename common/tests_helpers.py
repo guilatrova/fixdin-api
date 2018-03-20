@@ -15,3 +15,19 @@ class UrlsTestHelper:
         for key, value in actions_map.items():
             self.assertIn(key, resolver.func.actions)
             self.assertEqual(value, resolver.func.actions[key])
+
+class SerializerTestHelper:
+    def assert_has_field_error(self, serializer, key='non_field_errors'):
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(len(serializer.errors), 1)
+        self.assertIn(key, serializer.errors)
+
+    def get_data(self, **kwargs):
+        data = self.serializer_data
+        data.update(kwargs)
+        return data
+
+    def get_context(self, **kwargs):
+        context = self.serializer_context
+        context.update(kwargs)
+        return context

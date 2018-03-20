@@ -54,7 +54,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
         return super(TransactionSerializer, self).to_representation(value)
 
     @property
-    def data(self):
+    def data(self): #TODO: move this to a mixin or something else later
         if hasattr(self, 'initial_data') and not hasattr(self, '_validated_data'):
             msg = (
                 'When a serializer is passed a `data` keyword argument you '
