@@ -161,6 +161,13 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
         serializer = TransactionSerializer(data=data, context=self.serializer_context)
         self.assert_has_field_error(serializer)
 
+    def test_serializer_returns_list(self):
+        serializer = TransactionSerializer()
+        falsy = {}
+        truthy = { 'periodic': None }
+        self.assertFalse(serializer.is_return_data_list(falsy))
+        self.assertTrue(serializer.is_return_data_list(truthy))
+
     @mock.patch('transactions.factories.create_periodic_transactions', side_effect=MagicMock())
     def test_serializer_create_periodic(self, create_mock):
         dummy = { 'periodic': None }
