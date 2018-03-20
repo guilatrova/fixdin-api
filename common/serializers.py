@@ -1,3 +1,5 @@
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
+
 class SerializerMayReturnListMixin:
     @property
     def data(self):

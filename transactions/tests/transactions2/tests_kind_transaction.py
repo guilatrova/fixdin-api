@@ -12,10 +12,10 @@ from transactions import views
 from transactions.serializers import TransactionSerializer, PeriodicSerializer
 from transactions.serializers.PeriodicSerializer import PeriodicSerializer
 from transactions.factories import create_periodic_transactions, create_transfer_between_accounts
-from transactions.tests.base_test import BaseTestHelperFactory
+from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin, OtherUserDataTestSetupMixin
 from common.tests_helpers import UrlsTestHelper, SerializerTestHelper
 
-class KindTransactionUrlTest(TestCase, UrlsTestHelper):
+class KindTransactionUrlTestCase(TestCase, UrlsTestHelper):
 
     def test_resolves_list_url(self):
         resolver = self.resolve_by_name('kind_transactions')
@@ -41,30 +41,6 @@ class KindTransactionUrlTest(TestCase, UrlsTestHelper):
     def test_single_url_allows_actions(self):
         resolver = self.resolve_by_name('kind_transaction', pk=1)
         self.assert_has_actions(['get', 'put', 'delete', 'patch'], resolver.func.actions)
-
-#TODO: move from here
-class BaseUserDataTestSetupMixin(BaseTestHelperFactory):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
-        cls.account = cls.create_account()
-        cls.category = cls.create_category('category')
-        super().setUpTestData()
-
-#TODO: move from here
-class BaseOtherUserDataTestSetupMixin(BaseTestHelperFactory):
-    @classmethod
-    def setUpTestData(cls):
-        other_user, other_token = cls.create_user('other', email='other@test.com', password='pass')
-        other_account = cls.create_account(user=other_user)
-        other_category = cls.create_category('category', user=other_user)
-        cls.other_user = {
-            'user': other_user,
-            'token': other_token,
-            'account': other_account,
-            'category': other_category
-        }
-        super().setUpTestData()
 
 class PeriodicSerializerTestCase(TestCase, SerializerTestHelper):
     def setUp(self):
@@ -97,7 +73,7 @@ class PeriodicSerializerTestCase(TestCase, SerializerTestHelper):
         serializer = PeriodicSerializer(data=self.serializer_data)
         self.assert_has_field_error(serializer)
 
-class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUserDataTestSetupMixin, TestCase, SerializerTestHelper):
+class TransactionSerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, TestCase, SerializerTestHelper):
 
     def setUp(self):
         self.serializer_data = {
@@ -136,12 +112,12 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
         self.assert_has_field_error(serializer, 'value')
 
     def test_serializer_category_should_not_allows_from_other_user(self):
-        data = self.get_data(category=self.other_user['category'].id)
+        data = self.get_data(category=self.other_user_data['category'].id)
         serializer = TransactionSerializer(data=data, context=self.serializer_context)
         self.assert_has_field_error(serializer, 'category')
 
     def test_serializer_account_should_not_allows_from_other_user(self):
-        data = self.get_data(account=self.other_user['account'].id)
+        data = self.get_data(account=self.other_user_data['account'].id)
         serializer = TransactionSerializer(data=data, context=self.serializer_context)
         self.assert_has_field_error(serializer, 'account')
 
@@ -168,7 +144,7 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
         self.assertFalse(serializer.is_return_data_list(falsy))
         self.assertTrue(serializer.is_return_data_list(truthy))
 
-    @mock.patch('transactions.factories.create_periodic_transactions', side_effect=MagicMock())
+    @mock.patch('transactions.factories.create_periodic_transactions')
     def test_serializer_create_periodic(self, create_mock):
         dummy = { 'periodic': None }
         serializer = TransactionSerializer()
@@ -199,3 +175,69 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
         })
         return data
 
+class KindTransactionApiTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.expense = cls.create_transaction(-100)
+        cls.create_transaction(-50)
+        cls.income = cls.create_transaction(200, payment_date=date.today(), category=cls.income_category)
+        #other user        
+        cls.create_transaction(-30, **cls.other_user_data)
+        cls.create_transaction(100, **cls.other_user_data)
+
+    def setUp(self):
+        self.client = self.create_authenticated_client(self.token)
+
+    def test_api_lists(self):
+        response = self.client.get(self.list_url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_api_retrieves(self):
+        response = self.client.get(self.single_url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.income.id) #INCOME
+    
+    def test_api_creates(self):
+        response = self.client.post(self.list_url, self.dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Transaction.objects.incomes().owned_by(self.user).count(), 2) #INCOME
+
+    def test_api_updates(self):
+        dto = self.get_updated_dto(description='changed')
+        response = self.client.put(self.single_url, dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.income.refresh_from_db()
+        self.assertEqual(self.income.description, dto['description'])
+
+    def get_updated_dto(self, **kwargs):
+        dto = TransactionSerializer(self.income).data
+        dto.update(kwargs)
+        return dto
+
+    @property
+    def dto(self):
+        return {
+            'due_date': date.today(),
+            'description': 'dto',
+            'category': self.income_category.id,
+            'value': 500,
+            'details': 'this are the details',
+            'account': self.account.id,
+            'priority': 1,
+            'deadline': 10,
+            'payment_date': date.today()            
+        }
+
+    @property
+    def list_url(self):
+        return reverse('kind_transactions', kwargs={'kind': HasKind.INCOME_KIND})
+
+    @property
+    def single_url(self):
+        return reverse('kind_transaction', kwargs={'kind': HasKind.INCOME_KIND, 'pk': self.income.id})

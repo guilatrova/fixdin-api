@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from transactions.models import Transaction
 from transactions import factories
-from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from .PeriodicSerializer import PeriodicSerializer
 from .HasKindContextSerializer import HasKindContextSerializer
 from common.serializers import SerializerMayReturnListMixin

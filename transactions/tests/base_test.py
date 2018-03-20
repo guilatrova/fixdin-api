@@ -16,7 +16,7 @@ class BaseTestHelperFactory:
 
     @classmethod
     def create_transaction(cls, value=None, description='description', kind=None, account=None, category=None, 
-                            due_date=datetime.datetime.today(), payment_date=None, priority=0, deadline=10):
+                            due_date=datetime.datetime.today(), payment_date=None, priority=1, deadline=10):
         if value is None:
             value = cls.value
 
@@ -70,7 +70,31 @@ class BaseTestHelperFactory:
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
         return client
-        
+
+class UserDataTestSetupMixin(BaseTestHelperFactory):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
+        cls.account = cls.create_account()
+        cls.expense_category = cls.create_category('cat_exp', kind=HasKind.EXPENSE_KIND)
+        cls.income_category = cls.create_category('cat_inc', kind=HasKind.INCOME_KIND)
+        cls.category = cls.expense_category #default
+        super().setUpTestData()
+
+class OtherUserDataTestSetupMixin(BaseTestHelperFactory):
+    @classmethod
+    def setUpTestData(cls):
+        other_user, other_token = cls.create_user('other', email='other@test.com', password='pass')
+        other_account = cls.create_account(user=other_user)
+        other_category = cls.create_category('category', user=other_user)
+        cls.other_user = other_user
+        cls.other_user_token = other_token
+        cls.other_user_data = {
+            'account': other_account,
+            'category': other_category
+        }
+        super().setUpTestData()
+
 class BaseTestHelper:
     '''
     Class used to create some resources to backup tests
