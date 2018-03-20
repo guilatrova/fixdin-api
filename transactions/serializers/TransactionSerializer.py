@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from transactions.models import Transaction
-from transactions.factories import create_periodic_transactions
+from transactions import factories
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from .PeriodicSerializer import PeriodicSerializer
 from .HasKindContextSerializer import HasKindContextSerializer
@@ -78,7 +78,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
         return ReturnDict(self._data, serializer=self)
 
     def create(self, validated_data):
-        if 'periodic' not in validated_data:
-            return super(TransactionSerializer, self).create(validated_data)
+        if 'periodic' in validated_data:            
+            return factories.create_periodic_transactions(**validated_data)
 
-        return create_periodic_transactions(**validated_data)
+        return super(TransactionSerializer, self).create(validated_data)

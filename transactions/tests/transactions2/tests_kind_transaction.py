@@ -1,5 +1,6 @@
 from datetime import date
 from unittest import mock, skip
+from unittest.mock import MagicMock
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -41,6 +42,7 @@ class KindTransactionUrlTest(TestCase, UrlsTestHelper):
         resolver = self.resolve_by_name('kind_transaction', pk=1)
         self.assert_has_actions(['get', 'put', 'delete', 'patch'], resolver.func.actions)
 
+#TODO: move from here
 class BaseUserDataTestSetupMixin(BaseTestHelperFactory):
     @classmethod
     def setUpTestData(cls):
@@ -49,6 +51,7 @@ class BaseUserDataTestSetupMixin(BaseTestHelperFactory):
         cls.category = cls.create_category('category')
         super().setUpTestData()
 
+#TODO: move from here
 class BaseOtherUserDataTestSetupMixin(BaseTestHelperFactory):
     @classmethod
     def setUpTestData(cls):
@@ -157,6 +160,20 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
         data = self.get_data_with_periodic(until=date(2018, 1, 1))
         serializer = TransactionSerializer(data=data, context=self.serializer_context)
         self.assert_has_field_error(serializer)
+
+    @mock.patch('transactions.factories.create_periodic_transactions', side_effect=MagicMock())
+    def test_serializer_create_periodic(self, create_mock):
+        dummy = { 'periodic': None }
+        serializer = TransactionSerializer()
+        serializer.create(dummy)
+        create_mock.assert_called_with(**dummy)
+
+    @mock.patch('rest_framework.serializers.ModelSerializer.create')
+    def test_serializer_create_regular(self, super_create_mock):
+        dummy = {}
+        serializer = TransactionSerializer()
+        serializer.create(dummy)
+        super_create_mock.assert_called_with(dummy)
 
     def get_data_with_periodic(self, **kwargs):
         nested = {
