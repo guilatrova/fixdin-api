@@ -70,7 +70,10 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
         response = self.client.post(self.list_url, self.dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assert_created()
+        self.assertEqual(
+            Transaction.objects.owned_by(self.user).filter(kind=self.kind).count(), 
+            self.expected_list_count + 1
+        )
 
     def test_api_updates(self):
         dto = self.get_updated_dto(description='changed')
@@ -80,6 +83,15 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.description, dto['description'])
 
+    def test_api_deletes(self):
+        response = self.client.delete(self.single_url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(
+            Transaction.objects.owned_by(self.user).filter(kind=self.kind).count(), 
+            self.expected_list_count - 1
+        )
+
     @property
     def list_url(self):
         return reverse('kind_transactions', kwargs={'kind': self.kind})
@@ -87,11 +99,6 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
     @property
     def single_url(self):
         return reverse('kind_transaction', kwargs={'kind': self.kind, 'pk': self.transaction.id})
-
-    def get_updated_dto(self, **kwargs):
-        dto = TransactionSerializer(self.transaction).data
-        dto.update(kwargs)
-        return dto
     
     @property
     def dto(self):
@@ -107,6 +114,11 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
             'payment_date': date.today()
         }
 
+    def get_updated_dto(self, **kwargs):
+        dto = TransactionSerializer(self.transaction).data
+        dto.update(kwargs)
+        return dto
+
 class IncomeApiTestCase(KindTransactionApiTestMixin, TestCase):
     expected_list_count = 1
     kind = HasKind.INCOME_KIND
@@ -115,9 +127,6 @@ class IncomeApiTestCase(KindTransactionApiTestMixin, TestCase):
     @property
     def transaction(self):
         return self.income
-        
-    def assert_created(self):
-        self.assertEqual(Transaction.objects.incomes().owned_by(self.user).count(), 2)
 
 class ExpenseApiTestCase(KindTransactionApiTestMixin, TestCase):
     expected_list_count = 2
@@ -127,6 +136,3 @@ class ExpenseApiTestCase(KindTransactionApiTestMixin, TestCase):
     @property
     def transaction(self):
         return self.expense
-
-    def assert_created(self):
-        self.assertEqual(Transaction.objects.expenses().owned_by(self.user).count(), 3)
