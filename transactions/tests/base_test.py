@@ -39,7 +39,7 @@ class BaseTestHelperFactory:
             payment_date=payment_date,
             priority=priority,
             deadline=deadline
-            )
+        )
 
         return transaction
 

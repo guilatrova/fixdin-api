@@ -9,48 +9,45 @@ from rest_framework.authtoken.models import Token
 from transactions.views import AccountViewSet
 from transactions.models import Account
 from transactions.serializers import AccountSerializer
-from transactions.tests.base_test import BaseTestHelper
+from transactions.tests.base_test import BaseTestHelperFactory
 from common.tests_helpers import UrlsTestHelper
 
-class AccountUrlTestCase(TestCase, BaseTestHelper, UrlsTestHelper):
+class AccountUrlTestCase(TestCase, UrlsTestHelper):
 
     def test_resolves_list_url(self):
         resolver = self.resolve_by_name('accounts')
-
         self.assertEqual(resolver.func.cls, AccountViewSet)
 
     def test_resolves_retrieve_url(self):
         resolver = self.resolve_by_name('account', pk=1)
-
         self.assertEqual(resolver.func.cls, AccountViewSet)
 
     def test_resolves_url_to_list_action(self):
         resolver = self.resolve_by_name('accounts')
-
         self.assertIn('get', resolver.func.actions)
         self.assertEqual('list', resolver.func.actions['get'])
 
     def test_resolves_url_to_retrieve_action(self):
         resolver = self.resolve_by_name('account', pk=1)
-
         self.assertIn('get', resolver.func.actions)
         self.assertEqual('retrieve', resolver.func.actions['get'])
 
     def test_list_url_only_allows_get_and_post(self):
         resolver = self.resolve_by_name('accounts')
-
         self.assert_has_actions(['get', 'post'], resolver.func.actions)
 
-    def test_single_url_allows_all_methods_except_post_patch(self):
-        """All methods are: GET and PUT"""
+    def test_single_url_allows_all_get_and_put(self):
         resolver = self.resolve_by_name('account', pk=1)
-
         self.assert_has_actions(['get', 'put'], resolver.func.actions)
     
-class AccountSerializerTestCase(TestCase, BaseTestHelper):
+class AccountSerializerTestCase(TestCase, BaseTestHelperFactory):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
+        cls.account = cls.create_account(name='acc01')
+        cls.category = cls.create_category('any')
+
     def setUp(self):
-        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
-        self.account = self.create_account(name='acc01')
         self.serializer_data = {
             'name': 'acc02'
         }
@@ -71,18 +68,20 @@ class AccountSerializerTestCase(TestCase, BaseTestHelper):
         self.assertFalse(serializer.is_valid())
         self.assertIn('name', serializer.errors)
 
-    def test_serializer_calculates_balance(self):
-        self.category = self.create_category('any')
-        self.create_transaction(100, payment_date=date.today())
+    def test_serializer_calculates_balance(self):        
+        self.create_transaction(100, payment_date=date.today())        
         serializer = AccountSerializer(self.account)
         self.assertEqual(100, serializer.data['current_balance'])
 
-class AccountApiTestCase(APITestCase, BaseTestHelper):
+class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
+        cls.account = cls.create_account() #Now there are 2 accounts because signals creates a default account 
 
     def setUp(self):
-        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
-        self.client = self.create_authenticated_client(token)
-        self.account = self.create_account() #Now there are 2 accounts because signals creates a default account 
+        self.client = self.create_authenticated_client(self.token)
 
     def test_api_lists(self):
         response = self.client.get(reverse('accounts'), format='json')
@@ -97,9 +96,7 @@ class AccountApiTestCase(APITestCase, BaseTestHelper):
         self.assertEqual(response.data['id'], self.account.id)
 
     def test_api_creates(self):
-        dto = {
-            'name': 'acc01'
-        }
+        dto = { 'name': 'acc01' }
 
         response = self.client.post(reverse('accounts'), dto, format='json')
 
@@ -107,9 +104,7 @@ class AccountApiTestCase(APITestCase, BaseTestHelper):
         self.assertEqual(Account.objects.count(), 3)
 
     def test_api_updates(self):
-        data = {
-            'name': 'new_name'
-        }
+        data = { 'name': 'new_name' }
         response = self.client.put(reverse('account', kwargs={'pk': self.account.id}), data=data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
