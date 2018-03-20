@@ -9,7 +9,7 @@ class TransactionSerializer(serializers.ModelSerializer, HasKindContextSerialize
     class Meta:
         model = Transaction
         fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date', 'periodic', 'bound_transaction', 'bound_reason')
-        read_only_fields = ('kind', 'bound_transaction')
+        read_only_fields = ('kind', 'bound_transaction', 'bound_reason')
         write_only_fields = ('periodic',)
 
     periodic = PeriodicSerializer(required=False, write_only=True)

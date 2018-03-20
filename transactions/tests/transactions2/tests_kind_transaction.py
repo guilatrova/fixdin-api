@@ -115,10 +115,10 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
     def test_serializer_only_required_fields_validates(self):
         serializer = TransactionSerializer(data=self.serializer_data, context=self.serializer_context)
         self.assertTrue(serializer.is_valid(raise_exception=True))
-
-    @skip('not done')
+    
     def test_serializer_all_fields_validates(self):
-        pass
+        serializer = TransactionSerializer(data=self.get_full_data(), context=self.serializer_context)
+        self.assertTrue(serializer.is_valid(raise_exception=True))
 
     def test_serializer_value_should_not_allows_expense_positive(self):
         data = self.get_data(value=10)
@@ -165,5 +165,13 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
         }
         nested.update(kwargs)
         data = self.get_data(periodic=nested)
+        return data
+
+    def get_full_data(self):
+        data = self.get_data_with_periodic(how_many=1)
+        data.update({
+            'details': 'details',
+            'payment_date': date(2018, 3, 20),
+        })
         return data
 
