@@ -8,7 +8,8 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
 from transactions import views
-from transactions.serializers import TransactionSerializer
+from transactions.serializers import TransactionSerializer, PeriodicSerializer
+from transactions.serializers.PeriodicSerializer import PeriodicSerializer
 from transactions.factories import create_periodic_transactions, create_transfer_between_accounts
 from transactions.tests.base_test import BaseTestHelperFactory
 from common.tests_helpers import UrlsTestHelper, SerializerTestHelper
@@ -25,13 +26,13 @@ class KindTransactionUrlTest(TestCase, UrlsTestHelper):
 
     def test_resolves_list_to_actions(self):
         resolver = self.resolve_by_name('kind_transactions')
-        self.assert_resolves_actions(resolver, { 
+        self.assert_resolves_actions(resolver, {
             'get': 'list',
             'post': 'create',
             'delete': 'destroy_all_periodics',
             'patch': 'patch_list'
         })
-        
+
     def test_list_url_allows_actions(self):
         resolver = self.resolve_by_name('kind_transactions')
         self.assert_has_actions(['get', 'post', 'delete', 'patch'], resolver.func.actions)
@@ -50,7 +51,7 @@ class BaseUserDataTestSetupMixin(BaseTestHelperFactory):
 
 class BaseOtherUserDataTestSetupMixin(BaseTestHelperFactory):
     @classmethod
-    def setUpTestData(cls):        
+    def setUpTestData(cls):
         other_user, other_token = cls.create_user('other', email='other@test.com', password='pass')
         other_account = cls.create_account(user=other_user)
         other_category = cls.create_category('category', user=other_user)
@@ -62,8 +63,39 @@ class BaseOtherUserDataTestSetupMixin(BaseTestHelperFactory):
         }
         super().setUpTestData()
 
+class PeriodicSerializerTestCase(TestCase, SerializerTestHelper):
+    def setUp(self):
+        self.serializer_data = {
+            'frequency': 'daily',
+            'interval': 1,
+        }
+
+    def test_serializer_validates_with_how_many(self):
+        data = self.get_data(how_many=2)
+        serializer = PeriodicSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_serializer_validates_with_until(self):
+        data = self.get_data(until=date(2018, 3, 20))
+        serializer = PeriodicSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_serializer_how_many_should_not_allows_below_zero(self):
+        data = self.get_data(how_many=0)
+        serializer = PeriodicSerializer(data=data)
+        self.assert_has_field_error(serializer, 'how_many')
+
+    def test_serializer_should_not_allow_both_until_with_how_many(self):
+        data = self.get_data(how_many=2, until=date(2018, 3, 20))
+        serializer = PeriodicSerializer(data=data)
+        self.assert_has_field_error(serializer)
+
+    def test_serializer_should_not_allow_missing_both_until_with_how_many(self):
+        serializer = PeriodicSerializer(data=self.serializer_data)
+        self.assert_has_field_error(serializer)
+
 class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUserDataTestSetupMixin, TestCase, SerializerTestHelper):
-    
+
     def setUp(self):
         self.serializer_data = {
             'due_date': date(2018, 3, 20),
@@ -83,6 +115,10 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
     def test_serializer_only_required_fields_validates(self):
         serializer = TransactionSerializer(data=self.serializer_data, context=self.serializer_context)
         self.assertTrue(serializer.is_valid(raise_exception=True))
+
+    @skip('not done')
+    def test_serializer_all_fields_validates(self):
+        pass
 
     def test_serializer_value_should_not_allows_expense_positive(self):
         data = self.get_data(value=10)
@@ -121,7 +157,7 @@ class KindTransactionSerializerTestCase(BaseUserDataTestSetupMixin, BaseOtherUse
         data = self.get_data_with_periodic(until=date(2018, 1, 1))
         serializer = TransactionSerializer(data=data, context=self.serializer_context)
         self.assert_has_field_error(serializer)
-    
+
     def get_data_with_periodic(self, **kwargs):
         nested = {
             'frequency': 'daily',
