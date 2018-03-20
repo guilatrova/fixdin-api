@@ -178,7 +178,7 @@ class TransactionSerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSet
 class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, BaseTestHelperFactory):
     """
     Exposes all api tests in a generic way. TestCase which inherites this should set some properties.
-    By default it creates 2 expenses + 1 income for user, and 2 transactions for another user
+    By default it creates 2 expenses + 1 income for user, and 2 transactions for another user.
     """
     @classmethod
     def setUpTestData(cls):
@@ -219,71 +219,53 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.description, dto['description'])
 
+    @property
+    def list_url(self):
+        return reverse('kind_transactions', kwargs={'kind': self.kind})
+
+    @property
+    def single_url(self):
+        return reverse('kind_transaction', kwargs={'kind': self.kind, 'pk': self.transaction.id})
+
     def get_updated_dto(self, **kwargs):
         dto = TransactionSerializer(self.transaction).data
         dto.update(kwargs)
         return dto
-
-class IncomeApiTestCase(KindTransactionApiTestMixin, TestCase):
-    expected_list_count = 1    
-
-    @property
-    def list_url(self):
-        return reverse('kind_transactions', kwargs={'kind': HasKind.INCOME_KIND})
-
-    @property
-    def single_url(self):
-        return reverse('kind_transaction', kwargs={'kind': HasKind.INCOME_KIND, 'pk': self.transaction.id})
-
-    @property
-    def transaction(self):
-        return self.income
-
+    
     @property
     def dto(self):
         return {
             'due_date': date.today(),
             'description': 'dto',
-            'category': self.income_category.id,
-            'value': 500,
+            'category': self.transaction.category.id,
+            'value': self.dto_value,
             'details': 'this are the details',
             'account': self.account.id,
             'priority': 1,
             'deadline': 10,
             'payment_date': date.today()
         }
+
+class IncomeApiTestCase(KindTransactionApiTestMixin, TestCase):
+    expected_list_count = 1
+    kind = HasKind.INCOME_KIND
+    dto_value = 200
+
+    @property
+    def transaction(self):
+        return self.income
         
     def assert_created(self):
         self.assertEqual(Transaction.objects.incomes().owned_by(self.user).count(), 2)
 
 class ExpenseApiTestCase(KindTransactionApiTestMixin, TestCase):
     expected_list_count = 2
-
-    @property
-    def list_url(self):
-        return reverse('kind_transactions', kwargs={'kind': HasKind.EXPENSE_KIND})
-
-    @property
-    def single_url(self):
-        return reverse('kind_transaction', kwargs={'kind': HasKind.EXPENSE_KIND, 'pk': self.transaction.id})
+    kind = HasKind.EXPENSE_KIND
+    dto_value = -500
 
     @property
     def transaction(self):
         return self.expense
-
-    @property
-    def dto(self):
-        return {
-            'due_date': date.today(),
-            'description': 'dto',
-            'category': self.expense_category.id,
-            'value': -500,
-            'details': 'this are the details',
-            'account': self.account.id,
-            'priority': 1,
-            'deadline': 10,
-            'payment_date': date.today()            
-        }
 
     def assert_created(self):
         self.assertEqual(Transaction.objects.expenses().owned_by(self.user).count(), 3)
