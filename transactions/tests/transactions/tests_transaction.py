@@ -7,20 +7,30 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from transactions.models import *
-from transactions.tests.base_test import BaseTestHelper
+from transactions import views
+from transactions.tests.base_test import BaseTestHelperFactory
+from common.tests_helpers import UrlsTestHelper
 
-class TransactionTestCase(APITestCase, BaseTestHelper):
+class GenericTransactionUrlTestCase(TestCase, UrlsTestHelper):
+    def test_resolves_first_pending_expense_url(self):
+        resolver = self.resolve_by_name('first-pending-expense')
+        self.assertEqual(resolver.func.cls, views.FirstPendingExpenseAPIView)
+
+class GenericTransactionAPIIntegrationTestCase(APITestCase, BaseTestHelperFactory):
     '''
     Tests a generic endpoint /transactions that only retrieves/lists transactions
     regardless of its kind
     '''
-    def setUp(self):
-        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
-        self.client = self.create_authenticated_client(token)
-        self.account = self.create_account(self.user)
 
-        self.income_category = self.create_category('salary', kind=Category.INCOME_KIND)
-        self.expense_category = self.create_category('dinner', kind=Category.EXPENSE_KIND)
+    @classmethod
+    def setUpTestData(cls):
+        cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
+        cls.account = cls.create_account(cls.user)
+        cls.income_category = cls.create_category('salary', kind=Category.INCOME_KIND)
+        cls.expense_category = cls.create_category('dinner', kind=Category.EXPENSE_KIND)
+
+    def setUp(self):
+        self.client = self.create_authenticated_client(self.token)
 
     def test_lists_both_incomes_and_expenses(self):
         # Expenses

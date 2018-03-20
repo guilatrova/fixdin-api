@@ -6,14 +6,14 @@ list_actions = {
     'get': 'list', 
     'post': 'create',
     'delete': 'destroy_all_periodics',
-    'patch': 'patch_list'
+    'patch': 'patch_list',
 }
 
 single_action = {
     'get': 'retrieve',
     'put': 'update',
+    'delete': 'destroy',
     'patch': 'partial_update',
-    'delete': 'destroy'
 }
 
 transaction_list = views.TransactionViewSet.as_view(list_actions)
