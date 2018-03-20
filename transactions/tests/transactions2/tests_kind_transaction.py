@@ -6,6 +6,7 @@ from rest_framework import status
 from transactions.models import Transaction, HasKind
 from transactions import views
 from transactions.serializers import TransactionSerializer
+from transactions import factories
 from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin, OtherUserDataTestSetupMixin
 from common.tests_helpers import UrlsTestHelper, SerializerTestHelper
 
@@ -92,13 +93,26 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
             self.expected_list_count - 1
         )
 
+    def test_api_cant_manage_transfer(self):
+        account_to = self.create_account(name='account_to')
+        expense, income = factories.create_transfer_between_accounts(self.user.id, account_from=self.account.id, account_to=account_to.id, value=100)
+        transaction = income if self.kind == HasKind.INCOME_KIND else expense
+
+        response = self.client.put(self.get_single_url(transaction.id), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn('manage transfers', response.data['detail'])        
+
     @property
     def list_url(self):
         return reverse('kind_transactions', kwargs={'kind': self.kind})
 
     @property
     def single_url(self):
-        return reverse('kind_transaction', kwargs={'kind': self.kind, 'pk': self.transaction.id})
+        return self.get_single_url(self.transaction.id)
+
+    def get_single_url(self, id):
+        return reverse('kind_transaction', kwargs={'kind': self.kind, 'pk': id})
     
     @property
     def dto(self):
