@@ -175,7 +175,11 @@ class TransactionSerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSet
         })
         return data
 
-class KindTransactionApiTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
+class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, BaseTestHelperFactory):
+    """
+    Exposes all api tests in a generic way. TestCase which inherites this should set some properties.
+    By default it creates 2 expenses + 1 income for user, and 2 transactions for another user
+    """
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -193,32 +197,47 @@ class KindTransactionApiTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupM
         response = self.client.get(self.list_url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data), self.expected_list_count)
 
     def test_api_retrieves(self):
         response = self.client.get(self.single_url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['id'], self.income.id) #INCOME
+        self.assertEqual(response.data['id'], self.transaction.id)
     
     def test_api_creates(self):
         response = self.client.post(self.list_url, self.dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.incomes().owned_by(self.user).count(), 2) #INCOME
+        self.assert_created()
 
     def test_api_updates(self):
         dto = self.get_updated_dto(description='changed')
         response = self.client.put(self.single_url, dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.income.refresh_from_db()
-        self.assertEqual(self.income.description, dto['description'])
+        self.transaction.refresh_from_db()
+        self.assertEqual(self.transaction.description, dto['description'])
 
     def get_updated_dto(self, **kwargs):
-        dto = TransactionSerializer(self.income).data
+        dto = TransactionSerializer(self.transaction).data
         dto.update(kwargs)
         return dto
+
+class IncomeApiTestCase(KindTransactionApiTestMixin, TestCase):
+    expected_list_count = 1    
+
+    @property
+    def list_url(self):
+        return reverse('kind_transactions', kwargs={'kind': HasKind.INCOME_KIND})
+
+    @property
+    def single_url(self):
+        return reverse('kind_transaction', kwargs={'kind': HasKind.INCOME_KIND, 'pk': self.transaction.id})
+
+    @property
+    def transaction(self):
+        return self.income
 
     @property
     def dto(self):
@@ -231,13 +250,40 @@ class KindTransactionApiTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupM
             'account': self.account.id,
             'priority': 1,
             'deadline': 10,
-            'payment_date': date.today()            
+            'payment_date': date.today()
         }
+        
+    def assert_created(self):
+        self.assertEqual(Transaction.objects.incomes().owned_by(self.user).count(), 2)
+
+class ExpenseApiTestCase(KindTransactionApiTestMixin, TestCase):
+    expected_list_count = 2
 
     @property
     def list_url(self):
-        return reverse('kind_transactions', kwargs={'kind': HasKind.INCOME_KIND})
+        return reverse('kind_transactions', kwargs={'kind': HasKind.EXPENSE_KIND})
 
     @property
     def single_url(self):
-        return reverse('kind_transaction', kwargs={'kind': HasKind.INCOME_KIND, 'pk': self.income.id})
+        return reverse('kind_transaction', kwargs={'kind': HasKind.EXPENSE_KIND, 'pk': self.transaction.id})
+
+    @property
+    def transaction(self):
+        return self.expense
+
+    @property
+    def dto(self):
+        return {
+            'due_date': date.today(),
+            'description': 'dto',
+            'category': self.expense_category.id,
+            'value': -500,
+            'details': 'this are the details',
+            'account': self.account.id,
+            'priority': 1,
+            'deadline': 10,
+            'payment_date': date.today()            
+        }
+
+    def assert_created(self):
+        self.assertEqual(Transaction.objects.expenses().owned_by(self.user).count(), 3)
