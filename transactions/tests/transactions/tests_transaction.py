@@ -13,8 +13,8 @@ from common.tests_helpers import UrlsTestHelper
 
 class GenericTransactionUrlTestCase(TestCase, UrlsTestHelper):
     def test_resolves_first_pending_expense_url(self):
-        resolver = self.resolve_by_name('first-pending-expense')
-        self.assertEqual(resolver.func.cls, views.FirstPendingExpenseAPIView)
+        resolver = self.resolve_by_name('oldest-pending-expense')
+        self.assertEqual(resolver.func.cls, views.OldestPendingExpenseAPIView)
 
 class GenericTransactionAPIIntegrationTestCase(APITestCase, BaseTestHelperFactory):
     '''

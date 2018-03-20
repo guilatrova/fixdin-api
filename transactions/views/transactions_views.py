@@ -19,7 +19,7 @@ class GenericTransactionAPIView(mixins.ListModelMixin, mixins.RetrieveModelMixin
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
 
-class FirstPendingExpenseAPIView(generics.RetrieveAPIView):
+class OldestPendingExpenseAPIView(generics.RetrieveAPIView):
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
