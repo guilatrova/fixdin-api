@@ -10,3 +10,8 @@ class UrlsTestHelper:
 
         for allows in allowed:
             self.assertIn(allows, actions)
+    
+    def assert_resolves_actions(self, resolver, actions_map):
+        for key, value in actions_map.items():
+            self.assertIn(key, resolver.func.actions)
+            self.assertEqual(value, resolver.func.actions[key])
