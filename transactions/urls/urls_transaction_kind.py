@@ -6,7 +6,7 @@ list_actions = {
     'get': 'list', 
     'post': 'create',
     'delete': 'destroy_all_periodics',
-    'patch': 'patch_list',
+    'patch': 'partial_update_list',
 }
 
 single_action = {

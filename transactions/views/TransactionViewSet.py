@@ -9,7 +9,7 @@ from transactions.permissions import IsNotTransferOrIsReadOnly
 
 class PeriodicTransactionViewSetMixin:
     '''
-    Mixin that injects handlers for PUT/DELETE/PATCH periodic transactions
+    Mixin that injects handlers for PUT/PATCH/DELETE periodic transactions
     '''
     def update(self, request, *args, **kwargs):
         if request.query_params.get('next', False) == '1':
@@ -21,19 +21,11 @@ class PeriodicTransactionViewSetMixin:
         else:
             return super(PeriodicTransactionViewSetMixin, self).update(request, *args, **kwargs)
 
-    def patch_list(self, request, *args, **kwargs):
+    def partial_update_list(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
-        if periodic:
-            queryset = self.filter_queryset(Transaction.objects.filter(bound_transaction=periodic)).order_by('id')
+        if periodic: #TODO: CHECK FILTER WORKS CORRECTLY
+            queryset = self.filter_queryset(Transaction.objects.filter(bound_transaction=periodic)).order_by('due_date')
             to_return = self._patch_periodics(request.data, queryset)
-
-            return Response(to_return)
-        
-        transactions = self.request.query_params.get('ids', False)
-        if transactions:
-            ids = transactions.split(',')
-            queryset = self.filter_queryset(Transaction.objects.filter(id__in=ids))
-            to_return = self._patch_list(request.data, queryset)
 
             return Response(to_return)
 
@@ -50,21 +42,10 @@ class PeriodicTransactionViewSetMixin:
             self.perform_update(serializer)
             to_return.append(serializer.data)
 
-            if is_first:
+            if is_first: #TODO: Move it from here + Test it
                 data.pop('due_date', None)
                 data.pop('payment_date', None)
                 is_first = False
-
-        return to_return
-
-    def _patch_list(self, data, transactions):
-        to_return = []
-
-        for instance in transactions:
-            serializer = self.get_serializer(instance, data=data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            self.perform_update(serializer)
-            to_return.append(serializer.data)
 
         return to_return
 
@@ -107,6 +88,29 @@ class TransactionViewSet(PeriodicTransactionViewSetMixin, viewsets.ModelViewSet,
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
+
+    def partial_update_list(self, request, *args, **kwargs):
+        transactions = self.request.query_params.get('ids', False)
+        if transactions:
+            ids = transactions.split(',')
+            queryset = self.filter_queryset(Transaction.objects.filter(id__in=ids))
+            to_return = self._patch_list(request.data, queryset)
+
+            return Response(to_return)        
+        
+        #TODO: CREATE A MIXIN FOR VIEWSET TO HANDLE PARTIAL_UPDATE_LIST
+        return super().partial_update_list(request, *args, **kwargs)
+
+    def _patch_list(self, data, transactions):
+        to_return = []
+
+        for instance in transactions:
+            serializer = self.get_serializer(instance, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            to_return.append(serializer.data)
+
+        return to_return
 
     def perform_create(self, serializer):
         serializer.save(kind=self.kwargs['kind'])

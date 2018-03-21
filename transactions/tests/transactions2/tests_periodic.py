@@ -2,6 +2,7 @@ from datetime import date
 from unittest import mock, skip
 from django.test import TestCase
 from transactions.serializers.PeriodicSerializer import PeriodicSerializer
+from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin
 from common.tests_helpers import SerializerTestHelper
 
 class PeriodicSerializerTestCase(TestCase, SerializerTestHelper):
