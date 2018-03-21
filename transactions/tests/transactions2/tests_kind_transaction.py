@@ -97,6 +97,20 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
         self.transaction.refresh_from_db()
         self.assertEqual(self.transaction.description, dto['description'])
 
+    def test_api_patches_several(self):
+        t1 = self.create_transaction(0, kind=self.kind, category=self.transaction.category)
+        t2 = self.create_transaction(0, kind=self.kind, category=self.transaction.category)
+        ids = ','.join([str(t1.id), str(t2.id)])
+        dto = { 'description': 'patched' }
+        url = self.list_url + "?ids=" + ids
+        response = self.client.patch(url, dto, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        t1.refresh_from_db()
+        t2.refresh_from_db()
+        self.assertEqual(t1.description, dto['description'])
+        self.assertEqual(t2.description, dto['description'])
+
     def test_api_cant_manage_transfer(self):
         account_to = self.create_account(name='account_to')
         expense, income = factories.create_transfer_between_accounts(self.user.id, account_from=self.account.id, account_to=account_to.id, value=100)
