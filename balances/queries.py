@@ -10,3 +10,12 @@ def get_total_pending_incomes(user_id):
         .incomes()\
         .filter(due_date__lte=today)\
         .aggregate(Sum('value'))['value__sum']
+
+def get_total_pending_expenses(user_id):
+    today = date.today()
+    return Transaction.objects\
+        .owned_by(user_id)\
+        .pending()\
+        .expenses()\
+        .filter(due_date__lte=today)\
+        .aggregate(Sum('value'))['value__sum']

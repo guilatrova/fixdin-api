@@ -78,6 +78,20 @@ class ApiIntegrationTestCase(TestCase, BaseTestHelperFactory):
         response = self.client.get(reverse('pending-incomes-balance'))
         self.assert_response(response, 300)
 
+    @patch('balances.queries.date', side_effect=lambda *args, **kw: date(*args, **kw))
+    def test_get_total_pending_expenses(self, mock_date):
+        mock_date.today.return_value = datetime(2018, 3, 1)
+        #ignoreds
+        self.create_transaction(100, due_date=datetime(2018, 3, 1))
+        self.create_transaction(-100, due_date=datetime(2018, 3, 2))
+        self.create_transaction(-100, due_date=datetime(2018, 3, 1), payment_date=datetime(2018, 3, 1))
+        #considered
+        self.create_transaction(-100, due_date=datetime(2018, 3, 1))
+        self.create_transaction(-200, due_date=datetime(2018, 2, 1))
+
+        response = self.client.get(reverse('pending-expenses-balance'))
+        self.assert_response(response, -300)
+
     def assert_response(self, response, balance):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], balance)
