@@ -2,6 +2,7 @@ from django.db.models import QuerySet, Q
 
 EXPENSE_KIND = 0
 INCOME_KIND = 1
+SIGNALS_WARNING_CONSENT = "IMPLEMENT THIS"
 
 class TransactionsQuerySet(QuerySet):
     def owned_by(self, user):
@@ -19,6 +20,9 @@ class TransactionsQuerySet(QuerySet):
 
     def pending(self):
         return self.filter(payment_date__isnull=True)
+
+    # def delete(self, warning_consent):        
+    #     pass TODO: IMPLEMENT THIS ALSO FOR UPDATE / CREATE
     
     def in_date_range(self, start, end):
         return self.filter(

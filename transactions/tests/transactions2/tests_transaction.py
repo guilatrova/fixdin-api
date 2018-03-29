@@ -6,6 +6,21 @@ from transactions.serializers import TransactionSerializer
 from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin, OtherUserDataTestSetupMixin
 from common.tests_helpers import UrlsTestHelper, SerializerTestHelper
 
+class TransactionManagerTestCase(UserDataTestSetupMixin, TestCase, BaseTestHelperFactory):    
+    def test_delete_single(self):
+        t = self.create_transaction(-100)
+        t.delete()
+        self.assertFalse(Transaction.objects.filter(pk=t.id).exists())
+
+    @skip('unfinished')
+    def test_delete_list_without_consent_param(self):
+        pass
+
+    @skip('unfinished')
+    def test_delete_list_with_consent(self):
+        pass
+
+
 class TransactionSerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, TestCase, SerializerTestHelper):
 
     def setUp(self):
