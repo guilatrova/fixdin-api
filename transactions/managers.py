@@ -18,8 +18,14 @@ class TransactionsQuerySet(QuerySet):
     def expires_between(self, from_date, until_date):
         return self.filter(due_date__gte=from_date, due_date__lte=until_date)
 
+    def payed_between(self, from_date, until_date):
+        return self.filter(payment_date__gte=from_date, payment_date__lte=until_date)
+
     def pending(self):
         return self.filter(payment_date__isnull=True)
+
+    def payed(self):
+        return self.filter(payment_date__isnull=False)
 
     # def delete(self, warning_consent):        
     #     pass TODO: IMPLEMENT THIS ALSO FOR UPDATE / CREATE

@@ -27,6 +27,11 @@ def get_total_pending_expenses(request, format='json'):
     total = queries.get_total_pending_expenses(request.user.id)
     return Response({ 'balance': total })
 
+@api_view()
+def get_effective_incomes_expenses_by_account(request, format='json'):
+    accounts = queries.get_effective_incomes_expenses_by_account(request.user.id)
+    return Response(accounts)
+
 def _get_filter(request):
     payed = request.query_params.get('payed', None)
     until = request.query_params.get('until', None)
