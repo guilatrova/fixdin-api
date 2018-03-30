@@ -36,7 +36,8 @@ def get_effective_incomes_expenses_by_account(user_id):
             incomes=sum_when(kind=HasKind.INCOME_KIND),
             expenses=sum_when(kind=HasKind.EXPENSE_KIND),
             total=Sum('value')
-        )
+        )\
+        .order_by('account')
     
     missing_accounts = Account.objects\
         .filter(user_id=user_id)\

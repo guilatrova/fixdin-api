@@ -117,10 +117,12 @@ class ApiComplexBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, 
         self.assertEqual(len(response.data), 4)
         self.assert_balances(response.data[0], self.accounts[0].id, 600, -300, 300)
         self.assert_balances(response.data[1], self.accounts[1].id, 3000, -200, 2800)
-        self.assert_balances(response.data[2], 1, 0, 0, 0) #Signals creates a default account
+        self.assert_balances(response.data[2], False, 0, 0, 0) #Signals creates a default account
+        self.assert_balances(response.data[3], False, 0, 0, 0) #Signals creates a default account
 
     def assert_balances(self, data, account_id, incomes, expenses, total):
-        self.assertEqual(data['account'], account_id)
+        if account_id:
+            self.assertEqual(data['account'], account_id)
         self.assertEqual(data['incomes'], incomes)
         self.assertEqual(data['expenses'], expenses)
         self.assertEqual(data['total'], total)
