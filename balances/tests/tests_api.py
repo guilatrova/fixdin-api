@@ -93,7 +93,8 @@ class ApiComplexBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, 
         super().setUpTestData()
         cls.accounts = [
             cls.account,
-            cls.create_account(name='savings')
+            cls.create_account(name='savings'),
+            cls.create_account(name='newaccount')
         ]
 
     def setUp(self):
@@ -113,9 +114,10 @@ class ApiComplexBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, 
         response = self.client.get(reverse('effective-incomes-expenses-balance-by-account'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 4)
         self.assert_balances(response.data[0], self.accounts[0].id, 600, -300, 300)
         self.assert_balances(response.data[1], self.accounts[1].id, 3000, -200, 2800)
+        self.assert_balances(response.data[2], 1, 0, 0, 0) #Signals creates a default account
 
     def assert_balances(self, data, account_id, incomes, expenses, total):
         self.assertEqual(data['account'], account_id)
