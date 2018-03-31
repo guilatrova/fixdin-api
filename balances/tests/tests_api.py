@@ -11,7 +11,7 @@ from rest_framework.authtoken.models import Token
 from transactions.models import *
 from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin
 
-class ApiSimpleBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
+class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
 
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
@@ -80,13 +80,33 @@ class ApiSimpleBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, B
         self.create_transaction(-200, due_date=datetime(2018, 2, 1))
 
         response = self.client.get(reverse('pending-expenses-balance'))
-        self.assert_response(response, -300)    
+        self.assert_response(response, -300)
+
+    def test_get_accumulated_balance_over_year(self):
+        #ignoreds
+        self.create_transaction(1000, due_date=datetime(2016, 1, 1))
+        self.create_transaction(-500, due_date=datetime(2018, 1, 1))
+        #considered
+        self.create_transaction(-100, due_date=datetime(2017, 1, 1))
+        self.create_transaction(-300, due_date=datetime(2017, 3, 1))
+        self.create_transaction(-800, due_date=datetime(2017, 8, 1))
+        self.create_transaction(1000, due_date=datetime(2017, 2, 1))
+        self.create_transaction(900, due_date=datetime(2017, 7, 1))
+
+        response = self.client.get(reverse('accumulated-balance'))
+        self.assert_detailed_response(response, 1900, -1200, 700)
+
+    def assert_detailed_response(self, response, incomes, expenses, total):
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['incomes'], incomes)
+        self.assertEqual(response.data['expenses'], expenses)
+        self.assertEqual(response.data['total'], total)
 
     def assert_response(self, response, balance):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], balance)
 
-class ApiComplexBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
+class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
 
     @classmethod
     def setUpTestData(cls):
