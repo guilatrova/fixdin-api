@@ -16,6 +16,10 @@ def get_balance(request, format='json'):
     return Response({ 'balance': total_sum })
 
 @api_view()
+def get_accumulated_balance(request, format='json'):
+    pass
+
+@api_view()
 def get_total_pending_incomes(request, format='json'):
     """Returns actual balance summing all pending incomes"""
     total = queries.get_total_pending_incomes(request.user.id)
