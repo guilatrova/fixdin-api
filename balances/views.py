@@ -3,6 +3,7 @@ from django.db.models import Sum
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from common import dates_utils
 from transactions.models import Category, Transaction, Account
 from balances import queries
 
@@ -17,7 +18,13 @@ def get_balance(request, format='json'):
 
 @api_view()
 def get_accumulated_balance(request, format='json'):
-    pass
+    from_date = request.query_params.get('from', None)
+    until_date = request.query_params.get('until', None)
+    if from_date is None or until_date is None: #TODO: test this
+        from_date, until_date = dates_utils.get_year_range()
+
+    total = queries.get_accumulated_detailed(request.user.id, from_date, until_date)
+    return Response(total)
 
 @api_view()
 def get_total_pending_incomes(request, format='json'):
@@ -33,7 +40,7 @@ def get_total_pending_expenses(request, format='json'):
 
 @api_view()
 def get_effective_incomes_expenses_by_account(request, format='json'):
-    accounts = queries.get_effective_incomes_expenses_by_account(request.user.id)
+    accounts = queries.get_effective_incomes_expenses_by_account(request.user.id)    
     return Response(accounts)
 
 def _get_filter(request):

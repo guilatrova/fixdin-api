@@ -93,13 +93,13 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.create_transaction(1000, due_date=datetime(2017, 2, 1))
         self.create_transaction(900, due_date=datetime(2017, 7, 1))
 
-        response = self.client.get(reverse('accumulated-balance'))
+        response = self.client.get(reverse('accumulated-balance') + "?from=2017-1-1&until=2017-12-31")
         self.assert_detailed_response(response, 1900, -1200, 700)
 
     def assert_detailed_response(self, response, incomes, expenses, total):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['incomes'], incomes)
         self.assertEqual(response.data['expenses'], expenses)
+        self.assertEqual(response.data['incomes'], incomes)
         self.assertEqual(response.data['total'], total)
 
     def assert_response(self, response, balance):
