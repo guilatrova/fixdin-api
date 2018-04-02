@@ -22,6 +22,9 @@ def get_accumulated_balance(request, format='json'):
     until_date = request.query_params.get('until', None)
     if from_date is None or until_date is None: #TODO: test this
         from_date, until_date = dates_utils.get_year_range()
+    else:
+        from_date = datetime.strptime(from_date, '%Y-%m-%d')
+        until_date = datetime.strptime(until_date, '%Y-%m-%d')
 
     total = queries.get_accumulated_detailed(request.user.id, from_date, until_date)
     return Response(total)
