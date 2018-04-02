@@ -14,7 +14,10 @@ class LastMonthsAPIView(APIView):
 
     def get(self, request, format='json'):
         months_length = int(request.query_params.get('months', 12)) #12 past + current = 13
-        report = LastMonthsReportFactory(request.user.id, months_length).generate_report()
+        start = request.query_params.get('start', None)
+        if start:
+            start = datetime.strptime(start, '%Y-%m-%d')
+        report = LastMonthsReportFactory(request.user.id, months_length, start).generate_report()
         serialized = LastMonthsSerializer(report, many=True).data
         return Response(serialized)
 

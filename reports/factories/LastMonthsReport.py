@@ -12,9 +12,10 @@ class LastMonthsReportFactory:
     Calculates sum of expenses, incomes and total over last months.
     '''
 
-    def __init__(self, user_id, months):
+    def __init__(self, user_id, months, start=None): #TODO: Refactor this start thing
         self.user_id = user_id
         self.months = months
+        self.start = start
 
     def generate_report(self):
         data = list(self._get_query())
@@ -24,11 +25,17 @@ class LastMonthsReportFactory:
         return report
 
     def get_start_date(self):
+        if self.start:            
+            return datetime(self.start.year, self.start.month, 1)
         today = datetime.today()
         relative = today + relativedelta(months=-self.months)
         return datetime(relative.year, relative.month, 1)
 
     def get_end_date(self):
+        if self.start:
+            end = self.start + relativedelta(months=self.months)
+            last_day = calendar.monthrange(end.year, end.month)[1]
+            return datetime(end.year, end.month, last_day)
         today = datetime.today()
         last_day = calendar.monthrange(today.year, today.month)[1]
         return datetime(today.year, today.month, last_day)
