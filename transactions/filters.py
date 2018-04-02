@@ -12,6 +12,10 @@ class TransactionFilter:
         if categories:
             dic['category_id__in'] = categories.split(',')
 
+        accounts = self.request.query_params.get('account', False)
+        if accounts:
+            dic['account_id__in'] = accounts.split(',')
+
         priority = self.request.query_params.get('priority', False)
         if priority:
             dic['priority'] = priority
