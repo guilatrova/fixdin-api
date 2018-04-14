@@ -22,7 +22,6 @@ def create_period_strategy(action, transaction):
             return ChangedAccountStrategy(transaction)
         return UpdateStrategy(transaction)
 
-
 def create_period_balance_for(transaction, dates):
     result = []
     for date in dates:

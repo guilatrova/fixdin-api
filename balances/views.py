@@ -6,6 +6,8 @@ from rest_framework.decorators import api_view
 from common import dates_utils
 from transactions.models import Category, Transaction, Account
 from balances import queries
+from balances.builders import CalculatorBuilder
+from balances.strategies.query import based
 
 @api_view()
 def get_balance(request, format='json'):
@@ -23,8 +25,16 @@ def get_accumulated_balance(request, format='json'):
     if from_date is None or until_date is None: #TODO: test this
         from_date, until_date = dates_utils.get_year_range()
 
-    total = queries.get_accumulated_detailed(request.user.id, from_date, until_date)
-    return Response(total)
+    calculator = CalculatorBuilder()\
+        .owned_by(request.user.id)\
+        .consider(based.EFFECTIVE)\
+        .between_dates(from_date, until_date)\
+        .as_detailed()\
+        .build()
+        
+    result = calculator.calculate()
+
+    return Response(result)
 
 @api_view()
 def get_total_pending_incomes(request, format='json'):
@@ -59,4 +69,6 @@ def _get_filter(request):
 
 @api_view()
 def get_plain_balance(request, format='json'):
-    from_date = request.query_params
+    specific_date = request.query_params.get('date', None)
+    from_date = request.query_params.get('from_date', None)
+    until_date = request.query_params.get('until_date', None)
