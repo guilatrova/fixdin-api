@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from transactions.models import Transaction
 from balances.factories import create_strategy
 from balances.services.periods import get_current_period, get_period_from
-from balances.strategies import CREATED, UPDATED, DELETED
+from balances.strategies.periods import CREATED, UPDATED, DELETED
 
 @receiver(post_save, sender=Transaction)
 def created_or_updated_transaction_updates_balance(sender, instance=None, created=False, **kwargs):

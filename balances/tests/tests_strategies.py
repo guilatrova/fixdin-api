@@ -7,7 +7,7 @@ from transactions.tests.base_test import BaseTestHelper
 from transactions.models import Transaction, Account
 from balances.models import PeriodBalance
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory
-from balances.strategies import (
+from balances.strategies.periods import (
     BaseStrategy,
     CreateStrategy,
     ChangedAccountStrategy, 

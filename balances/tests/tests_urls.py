@@ -21,6 +21,10 @@ class BalancesUrlsTestCase(TestCase, UrlsTestHelper):
         resolver = self.resolve_by_name('accumulated-balance')
         self.assertEqual(resolver.func, views.get_accumulated_balance)
 
+    def test_resolves_plain_balance(self):
+        resolver = self.resolve_by_name('plain-balance')
+        self.assertEqual(resolver.func, views.get_plain_balance)
+
 class BalancesAccountUrlsTestCase(TestCase, UrlsTestHelper):
 
     def test_resolves_incomes_and_expenses_of_categories(self):

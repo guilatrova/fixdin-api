@@ -1,6 +1,6 @@
 from balances.models import PeriodBalance
 from balances.services.periods import get_period_from
-from balances.strategies import (
+from balances.strategies.periods import (
     CREATED, 
     UPDATED, 
     DELETED, 

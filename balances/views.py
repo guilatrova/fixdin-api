@@ -54,3 +54,9 @@ def _get_filter(request):
         return { 'due_date__lte': datetime.strptime(until, '%Y-%m-%d') }
 
     return { 'due_date__lte': datetime.today() }
+
+#REFACTOR
+
+@api_view()
+def get_plain_balance(request, format='json'):
+    from_date = request.query_params
