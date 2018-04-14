@@ -4,6 +4,17 @@ from transactions.models import Transaction
 from balances.models import PeriodBalance
 from balances.services import periods
 
+class Calculator:
+    def __init__(self, user_id, date_strategy, format_stategy):
+        self.user_id = user_id
+        self.date_strategy = date_strategy
+        self.format_stategy = format_stategy
+
+    def calculate(self):
+        query = Transaction.objects.owned_by(self.user_id)
+        query = self.date_strategy.apply(query)
+        return self.format_stategy.apply(query)
+
 #TODO: User / Account(s)
 def calculate_account_current_balance(account_id):
     periods = PeriodBalance.objects.filter(account_id=account_id)

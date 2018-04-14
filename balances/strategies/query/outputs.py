@@ -1,0 +1,3 @@
+TOTAL = 0
+EXPENSES = 1
+INCOMES = 2
