@@ -1,5 +1,5 @@
 import calendar
-from datetime import date
+from datetime import date, datetime
 
 def get_last_day_of(datein):
     days_count = calendar.monthrange(datein.year, datein.month)[1]
@@ -19,3 +19,6 @@ def get_year_range(datein=None):
     end = start.replace(day=days_amount, month=12)
 
     return (start, end)
+
+def from_str(strin):
+    return datetime.strptime(strin, '%Y-%m-%d')

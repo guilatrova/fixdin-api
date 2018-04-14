@@ -7,7 +7,7 @@ from common import dates_utils
 from transactions.models import Category, Transaction, Account
 from balances import queries
 from balances.builders import CalculatorBuilder
-from balances.strategies.query import based
+from balances.strategies.query import based, outputs
 
 @api_view()
 def get_balance(request, format='json'):
@@ -69,6 +69,45 @@ def _get_filter(request):
 
 @api_view()
 def get_plain_balance(request, format='json'):
-    specific_date = request.query_params.get('date', None)
-    from_date = request.query_params.get('from_date', None)
-    until_date = request.query_params.get('until_date', None)
+    builder = CalculatorBuilder()
+    consider = request.query_params.get('based', based.EFFECTIVE)
+    output = request.query_params.get('output', outputs.TOTAL)
+
+    builder.owned_by(request.user.id).consider(consider)
+    calculator = _apply_date(builder, request.query_params)\
+        .as_plain(output=output)\
+        .build()
+
+    result = calculator.calculate()
+    return Response(result)
+
+@api_view()
+def get_detailed_balance(request, format='json'):
+    builder = CalculatorBuilder()
+    consider = request.query_params.get('based', based.EFFECTIVE)
+
+    builder.owned_by(request.user.id).consider(consider)
+    calculator = _apply_date(builder, request.query_params)\
+        .as_detailed()\
+        .build()
+
+    result = calculator.calculate()
+    return Response(result)
+
+def _apply_date(builder, query_params):
+    specific_date = query_params.get('date', False)
+    start = query_params.get('from', False)
+    end = query_params.get('until', False)
+
+    if specific_date:
+        return builder.on_date(dates_utils.from_str(specific_date))
+
+    if start and end:
+        start = dates_utils.from_str(start)
+        end = dates_utils.from_str(end)
+        return builder.between_dates(start, end)
+
+    if end:
+        return builder.until(dates_utils.from_str(end))
+
+    return builder.until(datetime.today())

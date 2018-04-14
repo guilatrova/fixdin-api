@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^pending-expenses/$', views.get_total_pending_expenses, name="pending-expenses-balance"),
     #refactor
     url(r'^plain/$', views.get_plain_balance, name="plain-balance"),
+    url(r'^detailed/$', views.get_detailed_balance, name="detailed-balance"),
     #accounts
     url(r'^accounts/effective-incomes-expenses/$', views.get_effective_incomes_expenses_by_account, name="effective-incomes-expenses-balance-by-account"),
 ]
