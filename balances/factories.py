@@ -10,7 +10,7 @@ from balances.strategies.periods import (
     DeleteStrategy
 )
 
-def create_strategy(action, transaction):
+def create_period_strategy(action, transaction):
     if action == CREATED:
         return CreateStrategy(transaction)
         
