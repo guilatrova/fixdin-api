@@ -78,13 +78,17 @@ def get_plain_balance(request, format='json'):
     builder = CalculatorBuilder()
     consider = consider_mapping.get(request.query_params.get('based', 'effective'))
     output = request.query_params.get('output', outputs.TOTAL)
+    filters = {}
+    pending = request.query_params.get('pending', False)
+    if pending:
+        filters['payment_date__isnull'] = True
 
     builder.owned_by(request.user.id).consider(consider)
     calculator = _apply_date(builder, request.query_params)\
         .as_plain(output=output)\
         .build()
 
-    result = calculator.calculate()
+    result = calculator.calculate(**filters)
     return Response({ 'balance': result })
 
 @api_view()
