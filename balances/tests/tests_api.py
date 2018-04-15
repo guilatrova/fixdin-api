@@ -26,7 +26,7 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         tomorrow = datetime.today() + relativedelta(days=1)
         self.create_transaction(100, due_date=tomorrow)
 
-        response = self.client.get(reverse('balances'))
+        response = self.client.get(reverse('plain-balance'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 110)
 
@@ -38,7 +38,7 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.create_transaction(10)
         self.create_transaction(10)
 
-        url = reverse('balances') + '?payed=1'
+        url = reverse('plain-balance') + '?based=real'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 90)

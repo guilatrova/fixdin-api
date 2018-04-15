@@ -5,7 +5,7 @@ class OnDateStrategy(BaseStrategy):
     """
     Filters query to care about one date only
     """
-    def __init__(self, date, based=EFFECTIVE):
+    def __init__(self, date, based):
         """
         Initializes strategy class
 
@@ -15,7 +15,6 @@ class OnDateStrategy(BaseStrategy):
         self.date = date
         self.based = based
 
-
     def apply(self, query):
         kwargs = { self.based: self.date }
         return query.filter(**kwargs)
@@ -24,7 +23,7 @@ class BetweenDateStrategy(BaseStrategy):
     """
     Filters query to care about a date range
     """
-    def __init__(self, from_date, until_date, based=EFFECTIVE):
+    def __init__(self, from_date, until_date, based):
         """
         Initializes strategy class
 
@@ -51,13 +50,15 @@ class UntilDateStrategy(BaseStrategy):
     """
     Filters query to a limit date only
     """
-    def __init__(self, until_date, based=EFFECTIVE):
+    def __init__(self, until_date, based):
         """
         Initializes strategy class
 
         :param until_date: When it ends
         :param based: String determines whether date field should be due_date or payment_date
         """
+        self.until_date = until_date
+        self.based = based
 
     def apply(self, query):
         key = "{}__lte".format(self.based)

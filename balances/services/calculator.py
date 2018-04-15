@@ -10,8 +10,8 @@ class Calculator:
         self.date_strategy = date_strategy
         self.format_stategy = format_stategy
 
-    def calculate(self):
-        query = Transaction.objects.owned_by(self.user_id)
+    def calculate(self, **filters):
+        query = Transaction.objects.owned_by(self.user_id).filter(**filters)
         query = self.date_strategy.apply(query)
         return self.format_stategy.apply(query)
 

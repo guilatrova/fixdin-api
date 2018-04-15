@@ -67,10 +67,16 @@ def _get_filter(request):
 
 #REFACTOR
 
+consider_mapping = {
+    'effective': based.EFFECTIVE,
+    'real': based.REAL,
+    'both': based.BOTH
+}
+
 @api_view()
 def get_plain_balance(request, format='json'):
     builder = CalculatorBuilder()
-    consider = request.query_params.get('based', based.EFFECTIVE)
+    consider = consider_mapping.get(request.query_params.get('based', 'effective'))
     output = request.query_params.get('output', outputs.TOTAL)
 
     builder.owned_by(request.user.id).consider(consider)
@@ -79,12 +85,12 @@ def get_plain_balance(request, format='json'):
         .build()
 
     result = calculator.calculate()
-    return Response(result)
+    return Response({ 'balance': result })
 
 @api_view()
 def get_detailed_balance(request, format='json'):
     builder = CalculatorBuilder()
-    consider = request.query_params.get('based', based.EFFECTIVE)
+    consider = consider_mapping.get(request.query_params.get('based', 'effective'))
 
     builder.owned_by(request.user.id).consider(consider)
     calculator = _apply_date(builder, request.query_params)\
