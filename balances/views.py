@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from common import dates_utils
 from transactions.models import Category, Transaction, Account
 from balances import queries
-from balances.builders import CalculatorBuilder
+from balances.factories import CalculatorBuilder
 from balances.strategies.query import based, outputs
 
 @api_view()

@@ -1,10 +1,10 @@
 from balances.services.calculator import Calculator
 from balances.strategies.query import (
     based,
-    OnDateStrategy, 
-    BetweenDateStrategy, 
+    OnDateStrategy,
+    BetweenDateStrategy,
     UntilDateStrategy,
-    PlainFormatStrategy, 
+    PlainFormatStrategy,
     DetailedFormatStrategy
 )
 
