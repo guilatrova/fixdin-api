@@ -53,10 +53,8 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 125)
-
-    @patch('balances.queries.date', side_effect=lambda *args, **kw: date(*args, **kw))
-    def test_get_total_pending_incomes(self, mock_date):
-        mock_date.today.return_value = datetime(2018, 3, 1)
+    
+    def test_get_total_pending_incomes(self):
         #ignoreds
         self.create_transaction(-100, due_date=datetime(2018, 3, 1))
         self.create_transaction(100, due_date=datetime(2018, 3, 2))
@@ -68,10 +66,8 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         url = reverse('plain-balance') + '?output=incomes&pending=1'
         response = self.client.get(url)
         self.assert_response(response, 300)
-
-    @patch('balances.queries.date', side_effect=lambda *args, **kw: date(*args, **kw))
-    def test_get_total_pending_expenses(self, mock_date):
-        mock_date.today.return_value = datetime(2018, 3, 1)
+    
+    def test_get_total_pending_expenses(self):
         #ignoreds
         self.create_transaction(100, due_date=datetime(2018, 3, 1))
         self.create_transaction(-100, due_date=datetime(2018, 3, 2))
