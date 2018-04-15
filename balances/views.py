@@ -9,11 +9,6 @@ from balances import queries
 from balances.factories import CalculatorBuilder
 from balances.strategies.query import based, outputs
 
-@api_view()
-def get_effective_incomes_expenses_by_account(request, format='json'):
-    accounts = queries.get_effective_incomes_expenses_by_account(request.user.id)    
-    return Response(accounts)
-
 consider_mapping = {
     'effective': based.EFFECTIVE,
     'real': based.REAL,
@@ -81,3 +76,7 @@ class PlainBalanceAPIView(BaseBalanceAPIView):
 class DetailedBalanceAPIView(BaseBalanceAPIView):
     def create_calculator(self, builder):
         return builder.as_detailed().build()
+
+class DetailedAccountsBalanceAPIView(BaseBalanceAPIView):
+    def create_calculator(self, builder):
+        return builder.as_detailed_accounts().build()

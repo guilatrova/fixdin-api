@@ -133,7 +133,7 @@ class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, 
         self.create_transaction(500, account=self.accounts[1], payment_date=payment_date)
         self.create_transaction(2500, account=self.accounts[1], payment_date=payment_date)
 
-        response = self.client.get(reverse('effective-incomes-expenses-balance-by-account'), format='json')
+        response = self.client.get(reverse('detailed-balance-by-account'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 4)

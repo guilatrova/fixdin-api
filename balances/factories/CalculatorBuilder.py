@@ -5,7 +5,8 @@ from balances.strategies.query import (
     BetweenDateStrategy,
     UntilDateStrategy,
     PlainFormatStrategy,
-    DetailedFormatStrategy
+    DetailedFormatStrategy,
+    DetailedAccountFormatStrategy
 )
 
 class CalculatorBuilder:
@@ -36,6 +37,10 @@ class CalculatorBuilder:
 
     def as_detailed(self):
         self.format_strategy = DetailedFormatStrategy()
+        return self
+
+    def as_detailed_accounts(self):
+        self.format_strategy = DetailedAccountFormatStrategy(self.user_id)
         return self
 
     def build(self):

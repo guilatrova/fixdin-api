@@ -1,6 +1,6 @@
 from .BaseStrategy import BaseStrategy
 from .outputs import EXPENSES, INCOMES, TOTAL
-from transactions.models import HasKind
+from transactions.models import HasKind, Account
 from django.db.models import Sum, Case, When, F
 from django.db.models.functions import Coalesce
 
@@ -38,3 +38,41 @@ class DetailedFormatStrategy(BaseStrategy):
             expenses=sum_when(kind=HasKind.EXPENSE_KIND),
             total=Sum('value')
         )
+
+class DetailedAccountFormatStrategy(BaseStrategy):
+    """
+    Annotates balance split in accounts, and then into expenses, incomes and total values
+    """
+
+    def __init__(self, user_id):
+        """
+        Initializes strategy class
+
+        :param user_id: Id that represents user
+        """
+        self.user_id = user_id
+
+    def apply(self, query):
+        accounts = query.values('account').annotate(
+            incomes=sum_when(kind=HasKind.INCOME_KIND),
+            expenses=sum_when(kind=HasKind.EXPENSE_KIND),
+            total=Sum('value')
+        )\
+        .order_by('account')
+
+        missing_accounts = Account.objects\
+            .filter(user_id=self.user_id)\
+            .exclude(id__in=accounts.values_list('account_id', flat=True))\
+            .values_list('id', flat=True)
+
+        result = list(accounts)
+
+        for missing in missing_accounts:
+            result.append({
+                'account': missing,
+                'incomes': 0,
+                'expenses': 0,
+                'total': 0
+            })
+
+        return result
