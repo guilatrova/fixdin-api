@@ -1,10 +1,8 @@
+from django.db.models import Sum
+from transactions.models import HasKind, Account
+from transactions.query_operations import sum_when
 from .BaseStrategy import BaseStrategy
 from .outputs import EXPENSES, INCOMES, TOTAL
-from transactions.models import HasKind, Account
-from django.db.models import Sum, Case, When, F
-from django.db.models.functions import Coalesce
-
-sum_when = lambda **kwargs : Coalesce(Sum(Case(When(then=F('value'), **kwargs), default=0)), 0) #TODO: move it somewhere else
 
 class PlainFormatStrategy(BaseStrategy):
     """
