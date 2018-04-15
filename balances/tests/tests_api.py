@@ -80,7 +80,8 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.create_transaction(-100, due_date=datetime(2018, 3, 1))
         self.create_transaction(-200, due_date=datetime(2018, 2, 1))
 
-        response = self.client.get(reverse('pending-expenses-balance'))
+        url = reverse('plain-balance') + "?pending=1&output=incomes"
+        response = self.client.get(url)
         self.assert_response(response, -300)
 
     def test_get_accumulated_balance_over_year(self):

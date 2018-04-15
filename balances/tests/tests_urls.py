@@ -4,30 +4,13 @@ from common.tests_helpers import UrlsTestHelper
 from balances import views
 
 class BalancesUrlsTestCase(TestCase, UrlsTestHelper):
-
-    def test_resolves_current_balance_url(self):
-        resolver = self.resolve_by_name('balances')
-        self.assertEqual(resolver.func, views.get_balance)
-
-    def test_resolves_pending_incomes_balance(self):
-        resolver = self.resolve_by_name('pending-incomes-balance')
-        self.assertEqual(resolver.func, views.get_total_pending_incomes)
-
-    def test_resolves_pending_incomes_balance(self):
-        resolver = self.resolve_by_name('pending-expenses-balance')
-        self.assertEqual(resolver.func, views.get_total_pending_expenses)
-
-    def test_resolves_accumulated_balance_until(self):
-        resolver = self.resolve_by_name('accumulated-balance')
-        self.assertEqual(resolver.func, views.get_accumulated_balance)
-
     def test_resolves_plain_balance(self):
         resolver = self.resolve_by_name('plain-balance')
-        self.assertEqual(resolver.func, views.get_plain_balance)
+        self.assertEqual(resolver.func.cls, views.PlainBalanceAPIView)
 
-    def test_resolves_plain_balance(self):
+    def test_resolves_detailed_balance(self):
         resolver = self.resolve_by_name('detailed-balance')
-        self.assertEqual(resolver.func, views.get_detailed_balance)
+        self.assertEqual(resolver.func.cls, views.DetailedBalanceAPIView)
 
 class BalancesAccountUrlsTestCase(TestCase, UrlsTestHelper):
 
