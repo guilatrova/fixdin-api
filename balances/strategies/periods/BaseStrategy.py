@@ -3,7 +3,7 @@ from balances.models import PeriodBalance
 
 class BaseStrategy(ABC):
     """
-    Base strategy class that aims to be inherited for classes that
+    Base strategy class that aims to be inherited by classes that
     handles calculation of previous PeriodBalances and current account balances.
     """
     def __init__(self, instance):

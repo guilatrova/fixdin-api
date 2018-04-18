@@ -5,9 +5,9 @@ from django.db.models import Sum
 from django.db import transaction as db_transaction
 from django.dispatch import receiver
 from transactions.models import Transaction
-from balances.factories import create_strategy
+from balances.factories import create_period_strategy
 from balances.services.periods import get_current_period, get_period_from
-from balances.strategies import CREATED, UPDATED, DELETED
+from balances.strategies.periods import CREATED, UPDATED, DELETED
 
 @receiver(post_save, sender=Transaction)
 def created_or_updated_transaction_updates_balance(sender, instance=None, created=False, **kwargs):
@@ -27,7 +27,7 @@ def deleted_transaction_updates_balance(sender, instance=None, **kwargs):
 
 @db_transaction.atomic
 def trigger_updates(instance, action):
-    strategy = create_strategy(action, instance)
+    strategy = create_period_strategy(action, instance)
     strategy.run()
 
 def requires_updates(transaction):

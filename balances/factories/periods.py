@@ -1,6 +1,6 @@
 from balances.models import PeriodBalance
 from balances.services.periods import get_period_from
-from balances.strategies import (
+from balances.strategies.periods import (
     CREATED, 
     UPDATED, 
     DELETED, 
@@ -10,7 +10,7 @@ from balances.strategies import (
     DeleteStrategy
 )
 
-def create_strategy(action, transaction):
+def create_period_strategy(action, transaction):
     if action == CREATED:
         return CreateStrategy(transaction)
         
@@ -21,7 +21,6 @@ def create_strategy(action, transaction):
         if transaction.initial_account != transaction.account:
             return ChangedAccountStrategy(transaction)
         return UpdateStrategy(transaction)
-
 
 def create_period_balance_for(transaction, dates):
     result = []

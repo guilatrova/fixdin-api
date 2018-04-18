@@ -26,7 +26,7 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         tomorrow = datetime.today() + relativedelta(days=1)
         self.create_transaction(100, due_date=tomorrow)
 
-        response = self.client.get(reverse('balances'))
+        response = self.client.get(reverse('plain-balance'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 110)
 
@@ -38,7 +38,7 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.create_transaction(10)
         self.create_transaction(10)
 
-        url = reverse('balances') + '?payed=1'
+        url = reverse('plain-balance') + '?based=real'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 90)
@@ -49,14 +49,12 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.create_transaction(10, due_date=datetime(2017, 9, 15))
         self.create_transaction(25, due_date=datetime(2017, 9, 30))
 
-        url = reverse('balances') + '?until=2017-09-30'
+        url = reverse('plain-balance') + '?until=2017-09-30'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], 125)
-
-    @patch('balances.queries.date', side_effect=lambda *args, **kw: date(*args, **kw))
-    def test_get_total_pending_incomes(self, mock_date):
-        mock_date.today.return_value = datetime(2018, 3, 1)
+    
+    def test_get_total_pending_incomes(self):
         #ignoreds
         self.create_transaction(-100, due_date=datetime(2018, 3, 1))
         self.create_transaction(100, due_date=datetime(2018, 3, 2))
@@ -65,12 +63,11 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.create_transaction(100, due_date=datetime(2018, 3, 1))
         self.create_transaction(200, due_date=datetime(2018, 2, 1))
 
-        response = self.client.get(reverse('pending-incomes-balance'))
+        url = reverse('plain-balance') + '?output=incomes&pending=1'
+        response = self.client.get(url)
         self.assert_response(response, 300)
-
-    @patch('balances.queries.date', side_effect=lambda *args, **kw: date(*args, **kw))
-    def test_get_total_pending_expenses(self, mock_date):
-        mock_date.today.return_value = datetime(2018, 3, 1)
+    
+    def test_get_total_pending_expenses(self):
         #ignoreds
         self.create_transaction(100, due_date=datetime(2018, 3, 1))
         self.create_transaction(-100, due_date=datetime(2018, 3, 2))
@@ -79,7 +76,8 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.create_transaction(-100, due_date=datetime(2018, 3, 1))
         self.create_transaction(-200, due_date=datetime(2018, 2, 1))
 
-        response = self.client.get(reverse('pending-expenses-balance'))
+        url = reverse('plain-balance') + "?pending=1&output=incomes"
+        response = self.client.get(url)
         self.assert_response(response, -300)
 
     def test_get_accumulated_balance_over_year(self):
@@ -93,7 +91,7 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.create_transaction(1000, due_date=datetime(2017, 2, 1))
         self.create_transaction(900, due_date=datetime(2017, 7, 1))
 
-        response = self.client.get(reverse('accumulated-balance') + "?from=2017-1-1&until=2017-12-31")
+        response = self.client.get(reverse('detailed-balance') + "?from=2017-1-1&until=2017-12-31")
         self.assert_detailed_response(response, 1900, -1200, 700)
 
     def assert_detailed_response(self, response, incomes, expenses, total):
@@ -131,7 +129,7 @@ class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, 
         self.create_transaction(500, account=self.accounts[1], payment_date=payment_date)
         self.create_transaction(2500, account=self.accounts[1], payment_date=payment_date)
 
-        response = self.client.get(reverse('effective-incomes-expenses-balance-by-account'), format='json')
+        response = self.client.get(reverse('detailed-balance-by-account'), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 4)
