@@ -45,10 +45,9 @@ class TransactionFilter:
             range_until = datetime.strptime(due_date_until, '%Y-%m-%d')
 
             dic['due_date__range'] = [range_from, range_until]
-        elif self.request.method == 'GET' and not has_filter_by_payment_date:
-            pass #JUST WHILE IN DEV PHASE
-            # today = datetime.today()
-            # dic['due_date__month'] = today.month
-            # dic['due_date__year'] = today.year
+        elif self.request.method == 'GET' and not has_filter_by_payment_date:            
+            today = datetime.today()
+            dic['due_date__month'] = today.month
+            dic['due_date__year'] = today.year
 
         return dic

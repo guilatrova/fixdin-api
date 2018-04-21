@@ -73,7 +73,7 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
         response = self.client.post(self.list_url, self.dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assert_count(self.expected_list_count + 1)
+        self.assert_count(self.expected_total_count + 1)
 
     def test_api_updates(self):
         dto = self.get_updated_dto(description='changed')
@@ -87,7 +87,7 @@ class KindTransactionApiTestMixin(UserDataTestSetupMixin, OtherUserDataTestSetup
         response = self.client.delete(self.single_url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assert_count(self.expected_list_count - 1)
+        self.assert_count(self.expected_total_count - 1)
 
     def test_api_patches(self):
         dto = { 'description': 'patched' }
@@ -193,7 +193,7 @@ class KindPeriodicApiTestMixin(UserDataTestSetupMixin):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response.data), 2)
-        self.assert_count(self.expected_list_count + 2)
+        self.assert_count(self.expected_total_count + 2)
             
     def test_api_patches_all_periodics(self):
         url = self.list_url + "?periodic_transaction=" + str(self.periodics[0].id)
@@ -207,7 +207,7 @@ class KindPeriodicApiTestMixin(UserDataTestSetupMixin):
         url = self.list_url + "?periodic_transaction=" + str(self.periodics[0].id)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assert_count(self.expected_list_count - len(self.periodics))
+        self.assert_count(self.expected_total_count - len(self.periodics))
 
     def test_api_updates_periodic_and_next(self):
         dto = self.get_updated_periodic_dto(3, description='periodic changed')
@@ -221,7 +221,7 @@ class KindPeriodicApiTestMixin(UserDataTestSetupMixin):
         url = self.get_single_url(self.periodics[3].id) + "?next=1"
         response = self.client.delete(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assert_count(self.expected_list_count - 2)
+        self.assert_count(self.expected_total_count - 2)
 
     def assert_changed_periodics(self, split_index, changed):
         for periodic in self.periodics[:split_index]:
@@ -246,7 +246,8 @@ class KindPeriodicApiTestMixin(UserDataTestSetupMixin):
 #endmixins
 
 class IncomeApiTestCase(KindTransactionApiTestMixin, KindPeriodicApiTestMixin, TestCase):
-    expected_list_count = 6 # 1 + 5 periodics
+    expected_list_count = 1
+    expected_total_count = 6 # 1 + 5 periodics  
     kind = HasKind.INCOME_KIND
     dto_value = 200
 
@@ -255,7 +256,8 @@ class IncomeApiTestCase(KindTransactionApiTestMixin, KindPeriodicApiTestMixin, T
         return self.income
 
 class ExpenseApiTestCase(KindTransactionApiTestMixin, KindPeriodicApiTestMixin, TestCase):
-    expected_list_count = 7 # 2 + 5 periodics
+    expected_list_count = 2
+    expected_total_count = 7 # 2 + 5 periodics
     kind = HasKind.EXPENSE_KIND
     dto_value = -500
 

@@ -28,29 +28,6 @@ class TransactionTestMixin:
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn('manage transfers', response.data['detail'])
 
-    @skip('DISABLED IN DEVELOPMENT PHASE')
-    @mock.patch('transactions.views.datetime', side_effect=lambda *args, **kw: date(*args, **kw))    
-    def test_returns_only_from_current_month_by_default(self, mock_date):
-        '''
-        Returns only transactions from current month. Considering today is 15/02/2017
-        '''
-        mocked_today = datetime.datetime(2017, 2, 15)
-        mock_date.today.return_value = mocked_today
-        
-        #old transactions
-        self.create_transaction(value=self.value, due_date=datetime.date(2016, 12, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 1, 1))
-        #current month
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 1))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 7))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 8))
-        self.create_transaction(value=self.value, due_date=datetime.date(2017, 2, 14))
-
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 4)
-
     def test_partial_update_list(self):
         t1 = self.create_transaction()
         t2 = self.create_transaction()
