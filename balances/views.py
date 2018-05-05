@@ -5,8 +5,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from common import dates_utils
 from transactions.models import Category, Transaction, Account
-from balances.factories import CalculatorBuilder
+from balances.factories import CalculatorBuilder, PeriodQueryBuilder
 from balances.strategies.query import based, outputs
+from balances.serializers import PeriodSerializer
 
 consider_mapping = {
     'effective': based.EFFECTIVE,
@@ -79,3 +80,14 @@ class DetailedBalanceAPIView(BaseBalanceAPIView):
 class DetailedAccountsBalanceAPIView(BaseBalanceAPIView):
     def create_calculator(self, builder):
         return builder.as_detailed_accounts().build()
+
+@api_view()
+def get_periods(request):
+    cur_date = dates_utils.get_start_end_month(datetime.today())
+    get_date = lambda: '{year}-{month}-01'.format(year=cur_date.year, month=cur_date.month)
+    start = dates_utils.from_str(request.query_params.get('from', get_date()))
+    end = dates_utils.from_str(request.query_params.get('until', get_date()))
+
+    factory = PeriodQueryBuilder(request.user.id, start, end)
+    query = factory.build()
+    return Response(PeriodSerializer(query, many=True)).data
