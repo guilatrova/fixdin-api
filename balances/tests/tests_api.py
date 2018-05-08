@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -144,3 +144,19 @@ class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, 
         self.assertEqual(data['incomes'], incomes)
         self.assertEqual(data['expenses'], expenses)
         self.assertEqual(data['total'], total)
+
+class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
+
+    def setUp(self):
+        self.client = self.create_authenticated_client(self.token)
+
+    @patch('balances.views.PeriodQueryBuilder', return_value=MagicMock())
+    @patch('balances.views.datetime', side_effect=lambda *args, **kw: date(*args, **kw))
+    def test_get_without_query_params_uses_default_date(self, date_mock, mock):
+        mock.build.return_value = []
+        date_mock.today.return_value = datetime(2018, 5, 5)
+
+        url = reverse('balance-periods')
+        response = self.client.get(url)
+
+        mock.assert_called_once_with(self.user.id, datetime(2018, 5, 1), datetime(2018, 5, 1))

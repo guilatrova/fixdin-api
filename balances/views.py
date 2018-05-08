@@ -83,11 +83,13 @@ class DetailedAccountsBalanceAPIView(BaseBalanceAPIView):
 
 @api_view()
 def get_periods(request):
-    cur_date = dates_utils.get_start_end_month(datetime.today())
+    cur_date = datetime.today()
     get_date = lambda: '{year}-{month}-01'.format(year=cur_date.year, month=cur_date.month)
+
     start = dates_utils.from_str(request.query_params.get('from', get_date()))
     end = dates_utils.from_str(request.query_params.get('until', get_date()))
 
     factory = PeriodQueryBuilder(request.user.id, start, end)
     query = factory.build()
-    return Response(PeriodSerializer(query, many=True)).data
+    serialized = PeriodSerializer(query, many=True).data
+    return Response(serialized)

@@ -90,12 +90,11 @@ class PeriodQueryBuilder:
         return dict(ret)
 
     def _add_missing_periods(self, data):
-        cur_date = self.get_start_date()
-        end_date = self.get_end_date()
+        cur_date, end_date = self._get_date_limits()
         expected_dates = []
 
         while cur_date < end_date:
-            expected_dates.append(cur_date.date())
+            expected_dates.append(cur_date)
             cur_date += relativedelta(months=1)
 
         if len(expected_dates) > len(data):
