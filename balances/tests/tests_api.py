@@ -11,7 +11,7 @@ from rest_framework.authtoken.models import Token
 from transactions.models import *
 from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin
 
-class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
+class BalanceApiIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
 
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
@@ -104,7 +104,7 @@ class ApiBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTes
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['balance'], balance)
 
-class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
+class AccountBalanceApiIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
 
     @classmethod
     def setUpTestData(cls):
@@ -145,7 +145,7 @@ class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, 
         self.assertEqual(data['expenses'], expenses)
         self.assertEqual(data['total'], total)
 
-class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
+class PeriodsBalanceApiIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
 
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
@@ -160,3 +160,91 @@ class ApiAccountBalanceIntegrationTestCase(UserDataTestSetupMixin, APITestCase, 
         response = self.client.get(url)
 
         mock.assert_called_once_with(self.user.id, datetime(2018, 5, 1), datetime(2018, 5, 1))
+            
+    def test_get_periods(self):
+        '''
+        Creates 2 transactions/month in a range of 14 months. 
+        Then asserts that first month is not retrieved, but all others are
+        correctly returned with correct values
+        '''
+        cumulative_value = 10
+        cumulative_date = datetime(2016, 11, 1)
+
+        for i in range(14):
+            self.create_transaction(-cumulative_value, due_date=cumulative_date, category=self.expense_category)
+            self.create_transaction(-cumulative_value, due_date=cumulative_date, category=self.expense_category)
+            self.create_transaction(cumulative_value, due_date=cumulative_date, category=self.income_category)
+
+            cumulative_date = cumulative_date + relativedelta(months=1)
+            cumulative_value = cumulative_value + 10
+
+        expected_list = [
+            #2016-11 is ignored, but is $20, $10, -$10
+            { "period":'2016-12', "effective_expenses":  -40, "effective_incomes":  20, "real_expenses": 0, "real_incomes": 0, "effective_total":  -20, "real_total": 0 },
+            { "period":'2017-01', "effective_expenses":  -60, "effective_incomes":  30, "real_expenses": 0, "real_incomes": 0, "effective_total":  -30, "real_total": 0 },
+            { "period":'2017-02', "effective_expenses":  -80, "effective_incomes":  40, "real_expenses": 0, "real_incomes": 0, "effective_total":  -40, "real_total": 0 },
+            { "period":'2017-03', "effective_expenses": -100, "effective_incomes":  50, "real_expenses": 0, "real_incomes": 0, "effective_total":  -50, "real_total": 0 },
+            { "period":'2017-04', "effective_expenses": -120, "effective_incomes":  60, "real_expenses": 0, "real_incomes": 0, "effective_total":  -60, "real_total": 0 },
+            { "period":'2017-05', "effective_expenses": -140, "effective_incomes":  70, "real_expenses": 0, "real_incomes": 0, "effective_total":  -70, "real_total": 0 },
+            { "period":'2017-06', "effective_expenses": -160, "effective_incomes":  80, "real_expenses": 0, "real_incomes": 0, "effective_total":  -80, "real_total": 0 },
+            { "period":'2017-07', "effective_expenses": -180, "effective_incomes":  90, "real_expenses": 0, "real_incomes": 0, "effective_total":  -90, "real_total": 0 },
+            { "period":'2017-08', "effective_expenses": -200, "effective_incomes": 100, "real_expenses": 0, "real_incomes": 0, "effective_total": -100, "real_total": 0 },
+            { "period":'2017-09', "effective_expenses": -220, "effective_incomes": 110, "real_expenses": 0, "real_incomes": 0, "effective_total": -110, "real_total": 0 },
+            { "period":'2017-10', "effective_expenses": -240, "effective_incomes": 120, "real_expenses": 0, "real_incomes": 0, "effective_total": -120, "real_total": 0 },
+            { "period":'2017-11', "effective_expenses": -260, "effective_incomes": 130, "real_expenses": 0, "real_incomes": 0, "effective_total": -130, "real_total": 0 },
+            { "period":"2017-12", "effective_expenses": -280, "effective_incomes": 140, "real_expenses": 0, "real_incomes": 0, "effective_total": -140, "real_total": 0 },
+        ]
+
+        url = reverse('balance-periods') + "?from=2016-12-01&until=2017-12-01"
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 13)
+        self.assert_actual_expected(response.data, expected_list)
+
+    def test_get_some_periods_with_0_when_theres_no_transactions_expent_in_period(self):
+        '''
+        Creates 1 transactions/month in a range of 6 months, skipping 1. 
+        Then asserts that all months was filled.
+        '''
+        cumulative_value = 10
+        cumulative_date = datetime(2016, 12, 1)
+
+        for i in range(0, 13, 2):
+            self.create_transaction(cumulative_value, due_date=cumulative_date, category=self.expense_category)            
+
+            cumulative_date = cumulative_date + relativedelta(months=2)
+            cumulative_value = cumulative_value + 10
+
+        expected_list = [
+            { "period":'2016-12', "effective_expenses": 0, "effective_incomes": 10, "real_expenses": 0, "real_incomes": 0, "effective_total": 10, "real_total": 0 },
+            { "period":'2017-01', "effective_expenses": 0, "effective_incomes":  0, "real_expenses": 0, "real_incomes": 0, "effective_total": 0 , "real_total": 0 },
+            { "period":'2017-02', "effective_expenses": 0, "effective_incomes": 20, "real_expenses": 0, "real_incomes": 0, "effective_total": 20, "real_total": 0 },
+            { "period":'2017-03', "effective_expenses": 0, "effective_incomes":  0, "real_expenses": 0, "real_incomes": 0, "effective_total": 0 , "real_total": 0 },
+            { "period":'2017-04', "effective_expenses": 0, "effective_incomes": 30, "real_expenses": 0, "real_incomes": 0, "effective_total": 30, "real_total": 0 },
+            { "period":'2017-05', "effective_expenses": 0, "effective_incomes":  0, "real_expenses": 0, "real_incomes": 0, "effective_total": 0 , "real_total": 0 },
+            { "period":'2017-06', "effective_expenses": 0, "effective_incomes": 40, "real_expenses": 0, "real_incomes": 0, "effective_total": 40, "real_total": 0 },
+            { "period":'2017-07', "effective_expenses": 0, "effective_incomes":  0, "real_expenses": 0, "real_incomes": 0, "effective_total": 0 , "real_total": 0 },
+            { "period":'2017-08', "effective_expenses": 0, "effective_incomes": 50, "real_expenses": 0, "real_incomes": 0, "effective_total": 50, "real_total": 0 },
+            { "period":'2017-09', "effective_expenses": 0, "effective_incomes":  0, "real_expenses": 0, "real_incomes": 0, "effective_total": 0 , "real_total": 0 },
+            { "period":'2017-10', "effective_expenses": 0, "effective_incomes": 60, "real_expenses": 0, "real_incomes": 0, "effective_total": 60, "real_total": 0 },
+            { "period":'2017-11', "effective_expenses": 0, "effective_incomes":  0, "real_expenses": 0, "real_incomes": 0, "effective_total": 0 , "real_total": 0 },
+            { "period":"2017-12", "effective_expenses": 0, "effective_incomes": 70, "real_expenses": 0, "real_incomes": 0, "effective_total": 70, "real_total": 0 },
+        ]
+
+        url = reverse('balance-periods') + "?from=2016-12-01&until=2017-12-01"
+        response = self.client.get(url, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 13)
+        self.assert_actual_expected(response.data, expected_list)
+        
+    def assert_actual_expected(self, actual, expected):
+        for i in range(len(actual)):
+            self.assertEqual(actual[i]['period'], expected[i]['period'])
+            self.assertEqual(float(actual[i]["effective_incomes"]), float(expected[i]["effective_incomes"]))
+            self.assertEqual(float(actual[i]["effective_expenses"]), float(expected[i]["effective_expenses"]))
+            self.assertEqual(float(actual[i]["real_incomes"]), float(expected[i]["real_incomes"]))
+            self.assertEqual(float(actual[i]["real_expenses"]), float(expected[i]["real_expenses"]))
+            self.assertEqual(float(actual[i]["effective_total"]), float(expected[i]["effective_total"]))
+            self.assertEqual(float(actual[i]["real_total"]), float(expected[i]["real_total"]))
