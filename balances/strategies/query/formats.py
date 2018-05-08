@@ -1,6 +1,7 @@
 from django.db.models import Sum
+from django.db.models.functions import TruncMonth
 from transactions.models import HasKind, Account
-from transactions.query_operations import sum_when
+from transactions import query_operations
 from .BaseStrategy import BaseStrategy
 from .outputs import EXPENSES, INCOMES, TOTAL
 
@@ -32,10 +33,27 @@ class DetailedFormatStrategy(BaseStrategy):
 
     def apply(self, query):
         return query.aggregate(
-            incomes=sum_when(kind=HasKind.INCOME_KIND),
-            expenses=sum_when(kind=HasKind.EXPENSE_KIND),
+            incomes=query_operations.sum_when(kind=HasKind.INCOME_KIND),
+            expenses=query_operations.sum_when(kind=HasKind.EXPENSE_KIND),
             total=Sum('value')
         )
+
+class CompleteFormatStrategy(BaseStrategy):
+    """
+    Annotates balance split in expenses, incomes and total values AND effective/real.
+    Based doesn't matter here.
+    """
+
+    def apply(self, query):
+        raise Exception("NOT FINISHED YET")
+        return query.aggregate(
+                effective_expenses=query_operations.sum_effective_kind(HasKind.EXPENSE_KIND),
+                effective_incomes=query_operations.sum_effective_kind(HasKind.INCOME_KIND),
+                real_expenses=query_operations.sum_real_kind(HasKind.EXPENSE_KIND),
+                real_incomes=query_operations.sum_real_kind(HasKind.INCOME_KIND),
+                effective_total=query_operations.sum_effective(),
+                real_total=query_operations.sum_real()
+            )
 
 class DetailedAccountFormatStrategy(BaseStrategy):
     """
@@ -52,8 +70,8 @@ class DetailedAccountFormatStrategy(BaseStrategy):
 
     def apply(self, query):
         accounts = query.values('account').annotate(
-            incomes=sum_when(kind=HasKind.INCOME_KIND),
-            expenses=sum_when(kind=HasKind.EXPENSE_KIND),
+            incomes=query_operations.sum_when(kind=HasKind.INCOME_KIND),
+            expenses=query_operations.sum_when(kind=HasKind.EXPENSE_KIND),
             total=Sum('value')
         )\
         .order_by('account')
