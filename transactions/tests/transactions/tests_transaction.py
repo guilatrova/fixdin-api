@@ -1,61 +1,172 @@
-import datetime
-from unittest import skip
+from datetime import date
 from django.test import TestCase
-from django.contrib.auth.models import User
 from django.urls import reverse
-from rest_framework.test import APITestCase, APIClient
+from unittest import mock, skip
+from rest_framework.test import APITestCase
 from rest_framework import status
-from rest_framework.authtoken.models import Token
-from transactions.models import *
+from transactions.models import Transaction, HasKind
+from transactions.serializers import TransactionSerializer
+from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin, OtherUserDataTestSetupMixin
 from transactions import views
-from transactions.tests.base_test import BaseTestHelperFactory
-from common.tests_helpers import UrlsTestHelper
+from common.tests_helpers import UrlsTestHelper, SerializerTestHelper
 
-class GenericTransactionUrlTestCase(TestCase, UrlsTestHelper):
-    def test_resolves_first_pending_expense_url(self):
+class TransactionManagerTestCase(UserDataTestSetupMixin, TestCase, BaseTestHelperFactory):    
+    def test_delete_single(self):
+        t = self.create_transaction(-100)
+        t.delete()
+        self.assertFalse(Transaction.objects.filter(pk=t.id).exists())
+
+    @skip('unfinished')
+    def test_delete_list_without_consent_param(self):
+        pass
+
+    @skip('unfinished')
+    def test_delete_list_with_consent(self):
+        pass
+
+class TransactionUrlTestCase(UrlsTestHelper, TestCase):
+    
+    def test_resolves_list_url(self):
+        resolver = self.resolve_by_name('transactions')
+        self.assertEqual(resolver.func.cls, views.TransactionViewSet)
+
+    def test_resolves_single_url(self):
+        resolver = self.resolve_by_name('transaction', pk=1)
+        self.assertEqual(resolver.func.cls, views.TransactionViewSet)
+
+    def test_resolves_list_to_actions(self):
+        resolver = self.resolve_by_name('transactions')
+        self.assert_resolves_actions(resolver, {
+            'get': 'list',
+            'post': 'create',
+            'delete': 'destroy_all_periodics',
+            'patch': 'partial_update_list'
+        })
+
+    def test_list_url_allows_actions(self):
+        resolver = self.resolve_by_name('transactions')
+        self.assert_has_actions(['get', 'post', 'delete', 'patch'], resolver.func.actions)
+
+    def test_single_url_allows_actions(self):
+        resolver = self.resolve_by_name('transaction', pk=1)
+        self.assert_has_actions(['get', 'put', 'delete', 'patch'], resolver.func.actions)
+
+    def test_resolves_oldest_pending_expense_url(self):
         resolver = self.resolve_by_name('oldest-pending-expense')
         self.assertEqual(resolver.func.cls, views.OldestPendingExpenseAPIView)
 
-class GenericTransactionAPIIntegrationTestCase(APITestCase, BaseTestHelperFactory):
-    '''
-    Tests a generic endpoint /transactions that only retrieves/lists transactions
-    regardless of its kind
-    '''
+class TransactionSerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, TestCase, SerializerTestHelper):
 
+    def setUp(self):
+        self.serializer_data = {
+            'due_date': date(2018, 3, 20),
+            'description': 'description',
+            'category': self.category.id,
+            'value': 0,
+            'account': self.account.id,
+            'priority': 1,
+            'deadline': 1,
+            'kind': HasKind.EXPENSE_KIND,
+        }
+        self.serializer_context = {
+            'user_id': self.user.id,
+            'request_method': 'POST'
+        }
+
+    def test_serializer_only_required_fields_validates(self):
+        serializer = TransactionSerializer(data=self.serializer_data, context=self.serializer_context)
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+    
+    def test_serializer_all_fields_validates(self):
+        serializer = TransactionSerializer(data=self.get_full_data(), context=self.serializer_context)
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+    def test_serializer_value_should_not_allows_expense_positive(self):
+        data = self.get_data(value=10, kind=HasKind.EXPENSE_KIND)        
+        serializer = TransactionSerializer(data=data, context=self.serializer_context)
+        self.assert_has_field_error(serializer)
+
+    def test_serializer_value_should_not_allows_income_negative(self):
+        data = self.get_data(value=-10, kind=HasKind.INCOME_KIND)        
+        serializer = TransactionSerializer(data=data, context=self.serializer_context)
+        self.assert_has_field_error(serializer)
+
+    def test_serializer_category_should_not_allows_from_other_user(self):
+        data = self.get_data(category=self.other_user_data['category'].id)
+        serializer = TransactionSerializer(data=data, context=self.serializer_context)
+        self.assert_has_field_error(serializer, 'category')
+
+    def test_serializer_account_should_not_allows_from_other_user(self):
+        data = self.get_data(account=self.other_user_data['account'].id)
+        serializer = TransactionSerializer(data=data, context=self.serializer_context)
+        self.assert_has_field_error(serializer, 'account')
+
+    def test_serializer_periodic_cant_be_set_on_put(self):
+        data = self.get_data_with_periodic()
+        context = self.get_context(request_method='PUT')
+        serializer = TransactionSerializer(data=data, context=context)
+        self.assert_has_field_error(serializer, 'periodic')
+
+    def test_serializer_should_not_allows_category_kind_different_of_transaction(self):
+        data = self.get_data(kind=HasKind.INCOME_KIND)
+        serializer = TransactionSerializer(data=data, context=self.serializer_context)
+        self.assert_has_field_error(serializer)
+
+    def test_serializer_should_not_allows_periodic_with_until_before_due_date(self):
+        data = self.get_data_with_periodic(until=date(2018, 1, 1))
+        serializer = TransactionSerializer(data=data, context=self.serializer_context)
+        self.assert_has_field_error(serializer)
+
+    def test_serializer_returns_list(self):
+        serializer = TransactionSerializer()
+        falsy = {}
+        truthy = { 'periodic': None }
+        self.assertFalse(serializer.is_return_data_list(falsy))
+        self.assertTrue(serializer.is_return_data_list(truthy))
+
+    @mock.patch('transactions.factories.create_periodic_transactions')
+    def test_serializer_create_periodic(self, create_mock):
+        dummy = { 'periodic': None }
+        serializer = TransactionSerializer()
+        serializer.create(dummy)
+        create_mock.assert_called_with(**dummy)
+
+    @mock.patch('rest_framework.serializers.ModelSerializer.create')
+    def test_serializer_create_regular(self, super_create_mock):
+        dummy = {}
+        serializer = TransactionSerializer()
+        serializer.create(dummy)
+        super_create_mock.assert_called_with(dummy)
+
+    def get_data_with_periodic(self, **kwargs):
+        nested = {
+            'frequency': 'daily',
+            'interval': 1
+        }
+        nested.update(kwargs)
+        data = self.get_data(periodic=nested)
+        return data
+
+    def get_full_data(self):
+        data = self.get_data_with_periodic(how_many=1)
+        data.update({
+            'details': 'details',
+            'payment_date': date(2018, 3, 20),
+        })
+        return data
+
+class TransactionApiTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
     @classmethod
     def setUpTestData(cls):
-        cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
-        cls.account = cls.create_account(cls.user)
-        cls.income_category = cls.create_category('salary', kind=Category.INCOME_KIND)
-        cls.expense_category = cls.create_category('dinner', kind=Category.EXPENSE_KIND)
+        super().setUpTestData()
+        cls.oldest = cls.create_transaction(-100, due_date=date(2010, 1, 1))
+        cls.create_transaction(-5, due_date=date(2014, 1, 1))
 
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
 
-    def test_lists_both_incomes_and_expenses(self):
-        # Expenses
-        self.create_transaction(value=-100,category=self.expense_category) 
-        self.create_transaction(value=-50,category=self.expense_category)
-        # Incomes
-        self.create_transaction(value=220,category=self.income_category)
-        self.create_transaction(value=200,category=self.income_category)
+    def test_api_retrieves(self):
+        response = self.client.get(reverse('oldest-pending-expense'))
 
-        response = self.client.get(reverse('transactions'), format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 4)
-
-    def test_retrieves_both_incomes_and_expenses(self):
-        expense = self.create_transaction(value=-100,category=self.expense_category) #Expense
-        income = self.create_transaction(value=220,category=self.income_category) #Incomes
-
-        income_url = reverse('transaction', kwargs={'pk':income.id})
-        expense_url = reverse('transaction', kwargs={'pk':expense.id})
-
-        response = self.client.get(income_url, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)        
-        self.assertEqual(response.data['value'], '220.00')
-
-        response = self.client.get(expense_url, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['value'], '-100.00')
+        self.assertTrue(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['id'], self.oldest.id)
