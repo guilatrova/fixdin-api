@@ -69,14 +69,13 @@ class PeriodicTransactionViewSetMixin:
 
 class TransactionViewSet(PeriodicTransactionViewSetMixin, PatchModelListMixin, viewsets.ModelViewSet, TransactionFilter):
     '''
-    Handles /expenses and /incomes endpoints
+    Handles CRUD on /transactions endpoints
     '''
     serializer_class = TransactionSerializer
     permission_classes = (IsAuthenticated, IsNotTransferOrIsReadOnly)
 
     def get_serializer_context(self):
         return {
-            "kind": self.kwargs['kind'],
             "user_id": self.request.user.id,
             "request_method": self.request.method
         }
@@ -84,13 +83,9 @@ class TransactionViewSet(PeriodicTransactionViewSetMixin, PatchModelListMixin, v
     def get_queryset(self):
         query_filter = { 
             'account__user_id': self.request.user.id,
-            'kind': self.kwargs['kind'] 
         }
         
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
-
-    def perform_create(self, serializer):
-        serializer.save(kind=self.kwargs['kind'])
 

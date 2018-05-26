@@ -1,14 +1,19 @@
 from datetime import date
+from unittest import mock, skip
+
 from django.test import TestCase
 from django.urls import reverse
-from unittest import mock, skip
-from rest_framework.test import APITestCase
 from rest_framework import status
-from transactions.models import Transaction, HasKind
-from transactions.serializers import TransactionSerializer
-from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin, OtherUserDataTestSetupMixin
+from rest_framework.test import APITestCase
+
+from common.tests_helpers import SerializerTestHelper, UrlsTestHelper
 from transactions import views
-from common.tests_helpers import UrlsTestHelper, SerializerTestHelper
+from transactions.models import HasKind, Transaction
+from transactions.serializers import TransactionSerializer
+from transactions.tests.base_test import (BaseTestHelperFactory,
+                                          OtherUserDataTestSetupMixin,
+                                          UserDataTestSetupMixin)
+
 
 class TransactionManagerTestCase(UserDataTestSetupMixin, TestCase, BaseTestHelperFactory):    
     def test_delete_single(self):
@@ -154,19 +159,3 @@ class TransactionSerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSet
             'payment_date': date(2018, 3, 20),
         })
         return data
-
-class TransactionApiTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-        cls.oldest = cls.create_transaction(-100, due_date=date(2010, 1, 1))
-        cls.create_transaction(-5, due_date=date(2014, 1, 1))
-
-    def setUp(self):
-        self.client = self.create_authenticated_client(self.token)
-
-    def test_api_retrieves(self):
-        response = self.client.get(reverse('oldest-pending-expense'))
-
-        self.assertTrue(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data['id'], self.oldest.id)

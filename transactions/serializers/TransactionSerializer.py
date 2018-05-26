@@ -9,19 +9,10 @@ class TransactionSerializer(SerializerMayReturnListMixin, serializers.ModelSeria
     class Meta:
         model = Transaction
         fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date', 'periodic', 'bound_transaction', 'bound_reason')
-        read_only_fields = ('kind', 'bound_transaction', 'bound_reason')
+        read_only_fields = ('bound_transaction', 'bound_reason')
         write_only_fields = ('periodic',)
 
     periodic = PeriodicSerializer(required=False, write_only=True)
-
-    def validate_value(self, value):
-        if self.context['kind'] == Transaction.EXPENSE_KIND:
-            if value > 0:
-                raise serializers.ValidationError('Expense value cannot be positive')
-        elif value < 0:
-            raise serializers.ValidationError('Income value cannot be negative')
-
-        return value
 
     def validate_category(self, category):
         if category.user.id != self.context['user_id']:
@@ -39,11 +30,22 @@ class TransactionSerializer(SerializerMayReturnListMixin, serializers.ModelSeria
         return periodic
 
     def validate(self, data):
+        """
+        Validates if data is correctly set.
+        Those checks about whether is key inside data or not, is due PATCH request.
+        """        
+        if 'kind' in data and 'value' in data:
+            if data['kind'] == Transaction.EXPENSE_KIND:
+                if data['value'] > 0:
+                    raise serializers.ValidationError('Expense value cannot be positive')
+            elif data['value'] < 0:
+                raise serializers.ValidationError('Income value cannot be negative')
+
         if 'periodic' in data and 'until' in data['periodic'] and data['periodic']['until'] < data['due_date']:
             raise serializers.ValidationError("Periodic until must be greater than due date")
 
         if 'category' in data:
-            if self.context['kind'] != data['category'].kind:
+            if data['kind'] != data['category'].kind:
                 raise serializers.ValidationError('Transaction and Category must have the same kind')
         return data
 
