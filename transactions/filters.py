@@ -1,4 +1,5 @@
 from datetime import datetime
+from transactions.models import HasKind
 
 class TransactionFilter:
     def get_query_params_filter(self):
@@ -23,6 +24,10 @@ class TransactionFilter:
         deadline = self.request.query_params.get('deadline', False)
         if deadline:
             dic['deadline'] = deadline
+
+        kind = self.request.query_params.get('kind', False)
+        if kind in [str(HasKind.EXPENSE_KIND), str(HasKind.INCOME_KIND)]:
+            dic['kind'] = kind
 
         payed = self.request.query_params.get('payed', False)
         has_filter_by_payment_date = False
