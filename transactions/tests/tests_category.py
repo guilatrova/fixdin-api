@@ -1,14 +1,17 @@
 from unittest import skip
-from django.test import TestCase
+
 from django.contrib.auth.models import User
+from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APITestCase
+
 from transactions.models import Category
 from transactions.tests.base_test import BaseTestHelper
 
-class CategoryTestCase(APITestCase, BaseTestHelper):
+
+class CategoryApiTestCase(APITestCase, BaseTestHelper):
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -21,10 +24,11 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
 
     def test_create_category(self):
         category_dto = {
-            'name': 'eating'
+            'name': 'eating',
+            'kind': Category.INCOME_KIND
         }
 
-        response = self.client.post(reverse('expense-categories'), category_dto, format='json')
+        response = self.client.post(reverse('categories'), category_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Category.objects.count(), 1)
@@ -33,10 +37,11 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
         self.create_category('eating')
 
         category_dto = {
-            'name': 'eating'
+            'name': 'eating',
+            'kind': Category.EXPENSE_KIND
         }
 
-        response = self.client.post(reverse('expense-categories'), category_dto, format='json')
+        response = self.client.post(reverse('categories'), category_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Category.objects.count(), 1)
@@ -48,7 +53,7 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
             'kind': Category.INCOME_KIND
         }
 
-        response = self.client.post(reverse('income-categories'), category_dto, format='json')
+        response = self.client.post(reverse('categories'), category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Category.objects.count(), 2)
 
@@ -59,7 +64,7 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
             'name': 'Eating'
         }
 
-        response = self.client.post(reverse('expense-categories'), category_dto, format='json')
+        response = self.client.post(reverse('categories'), category_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Category.objects.count(), 1)
@@ -73,7 +78,7 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
             'name': 'eating' #changed name
         }
 
-        url = reverse('expense-category', kwargs={'pk':category_dto['id']})
+        url = reverse('category', kwargs={'pk':category_dto['id']})
         response = self.client.put(url, category_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -85,12 +90,12 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
         other_client = APIClient()
         other_client.credentials(HTTP_AUTHORIZATION='Token ' + other_token.key)
 
-        category_dto = {'name': 'eating'}
+        category_dto = {'name': 'eating', 'kind': Category.EXPENSE_KIND }
 
-        response = self.client.post(reverse('expense-categories'), category_dto, format='json')
+        response = self.client.post(reverse('categories'), category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        response = other_client.post(reverse('expense-categories'), category_dto, format='json')
+        response = other_client.post(reverse('categories'), category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_list_only_user_categories(self):
@@ -102,14 +107,14 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
         other_user = self.create_user('other', email='other_user@email.com', password='123456')[0]
         self.create_category('', user=other_user)
 
-        response = self.client.get(reverse('expense-categories'), format='json')
+        response = self.client.get(reverse('categories'), format='json')
         self.assertEqual(len(response.data), 4)
 
     def test_cant_delete_category_in_use(self):
         category = self.create_category('in_use')
         self.create_transaction(category=category)
 
-        url = reverse('expense-category', kwargs={'pk':category.id})
+        url = reverse('category', kwargs={'pk':category.id})
         response = self.client.delete(url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -118,7 +123,7 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
     def test_can_delete_category_not_in_use(self):
         category = self.create_category('eating')
 
-        url = reverse('expense-category', kwargs={'pk':category.id})
+        url = reverse('category', kwargs={'pk':category.id})
         response = self.client.delete(url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -128,11 +133,13 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
         self.create_category('eating', kind=Category.EXPENSE_KIND)
         self.create_category('salary', kind=Category.INCOME_KIND)
         self.create_category('freelance', kind=Category.INCOME_KIND)
-
-        response = self.client.get(reverse('expense-categories'), format='json')
+        
+        expenses_url = "{}?kind={}".format(reverse('categories'), Category.EXPENSE_KIND)
+        response = self.client.get(expenses_url, format='json')
         self.assertEqual(len(response.data), 1)
 
-        response = self.client.get(reverse('income-categories'), format='json')
+        incomes_url = "{}?kind={}".format(reverse('categories'), Category.INCOME_KIND)
+        response = self.client.get(incomes_url, format='json')
         self.assertEqual(len(response.data), 2)
 
     def test_user_cant_handle_category_it_doesnt_own(self):
@@ -145,7 +152,7 @@ class CategoryTestCase(APITestCase, BaseTestHelper):
         
         category_dto = {'name': 'new name'}
 
-        url = reverse('expense-category', kwargs={'pk':category_from_other_user.id})
+        url = reverse('category', kwargs={'pk':category_from_other_user.id})
         
         response = self.client.put(url, category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
