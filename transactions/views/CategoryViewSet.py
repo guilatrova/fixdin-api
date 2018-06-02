@@ -17,9 +17,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Category.objects.filter(user_id=self.request.user.id, **filters)
 
     def get_serializer_context(self):
-        return {
-            "user_id": self.request.user.id,
-        }
+        return { "user_id": self.request.user.id }
 
     def destroy(self, request, *args, **kwargs):
         if Transaction.objects.filter(category_id=kwargs['pk']).exists():

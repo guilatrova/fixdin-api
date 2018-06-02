@@ -13,7 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url, include
+from django.conf.urls import include, url
 from django.contrib import admin
 from transactions.models import Transaction
 
@@ -25,7 +25,7 @@ urlpatterns = [
     url(r'^api/v1/integrations/', include('integrations.urls')),
 
     url(r'^api/v1/accounts/', include('transactions.urls.urls_accounts')),
-    url(r'^api/v1/transactions/', include('transactions.urls.urls_transaction'), name='transactions'),
+    url(r'^api/v1/transactions/', include('transactions.urls.urls_transaction')),
     url(r'^api/v1/categories/', include('transactions.urls.urls_category')),
 
     url(r'^api/v1/payment-orders/', include('paymentorders.urls')),

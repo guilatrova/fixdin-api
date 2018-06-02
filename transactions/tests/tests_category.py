@@ -91,6 +91,7 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
         other_client.credentials(HTTP_AUTHORIZATION='Token ' + other_token.key)
 
         category_dto = {'name': 'eating', 'kind': Category.EXPENSE_KIND }
+        category_dto = { 'name': 'eating', 'kind': Category.EXPENSE_KIND }
 
         response = self.client.post(reverse('categories'), category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -128,19 +129,6 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Category.objects.count(), 0)
-
-    def test_get_categories_by_kind(self):
-        self.create_category('eating', kind=Category.EXPENSE_KIND)
-        self.create_category('salary', kind=Category.INCOME_KIND)
-        self.create_category('freelance', kind=Category.INCOME_KIND)
-        
-        expenses_url = "{}?kind={}".format(reverse('categories'), Category.EXPENSE_KIND)
-        response = self.client.get(expenses_url, format='json')
-        self.assertEqual(len(response.data), 1)
-
-        incomes_url = "{}?kind={}".format(reverse('categories'), Category.INCOME_KIND)
-        response = self.client.get(incomes_url, format='json')
-        self.assertEqual(len(response.data), 2)
 
     def test_user_cant_handle_category_it_doesnt_own(self):
         '''
