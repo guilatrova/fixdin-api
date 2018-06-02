@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from integrations.models import Integration, IntegrationSettings, SyncHistory, CPFL_Settings
-from integrations.serializers import IntegrationSerializer, SyncHistorySerializer, ServiceSettingsSerializer
+from rest_framework.views import APIView
+
+from integrations.models import CPFL_Settings, Integration, IntegrationSettings, SyncHistory
+from integrations.serializers import IntegrationSerializer, ServiceSettingsSerializer, SyncHistorySerializer
 from integrations.services.CPFLSyncService import CPFL_SyncService
+
 
 class ListIntegrationsAPIView(ListAPIView):
     queryset = Integration.objects.all()
@@ -102,4 +104,3 @@ class IntegrationSettingsHandler:
     def get_service(self):
         base, cpfl = self._get_data()
         return CPFL_SyncService(self.user, cpfl)
-        

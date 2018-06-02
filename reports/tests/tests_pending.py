@@ -1,15 +1,19 @@
-from unittest import skip, mock
 from datetime import datetime
+from unittest import mock, skip
+
 from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
-from transactions.models import Transaction, Category
-from transactions.tests.base_test import BaseTestHelper
-from reports.factories.PendingReport import PendingReportFactory, PendingExpensesReportFactory, PendingIncomesReportFactory
+from rest_framework.test import APIClient, APITestCase
+
 from common.helpers import Struct
+from reports.factories.PendingReport import (PendingExpensesReportFactory, PendingIncomesReportFactory,
+                                             PendingReportFactory)
+from transactions.models import Category, Transaction
+from transactions.tests.base_test import BaseTestHelper
+
 
 class PendingAPITestMixin(BaseTestHelper):
 

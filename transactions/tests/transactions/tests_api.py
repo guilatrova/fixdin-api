@@ -8,9 +8,8 @@ from rest_framework.test import APITestCase
 from transactions import factories
 from transactions.models import HasKind, Transaction
 from transactions.serializers import TransactionSerializer
-from transactions.tests.base_test import (BaseTestHelperFactory,
-                                          OtherUserDataTestSetupMixin,
-                                          UserDataTestSetupMixin)
+from transactions.tests.base_test import BaseTestHelperFactory, OtherUserDataTestSetupMixin, UserDataTestSetupMixin
+
 
 class ApiTestMixin(UserDataTestSetupMixin, 
                     OtherUserDataTestSetupMixin, 

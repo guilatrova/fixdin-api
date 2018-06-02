@@ -1,5 +1,5 @@
-from django.db.models import Sum, Case, When, F
-from django.db.models.functions import Coalesce, TruncMonth, ExtractMonth, ExtractYear
+from django.db.models import Case, F, Sum, When
+from django.db.models.functions import Coalesce, ExtractMonth, ExtractYear, TruncMonth
 
 sum_when = lambda **kwargs : Coalesce(Sum(Case(When(then=F('value'), **kwargs), default=0)), 0)
 sum_effective = lambda **kwargs : sum_when(**kwargs, due_date__month=ExtractMonth('date'), due_date__year=ExtractYear('date'))

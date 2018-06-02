@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+
 from balances.models import PeriodBalance
+
 
 class BaseStrategy(ABC):
     """

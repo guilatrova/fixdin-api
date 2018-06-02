@@ -1,13 +1,16 @@
 import calendar
 import datetime
-from django.db.models.signals import post_save, post_delete
-from django.db.models import Sum
+
 from django.db import transaction as db_transaction
+from django.db.models import Sum
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from transactions.models import Transaction
+
 from balances.factories import create_period_strategy
 from balances.services.periods import get_current_period, get_period_from
-from balances.strategies.periods import CREATED, UPDATED, DELETED
+from balances.strategies.periods import CREATED, DELETED, UPDATED
+from transactions.models import Transaction
+
 
 @receiver(post_save, sender=Transaction)
 def created_or_updated_transaction_updates_balance(sender, instance=None, created=False, **kwargs):

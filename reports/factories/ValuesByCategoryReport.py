@@ -1,9 +1,12 @@
+import calendar
+from datetime import datetime
+
+from dateutil.relativedelta import relativedelta
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
-from datetime import datetime
-import calendar
-from dateutil.relativedelta import relativedelta
+
 from transactions.models import Transaction
+
 
 class ValuesByCategoryReportFactory:
     '''

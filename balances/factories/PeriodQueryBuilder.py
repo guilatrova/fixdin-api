@@ -1,13 +1,16 @@
-from datetime import datetime, date
-from collections import defaultdict
-from functools import reduce
-from django.db.models import Q, Sum, Case, When, F, Value, CharField
-from django.db.models.functions import TruncMonth, ExtractMonth, ExtractYear
 import calendar
+from collections import defaultdict
+from datetime import date, datetime
+from functools import reduce
+
 from dateutil.relativedelta import relativedelta
-from transactions.models import Transaction, HasKind
-from transactions.query_operations import sum_when
+from django.db.models import Case, CharField, F, Q, Sum, Value, When
+from django.db.models.functions import ExtractMonth, ExtractYear, TruncMonth
+
 from common import dates_utils
+from transactions.models import HasKind, Transaction
+from transactions.query_operations import sum_when
+
 
 class PeriodQueryBuilder:
     '''

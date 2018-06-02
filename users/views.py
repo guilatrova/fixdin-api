@@ -1,12 +1,14 @@
-from django.shortcuts import render
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.shortcuts import render
 from rest_framework import status, views, viewsets
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_expiring_authtoken.models import ExpiringToken
+
 from users.serializers import LoginSerializer, UserSerializer
+
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer

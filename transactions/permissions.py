@@ -1,5 +1,7 @@
 from rest_framework import permissions
+
 from transactions.models import BoundReasons
+
 
 class IsNotTransferOrIsReadOnly(permissions.BasePermission):
     """

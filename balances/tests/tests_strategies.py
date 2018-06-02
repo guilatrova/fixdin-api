@@ -1,19 +1,17 @@
 from datetime import date, datetime
+from unittest import skip
+from unittest.mock import MagicMock, patch
+
 from dateutil.relativedelta import relativedelta
 from django.test import TestCase
-from unittest import skip
-from unittest.mock import patch, MagicMock
-from transactions.tests.base_test import BaseTestHelper
-from transactions.models import Transaction, Account
+
 from balances.models import PeriodBalance
+from balances.strategies.periods import (BaseStrategy, ChangedAccountStrategy, CreateStrategy, DeleteStrategy,
+                                         UpdateStrategy)
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory
-from balances.strategies.periods import (
-    BaseStrategy,
-    CreateStrategy,
-    ChangedAccountStrategy, 
-    UpdateStrategy, 
-    DeleteStrategy
-)
+from transactions.models import Account, Transaction
+from transactions.tests.base_test import BaseTestHelper
+
 
 class StrategyTestMixin:
     def setUp(self):

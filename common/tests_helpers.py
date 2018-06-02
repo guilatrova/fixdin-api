@@ -1,4 +1,5 @@
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
+
 
 class UrlsTestHelper:
     def resolve_by_name(self, name, **kwargs): 

@@ -1,14 +1,8 @@
 from balances.services.calculator import Calculator
-from balances.strategies.query import (
-    based,
-    OnDateStrategy,
-    BetweenDateStrategy,
-    UntilDateStrategy,
-    PlainFormatStrategy,
-    DetailedFormatStrategy,
-    DetailedAccountFormatStrategy,
-    CompleteFormatStrategy
-)
+from balances.strategies.query import (BetweenDateStrategy, CompleteFormatStrategy, DetailedAccountFormatStrategy,
+                                       DetailedFormatStrategy, OnDateStrategy, PlainFormatStrategy, UntilDateStrategy,
+                                       based)
+
 
 class CalculatorBuilder:
 

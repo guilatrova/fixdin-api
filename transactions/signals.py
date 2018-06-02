@@ -1,6 +1,8 @@
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
+
 from transactions.models import Transaction
+
 
 @receiver(pre_delete, sender=Transaction)
 def updates_periodics_parent(sender, instance=None, **kwargs):

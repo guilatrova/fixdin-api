@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, Q
+from django.db.models import Q, QuerySet
 
 EXPENSE_KIND = 0
 INCOME_KIND = 1

@@ -1,5 +1,6 @@
 from .CascadeStrategy import CascadeStrategy
 
+
 class DeleteStrategy(CascadeStrategy):
     """
     Exclusive strategy to be triggered when a transaction is deleted    

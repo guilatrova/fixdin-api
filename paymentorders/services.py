@@ -1,9 +1,12 @@
-from django.db.models.functions import TruncMonth
 from datetime import date
-from dateutil.relativedelta import relativedelta
-from common import dates_utils
 from itertools import groupby
-from transactions.models import Transaction, HasKind
+
+from dateutil.relativedelta import relativedelta
+from django.db.models.functions import TruncMonth
+
+from common import dates_utils
+from transactions.models import HasKind, Transaction
+
 
 class NextExpensesService:
     def __init__(self, user_id, from_date, until_date):

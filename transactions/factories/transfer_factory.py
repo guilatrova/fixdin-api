@@ -1,6 +1,9 @@
-from transactions.models import Transaction, Category, BoundReasons, HasKind
-from django.db import transaction as db_transaction
 import datetime
+
+from django.db import transaction as db_transaction
+
+from transactions.models import BoundReasons, Category, HasKind, Transaction
+
 
 @db_transaction.atomic
 def create_transfer_between_accounts(user_id, **kwargs):

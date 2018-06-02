@@ -1,8 +1,10 @@
-from django.db.models import Q, Sum, Case, When, F
+from django.db.models import Case, F, Q, Sum, When
 from django.db.models.functions import Coalesce
-from transactions.models import Transaction
+
 from balances.models import PeriodBalance
 from balances.services import periods
+from transactions.models import Transaction
+
 
 class Calculator:
     def __init__(self, user_id, date_strategy, format_stategy):
@@ -38,4 +40,3 @@ def _calculate_open_balance(account_id):
             effective=Coalesce(Sum('value'), 0), #TODO: quando cair num payment date não vai calcular um valor falso aqui? devo validar o due_date
             real=Coalesce(Sum(Case(When(payment_date__isnull=False, then=F('value')), default=0)), 0)
         )
-    

@@ -10,9 +10,7 @@ from common.tests_helpers import SerializerTestHelper, UrlsTestHelper
 from transactions import views
 from transactions.models import HasKind, Transaction
 from transactions.serializers import TransactionSerializer
-from transactions.tests.base_test import (BaseTestHelperFactory,
-                                          OtherUserDataTestSetupMixin,
-                                          UserDataTestSetupMixin)
+from transactions.tests.base_test import BaseTestHelperFactory, OtherUserDataTestSetupMixin, UserDataTestSetupMixin
 
 
 class TransactionManagerTestCase(UserDataTestSetupMixin, TestCase, BaseTestHelperFactory):    

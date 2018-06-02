@@ -1,7 +1,10 @@
 import datetime
-from balances.services.periods import get_current_period, get_period_from
+
 from balances import factories
+from balances.services.periods import get_current_period, get_period_from
+
 from .CascadeStrategy import CascadeStrategy
+
 
 class CreateStrategy(CascadeStrategy):
     """

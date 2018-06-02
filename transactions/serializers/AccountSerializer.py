@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from transactions.models import Account
+
 from balances.services import calculator
+from transactions.models import Account
+
 
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:

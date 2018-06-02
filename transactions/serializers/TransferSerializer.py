@@ -1,7 +1,9 @@
 from django.db import transaction as db_transaction
 from rest_framework import serializers
-from transactions.models import Account, HasKind
+
 from transactions.factories import create_transfer_between_accounts, map_transaction_to_transfer_data
+from transactions.models import Account, HasKind
+
 
 def validate_account(id, user_id):
     if not Account.objects.filter(pk=id).exists():

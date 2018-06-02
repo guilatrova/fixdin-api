@@ -1,9 +1,12 @@
 from rest_framework import serializers
-from transactions.models import Transaction
-from transactions import factories
-from .PeriodicSerializer import PeriodicSerializer
-from .HasKindContextSerializer import HasKindContextSerializer
+
 from common.serializers import SerializerMayReturnListMixin
+from transactions import factories
+from transactions.models import Transaction
+
+from .HasKindContextSerializer import HasKindContextSerializer
+from .PeriodicSerializer import PeriodicSerializer
+
 
 class TransactionSerializer(SerializerMayReturnListMixin, serializers.ModelSerializer, HasKindContextSerializer):
     class Meta:

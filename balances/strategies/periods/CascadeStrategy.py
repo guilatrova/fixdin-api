@@ -1,7 +1,10 @@
-from django.db.models import Sum, Case, When, F
+from django.db.models import Case, F, Sum, When
 from django.db.models.functions import Coalesce
+
 from balances.models import PeriodBalance
+
 from .BaseStrategy import BaseStrategy
+
 
 class CascadeStrategy(BaseStrategy):
     """

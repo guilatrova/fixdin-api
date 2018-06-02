@@ -1,5 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
+
 
 class Integration(models.Model):
     name_id = models.CharField(max_length=30, unique=True)
@@ -41,4 +42,3 @@ class SyncHistory(models.Model, HasStatus):
     result = models.CharField(max_length=120)
     details = models.TextField()
     trigger = models.PositiveIntegerField(choices=TRIGGER_CHOICES)
-    

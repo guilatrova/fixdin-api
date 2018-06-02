@@ -1,12 +1,14 @@
 from django.db import transaction as db_transaction
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from transactions.models import Transaction
-from transactions.filters import TransactionFilter
-from transactions.serializers import TransactionSerializer
-from transactions.permissions import IsNotTransferOrIsReadOnly
+
 from common.views import PatchModelListMixin
+from transactions.filters import TransactionFilter
+from transactions.models import Transaction
+from transactions.permissions import IsNotTransferOrIsReadOnly
+from transactions.serializers import TransactionSerializer
+
 
 class PeriodicTransactionViewSetMixin:
     '''
@@ -88,4 +90,3 @@ class TransactionViewSet(PeriodicTransactionViewSetMixin, PatchModelListMixin, v
         url_query_params = self.get_query_params_filter()  
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)
-

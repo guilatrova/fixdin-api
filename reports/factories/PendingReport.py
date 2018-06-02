@@ -1,5 +1,7 @@
 from datetime import datetime
+
 from transactions.models import Transaction
+
 
 class PendingReportFactory:
 

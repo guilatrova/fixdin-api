@@ -1,5 +1,7 @@
-from ..models import SyncHistory
 from abc import ABCMeta, abstractmethod
+
+from ..models import SyncHistory
+
 
 class SyncService(metaclass=ABCMeta):
     def __init__(self, user, settings):

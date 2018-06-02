@@ -1,17 +1,20 @@
-from unittest import skip
-from unittest.mock import patch, MagicMock
 import datetime
-from django.test import TestCase
+from unittest import skip
+from unittest.mock import MagicMock, patch
+
 from django.contrib.auth.models import User
+from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from transactions.models import HasKind, BoundReasons, Transaction
-from transactions.views import TransferViewSet
+from rest_framework.test import APIClient, APITestCase
+
+from common.tests_helpers import UrlsTestHelper
+from transactions.factories import create_transfer_between_accounts
+from transactions.models import BoundReasons, HasKind, Transaction
 from transactions.serializers import TransferSerializer
 from transactions.tests.base_test import BaseTestHelper
-from transactions.factories import create_transfer_between_accounts
-from common.tests_helpers import UrlsTestHelper
+from transactions.views import TransferViewSet
+
 
 class TransferUrlTestCase(TestCase, BaseTestHelper, UrlsTestHelper):
 

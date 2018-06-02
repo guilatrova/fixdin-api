@@ -1,5 +1,6 @@
 from .CreateStrategy import CreateStrategy
 
+
 #We inherit from Create because it may be changed some date without a PeriodBalance, 
 #so it will be created if needed
 class UpdateStrategy(CreateStrategy):

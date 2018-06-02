@@ -1,5 +1,7 @@
 from datetime import datetime
+
 from transactions.models import HasKind
+
 
 class TransactionFilter:
     def get_query_params_filter(self):

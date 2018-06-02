@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import Q
-from transactions.models import Transaction, Account
+
+from transactions.models import Account, Transaction
+
 
 class PeriodBalance(models.Model):
     account = models.ForeignKey(Account)

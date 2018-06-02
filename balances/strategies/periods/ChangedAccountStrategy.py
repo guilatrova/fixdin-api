@@ -1,5 +1,6 @@
 from .UpdateStrategy import UpdateStrategy
 
+
 class ChangedAccountStrategy(UpdateStrategy):
     """
     Exclusive strategy to be triggered when user changes any transaction

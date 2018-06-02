@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+
 class PeriodicSerializer(serializers.Serializer):
     frequency = serializers.ChoiceField(['daily', 'weekly', 'monthly', 'yearly'])
     interval = serializers.IntegerField()

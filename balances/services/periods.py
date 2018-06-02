@@ -1,6 +1,7 @@
 import calendar
 import datetime
 
+
 def get_current_period():
     return get_period_from(datetime.date.today())
 

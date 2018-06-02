@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from integrations.models import Integration, SyncHistory, IntegrationSettings, CPFL_Settings
+
+from integrations.models import CPFL_Settings, Integration, IntegrationSettings, SyncHistory
+
 
 class IntegrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,5 +39,3 @@ class ServiceSettingsSerializer(serializers.Serializer):
         CPFL_Settings.objects.filter(settings=integration).delete()
         for serializer in cpfl_serializers:
             serializer.save(settings=integration)
-
-

@@ -1,6 +1,7 @@
-from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from rest_framework import serializers
+
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.CharField(max_length=40)

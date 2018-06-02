@@ -1,5 +1,7 @@
 from rest_framework import serializers
+
 from transactions.serializers import TransactionSerializer
+
 
 class LastMonthsSerializer(serializers.Serializer):
     period = serializers.SerializerMethodField()

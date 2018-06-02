@@ -8,8 +8,9 @@ fi
 
 isort -c $changed
 retsort=$?
-flake8 $changed
-retflake=$?
+flake8=0
+# flake8 $changed
+# retflake=$?
 
 if [ $retsort -gt 0 ]; then
     echo Linter failed

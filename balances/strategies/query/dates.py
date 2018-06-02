@@ -1,5 +1,6 @@
+from .based import BOTH, EFFECTIVE, REAL
 from .BaseStrategy import BaseStrategy
-from .based import EFFECTIVE, REAL, BOTH
+
 
 class OnDateStrategy(BaseStrategy):
     """

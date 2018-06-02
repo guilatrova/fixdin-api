@@ -1,14 +1,14 @@
 import calendar
 from contextlib import contextmanager
 from datetime import date, datetime
+
 from dateutil.relativedelta import relativedelta
 from django.db.models import signals
-from transactions.models import Transaction
+
 from balances.models import PeriodBalance
-from balances.signals import (
-    created_or_updated_transaction_updates_balance, 
-    deleted_transaction_updates_balance
-)
+from balances.signals import created_or_updated_transaction_updates_balance, deleted_transaction_updates_balance
+from transactions.models import Transaction
+
 
 @contextmanager
 def balance_signals_disabled():

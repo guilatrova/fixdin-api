@@ -1,6 +1,7 @@
 from django.conf.urls import url
-from transactions.models import Transaction
+
 from reports import views
+from transactions.models import Transaction
 
 urlpatterns = [
     url(r'^last-months/$', views.LastMonthsAPIView.as_view(), name="last-months"),

@@ -1,4 +1,5 @@
 from django.conf.urls import url
+
 from users import views
 
 list_users = views.UserViewSet.as_view({'post': 'create'})

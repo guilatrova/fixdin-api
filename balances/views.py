@@ -1,13 +1,15 @@
 from datetime import datetime
+
 from django.db.models import Sum
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from common import dates_utils
-from transactions.models import Category, Transaction, Account
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from balances.factories import CalculatorBuilder, PeriodQueryBuilder
-from balances.strategies.query import based, outputs
 from balances.serializers import PeriodSerializer
+from balances.strategies.query import based, outputs
+from common import dates_utils
+from transactions.models import Account, Category, Transaction
 
 consider_mapping = {
     'effective': based.EFFECTIVE,

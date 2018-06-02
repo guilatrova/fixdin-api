@@ -1,12 +1,13 @@
 import json
-import requests
 import traceback
 from datetime import datetime
 from decimal import Decimal
 
+import requests
+
 from integrations.models import SyncHistory
 from integrations.services.SyncService import SyncService
-from transactions.models import Transaction, Category, Account
+from transactions.models import Account, Category, Transaction
 
 TOKEN_URL = 'https://servicosonline.cpfl.com.br/agencia-webapi/api/token'
 SITUACAO_URL = 'https://servicosonline.cpfl.com.br/agencia-webapi/api/historico-contas/validar-situacao'

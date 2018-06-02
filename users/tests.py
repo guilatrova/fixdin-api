@@ -8,9 +8,9 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
+from rest_framework_expiring_authtoken.models import ExpiringToken
 
 from fixdin.settings.base import EXPIRING_TOKEN_LIFESPAN
-from rest_framework_expiring_authtoken.models import ExpiringToken
 from transactions.models import Account
 
 

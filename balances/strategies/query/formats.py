@@ -1,9 +1,12 @@
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
-from transactions.models import HasKind, Account
+
 from transactions import query_operations
+from transactions.models import Account, HasKind
+
 from .BaseStrategy import BaseStrategy
 from .outputs import EXPENSES, INCOMES, TOTAL
+
 
 class PlainFormatStrategy(BaseStrategy):
     """

@@ -1,15 +1,18 @@
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
 from dateutil.relativedelta import relativedelta
-from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test import TestCase
 from django.urls import reverse
-from unittest.mock import patch, MagicMock
-from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APITestCase
+
 from transactions.models import *
 from transactions.tests.base_test import BaseTestHelperFactory, UserDataTestSetupMixin
+
 
 class BalanceApiIntegrationTestCase(UserDataTestSetupMixin, APITestCase, BaseTestHelperFactory):
 

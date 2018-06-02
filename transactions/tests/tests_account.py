@@ -1,16 +1,19 @@
 from datetime import date
 from unittest import skip
-from django.test import TestCase
+
 from django.contrib.auth.models import User
+from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from transactions.views import AccountViewSet
+from rest_framework.test import APIClient, APITestCase
+
+from common.tests_helpers import UrlsTestHelper
 from transactions.models import Account
 from transactions.serializers import AccountSerializer
 from transactions.tests.base_test import BaseTestHelperFactory
-from common.tests_helpers import UrlsTestHelper
+from transactions.views import AccountViewSet
+
 
 class AccountUrlTestCase(TestCase, UrlsTestHelper):
 

@@ -1,5 +1,7 @@
-from .base import IntegrationSettings
 from django.db import models
+
+from .base import IntegrationSettings
+
 
 class CPFL_Settings(models.Model):
     settings = models.ForeignKey(IntegrationSettings)

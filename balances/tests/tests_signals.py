@@ -1,14 +1,17 @@
 from datetime import date
-from dateutil.relativedelta import relativedelta
-from django.test import TestCase
 from unittest import skip
 from unittest.mock import patch
-from transactions.tests.base_test import BaseTestHelper
-from transactions.models import Transaction, Account
+
+from dateutil.relativedelta import relativedelta
+from django.test import TestCase
+
+from balances.factories import create_period_balance_for
 from balances.models import PeriodBalance
 from balances.signals import requires_updates
-from balances.factories import create_period_balance_for
 from balances.tests.helpers import PeriodBalanceWithTransactionsFactory, balance_signals_disabled
+from transactions.models import Account, Transaction
+from transactions.tests.base_test import BaseTestHelper
+
 
 class SignalsTestCase(TestCase, BaseTestHelper):
     def setUp(self):

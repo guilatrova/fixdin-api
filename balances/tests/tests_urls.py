@@ -1,7 +1,10 @@
 from unittest import skip
+
 from django.test import TestCase
-from common.tests_helpers import UrlsTestHelper
+
 from balances import views
+from common.tests_helpers import UrlsTestHelper
+
 
 class BalancesUrlsTestCase(TestCase, UrlsTestHelper):
     def test_resolves_plain_balance(self):

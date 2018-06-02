@@ -1,11 +1,14 @@
-from django.shortcuts import render
 from datetime import date
-from dateutil.relativedelta import relativedelta
+
 from dateutil import parser
-from rest_framework.views import APIView
+from dateutil.relativedelta import relativedelta
+from django.shortcuts import render
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from paymentorders.services import NextExpensesService
 from transactions.serializers import TransactionSerializer
+
 
 class PaymentOrderAPIView(APIView):
     def get(self, request, format='json'):
@@ -37,4 +40,3 @@ class PaymentOrderAPIView(APIView):
         if 'until' in self.request.query_params:
             return parser.parse(self.request.query_params['until']).date()
         return date.today() + relativedelta(months=1)
-

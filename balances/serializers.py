@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+
 class PeriodSerializer(serializers.Serializer):
     period = serializers.SerializerMethodField()
     date = serializers.DateField(write_only=True)    

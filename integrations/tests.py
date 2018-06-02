@@ -1,18 +1,19 @@
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-from django.urls import reverse, resolve
-from django.test import TestCase
-from rest_framework.test import APITestCase, APIRequestFactory, force_authenticate
-from rest_framework import status
 
+from django.test import TestCase
+from django.urls import resolve, reverse
+from rest_framework import status
+from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
+
+from common.tests_helpers import UrlsTestHelper
+from integrations import views
+from integrations.models import CPFL_Settings, Integration, IntegrationSettings, SyncHistory
+from integrations.serializers import ServiceSettingsSerializer
+from integrations.services.CPFLSyncService import CPFL, CPFL_SyncService
 from transactions.models import Transaction
 from transactions.tests.base_test import BaseTestHelper
-from integrations.services.CPFLSyncService import CPFL_SyncService, CPFL
-from integrations.models import SyncHistory, IntegrationSettings, Integration, CPFL_Settings
-from integrations.serializers import ServiceSettingsSerializer
-from integrations import views
-from common.tests_helpers import UrlsTestHelper
 
 CONTAS_RECUPERADAS_MOCK = [
     {

@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 
+
 class PatchModelListMixin:
     """
     Patch a list of instances passed by "?ids=1,2,3" on query params.

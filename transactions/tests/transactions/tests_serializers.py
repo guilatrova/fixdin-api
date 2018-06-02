@@ -7,9 +7,7 @@ from common.tests_helpers import SerializerTestHelper
 from transactions.models import HasKind
 from transactions.serializers import TransactionSerializer
 from transactions.serializers.PeriodicSerializer import PeriodicSerializer
-from transactions.tests.base_test import (BaseTestHelperFactory,
-                                          OtherUserDataTestSetupMixin,
-                                          UserDataTestSetupMixin)
+from transactions.tests.base_test import BaseTestHelperFactory, OtherUserDataTestSetupMixin, UserDataTestSetupMixin
 
 
 class TransactionSerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, TestCase, SerializerTestHelper):
