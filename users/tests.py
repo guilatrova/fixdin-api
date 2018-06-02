@@ -1,16 +1,17 @@
+import datetime
 from unittest import mock, skip
-from django.test import TestCase
-from django.core.urlresolvers import reverse, get_resolver
-from django.contrib.auth.models import User
+
 from django.contrib.auth.hashers import check_password
-from rest_framework.test import APITestCase, APIClient
+from django.contrib.auth.models import User
+from django.core.urlresolvers import get_resolver, reverse
+from django.test import TestCase
+from fixdin.settings.base import EXPIRING_TOKEN_LIFESPAN
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APITestCase
 from rest_framework_expiring_authtoken.models import ExpiringToken
-from fixdin.settings.base import EXPIRING_TOKEN_LIFESPAN
 from transactions.models import Account
 
-import datetime
 
 class UsersTests(APITestCase):
 
@@ -60,7 +61,7 @@ class UsersTests(APITestCase):
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + expired_token.key)
 
-        response = self.client.get(reverse('expense-categories'))
+        response = self.client.get(reverse('categories'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_should_block_create_user_with_duplicated_email(self):
