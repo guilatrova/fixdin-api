@@ -1,0 +1,22 @@
+#!/bin/bash
+#Run it to enable: git config core.hooksPath .githooks
+changed=$(git diff --cached --name-only --diff-filter=AMR '*.py')
+
+if [[ -z $changed ]]; then
+  exit 0
+fi
+
+isort -c $changed
+retsort=$?
+flake8 $changed
+retflake=$?
+
+if [ $retsort -gt 0 ]; then
+    echo Linter failed
+    exit 1
+fi
+
+if [ $retflake -gt 0 ]; then
+  echo Linter failed
+  exit 1
+fi
