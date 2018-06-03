@@ -4,6 +4,7 @@ EXPENSE_KIND = 0
 INCOME_KIND = 1
 SIGNALS_WARNING_CONSENT = "IMPLEMENT THIS"
 
+
 class TransactionsQuerySet(QuerySet):
     def owned_by(self, user):
         value = user if isinstance(user, int) else user.id
@@ -27,9 +28,9 @@ class TransactionsQuerySet(QuerySet):
     def payed(self):
         return self.filter(payment_date__isnull=False)
 
-    # def delete(self, warning_consent):        
+    # def delete(self, warning_consent):
     #     pass TODO: IMPLEMENT THIS ALSO FOR UPDATE / CREATE
-    
+
     def in_date_range(self, start, end):
         return self.filter(
             Q(due_date__gte=start, due_date__lte=end) |

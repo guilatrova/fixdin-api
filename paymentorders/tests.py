@@ -1,5 +1,4 @@
 from datetime import date
-from unittest import skip
 from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
@@ -14,8 +13,9 @@ from transactions.tests.base_test import BaseTestHelperFactory
 
 class PaymentOrderUrlTestCase(TestCase, UrlsTestHelper):
     def test_resolves_get_url(self):
-        resolver = self.resolve_by_name('payment-orders')        
+        resolver = self.resolve_by_name('payment-orders')
         self.assertEqual(resolver.func.cls, PaymentOrderAPIView)
+
 
 class PaymentOrderApiTestCase(TestCase, BaseTestHelperFactory):
 
@@ -25,28 +25,29 @@ class PaymentOrderApiTestCase(TestCase, BaseTestHelperFactory):
 
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
-    
+
     @patch('paymentorders.views.PaymentOrderAPIView._get_transactions', return_value=[])
-    def test_api_get_replies_empty_array(self, mock):        
+    def test_api_get_replies_empty_array(self, mock):
         response = self.client.get(reverse('payment-orders'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
-    
-    @patch('paymentorders.views.PaymentOrderAPIView._get_transactions', return_value=[ { 'id': 1},  { 'id': 2}])
+
+    @patch('paymentorders.views.PaymentOrderAPIView._get_transactions', return_value=[{'id': 1}, {'id': 2}])
     def test_api_get_replies_array(self, mock):
         response = self.client.get(reverse('payment-orders'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [ {'id':1}, {'id':2} ])
-        
+        self.assertEqual(response.data, [{'id': 1}, {'id': 2}])
+
+
 class PaymentOrderViewsTestCase(TestCase, BaseTestHelperFactory):
 
     def setUp(self):
         self.user = MagicMock(id=5)
-    
-    @patch('paymentorders.views.NextExpensesService', return_value=MagicMock())    
-    def test_creates_service_correctly_with_params(self, service_mock):        
-        view, request = self.create_view_with_request({'from':'2018-01-01', 'until':'2018-02-01'})
-        
+
+    @patch('paymentorders.views.NextExpensesService', return_value=MagicMock())
+    def test_creates_service_correctly_with_params(self, service_mock):
+        view, request = self.create_view_with_request({'from': '2018-01-01', 'until': '2018-02-01'})
+
         view.get(request)
 
         service_mock.assert_called_with(self.user.id, date(2018, 1, 1), date(2018, 2, 1))
@@ -56,7 +57,7 @@ class PaymentOrderViewsTestCase(TestCase, BaseTestHelperFactory):
     def test_creates_service_correctly_without_params(self, service_mock, date_mock):
         date_mock.today.return_value = date(2017, 1, 5)
         view, request = self.create_view_with_request()
-        
+
         view.get(request)
 
         service_mock.assert_called_with(self.user.id, date(2017, 1, 5), date(2017, 2, 5))
@@ -64,6 +65,7 @@ class PaymentOrderViewsTestCase(TestCase, BaseTestHelperFactory):
     def create_view_with_request(self, query_params={}):
         mock_request = MagicMock(self.user, user=self.user, query_params=query_params)
         return PaymentOrderAPIView(request=mock_request), mock_request
+
 
 class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
 
@@ -79,13 +81,14 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
 
     def test_returns_transactions_from_user(self):
         self.create_transaction(-100, 'user', due_date=date(2018, 1, 1))
-        self.create_transaction(-200, 'otheruser', due_date=date(2018, 1, 1), account=self.other_account, category=self.other_category)
+        self.create_transaction(-200, 'otheruser', due_date=date(2018, 1, 1),
+                                account=self.other_account, category=self.other_category)
 
         service = NextExpensesService(self.user.id, date(2018, 1, 1), date(2018, 3, 1))
         data = service._generate_queryset()
 
         self.assertEqual(len(data), 1)
-        
+
     def test_returns_transactions_until_date(self):
         self.create_transaction(-100, '1', due_date=date(2018, 1, 1))
         self.create_transaction(-100, '2', due_date=date(2018, 4, 1))
@@ -126,9 +129,9 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
         data = service.generate_data()
 
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['2018-01-01'], [ t1 ])
-        self.assertEqual(data[0]['2018-02-01'], [ t2 ])
-        self.assertEqual(data[0]['2018-03-01'], [ t3 ])
+        self.assertEqual(data[0]['2018-01-01'], [t1])
+        self.assertEqual(data[0]['2018-02-01'], [t2])
+        self.assertEqual(data[0]['2018-03-01'], [t3])
 
     def test_returns_transactions_groupped_by_description_as_list(self):
         t1 = self.create_transaction(-100, 'shoes', due_date=date(2018, 1, 5))
@@ -140,16 +143,16 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
         data = service.generate_data()
 
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['2018-01-01'], [ t1, t2 ])
-        self.assertEqual(data[0]['2018-02-01'], [ t3 ])
-        self.assertEqual(data[0]['2018-03-01'], [ t4 ])
+        self.assertEqual(data[0]['2018-01-01'], [t1, t2])
+        self.assertEqual(data[0]['2018-02-01'], [t3])
+        self.assertEqual(data[0]['2018-03-01'], [t4])
 
     def test_returns_several_transactions_groupped_by_description_as_list(self):
-        #shoes
+        # shoes
         shoes1 = self.create_transaction(-100, 'shoes', due_date=date(2018, 1, 5))
         shoes2 = self.create_transaction(-100, 'shoes', due_date=date(2018, 1, 20))
         shoes3 = self.create_transaction(-100, 'shoes', due_date=date(2018, 2, 10))
-        #hat
+        # hat
         hat1 = self.create_transaction(-100, 'hat', due_date=date(2018, 1, 10))
         hat2 = self.create_transaction(-100, 'hat', due_date=date(2018, 4, 5))
 
@@ -157,11 +160,11 @@ class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
         data = service.generate_data()
 
         self.assertEqual(len(data), 2)
-        self.assertEqual(data[1]['2018-01-01'], [ shoes1, shoes2 ])
-        self.assertEqual(data[1]['2018-02-01'], [ shoes3 ])
-        self.assertEqual(data[1]['2018-03-01'], [ ])
-        self.assertEqual(data[1]['2018-04-01'], [ ])
-        self.assertEqual(data[0]['2018-01-01'], [ hat1 ])
-        self.assertEqual(data[0]['2018-02-01'], [  ])
-        self.assertEqual(data[0]['2018-03-01'], [  ])
-        self.assertEqual(data[0]['2018-04-01'], [ hat2 ])
+        self.assertEqual(data[1]['2018-01-01'], [shoes1, shoes2])
+        self.assertEqual(data[1]['2018-02-01'], [shoes3])
+        self.assertEqual(data[1]['2018-03-01'], [])
+        self.assertEqual(data[1]['2018-04-01'], [])
+        self.assertEqual(data[0]['2018-01-01'], [hat1])
+        self.assertEqual(data[0]['2018-02-01'], [])
+        self.assertEqual(data[0]['2018-03-01'], [])
+        self.assertEqual(data[0]['2018-04-01'], [hat2])

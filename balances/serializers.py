@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 class PeriodSerializer(serializers.Serializer):
     period = serializers.SerializerMethodField()
-    date = serializers.DateField(write_only=True)    
+    date = serializers.DateField(write_only=True)
     effective_expenses = serializers.DecimalField(max_digits=20, decimal_places=2)
     effective_incomes = serializers.DecimalField(max_digits=20, decimal_places=2)
     real_expenses = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -11,5 +11,5 @@ class PeriodSerializer(serializers.Serializer):
     effective_total = serializers.DecimalField(max_digits=20, decimal_places=2)
     real_total = serializers.DecimalField(max_digits=20, decimal_places=2)
 
-    def get_period(self, obj):        
+    def get_period(self, obj):
         return '{}-{:02d}'.format(obj['date'].year, obj['date'].month)

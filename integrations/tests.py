@@ -3,9 +3,9 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
-from django.urls import resolve, reverse
+from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
+from rest_framework.test import APITestCase
 
 from common.tests_helpers import UrlsTestHelper
 from integrations import views
@@ -34,10 +34,18 @@ CONTAS_RECUPERADAS_MOCK = [
     }
 ]
 
+
 class CPFL_SyncServiceTestCase(TestCase):
     def setUp(self):
         self.user_mock = MagicMock()
-        self.mocked_settings = [MagicMock(documento=x, imovel='imovel' + str(x), settings='settings') for x in range(1, 3)]
+        self.mocked_settings = [
+            MagicMock(
+                documento=x,
+                imovel='imovel' +
+                str(x),
+                settings='settings') for x in range(
+                1,
+                3)]
         self.cpfl_sync_service = CPFL_SyncService(self.user_mock, self.mocked_settings)
 
         self.create_transaction_mock_patcher = patch('transactions.models.Transaction.objects.create')
@@ -53,7 +61,7 @@ class CPFL_SyncServiceTestCase(TestCase):
     def test_invalid_trigger_throws_exceptions(self):
         self.assertRaises(AssertionError, self.cpfl_sync_service.run, 'Invalid')
 
-    @patch.object(CPFL, '_gerar_token', return_value=('token', { 'info': 'info' }))
+    @patch.object(CPFL, '_gerar_token', return_value=('token', {'info': 'info'}))
     def test_validate_settings_successful(self, gerar_token_mock):
         result, message = self.cpfl_sync_service.validate_settings()
 
@@ -67,7 +75,7 @@ class CPFL_SyncServiceTestCase(TestCase):
         self.assertFalse(result)
         self.assertIn('imovel1', message)
         self.assertIn('imovel2', message)
-    
+
     @patch.object(CPFL_SyncService, '_save_transactions', return_value=2)
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
     @patch.object(CPFL, 'recuperar_contas_abertas', return_value=CONTAS_RECUPERADAS_MOCK)
@@ -75,14 +83,14 @@ class CPFL_SyncServiceTestCase(TestCase):
         succeed, created, failed, errors, result = self.cpfl_sync_service._inner_run()
 
         self.assertEqual(recuperar_contas_mock.call_count, 2)
-        self.assertEqual(save_transactions_mock.call_count, 2)        
+        self.assertEqual(save_transactions_mock.call_count, 2)
         self.assertEqual(succeed, 2)
         self.assertEqual(created, 4)
         self.assertFalse(errors)
         self.assertFalse(result)
 
     @patch.object(CPFL, 'recuperar_contas_abertas', side_effect=Exception('Something went wrong'))
-    def test_asserts_inner_run_failed(self,recuperar_contas_mock):
+    def test_asserts_inner_run_failed(self, recuperar_contas_mock):
         error_message = 'Something went wrong'
 
         succeed, created, failed, errors, result = self.cpfl_sync_service._inner_run()
@@ -96,7 +104,8 @@ class CPFL_SyncServiceTestCase(TestCase):
 
     @patch.object(CPFL_SyncService, '_save_transactions', return_value=2)
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
-    @patch.object(CPFL, 'recuperar_contas_abertas', side_effect=[CONTAS_RECUPERADAS_MOCK, Exception('Something went wrong')])
+    @patch.object(CPFL, 'recuperar_contas_abertas', side_effect=[
+                  CONTAS_RECUPERADAS_MOCK, Exception('Something went wrong')])
     def test_asserts_inner_run_partial(self, recuperar_contas_mock, should_create_mock, save_transactions_mock):
         error_message = 'Something went wrong'
 
@@ -122,7 +131,7 @@ class CPFL_SyncServiceTestCase(TestCase):
             trigger=SyncHistory.MANUAL,
         )
 
-    @patch.object(CPFL_SyncService, '_inner_run', return_value=(0, 0, 2, 
+    @patch.object(CPFL_SyncService, '_inner_run', return_value=(0, 0, 2,
         "Long stack trace that explains that Something went wrong", "Something went wrong"))
     def test_run_creates_failed_history(self, inner_run_mock):
         self.cpfl_sync_service.run(SyncHistory.MANUAL)
@@ -135,8 +144,8 @@ class CPFL_SyncServiceTestCase(TestCase):
             trigger=SyncHistory.MANUAL,
         )
 
-    @patch.object(CPFL_SyncService, '_inner_run', return_value=(1, 3, 2, 
-        "Long stack trace that explains that Something went wrong", "Something went wrong"))
+    @patch.object(CPFL_SyncService, '_inner_run', return_value=(1, 3, 2,
+                                "Long stack trace that explains that Something went wrong", "Something went wrong"))
     def test_run_creates_partial_succeed_history(self, inner_run_mock):
         self.cpfl_sync_service.run(SyncHistory.AUTO)
 
@@ -150,7 +159,7 @@ class CPFL_SyncServiceTestCase(TestCase):
 
     def test_should_create_transaction(self):
         def filter_side_effect(**kwargs):
-            mock = MagicMock()            
+            mock = MagicMock()
             mock.exists.return_value = (kwargs['generic_tag'] == '1')
 
             return mock
@@ -162,7 +171,7 @@ class CPFL_SyncServiceTestCase(TestCase):
             self.assertTrue(self.cpfl_sync_service._should_create_transaction(CONTAS_RECUPERADAS_MOCK[1]))
             self.assertEqual(mock.call_count, 2)
             mock.assert_called_with(account__user=self.user_mock, generic_tag='2')
-    
+
     @patch('transactions.models.Account.objects.filter')
     @patch('transactions.models.Category.objects.filter')
     @patch.object(CPFL_SyncService, '_should_create_transaction', return_value=True)
@@ -187,7 +196,8 @@ class CPFL_SyncServiceTestCase(TestCase):
             kind=Transaction.EXPENSE_KIND,
             generic_tag="TAG"
         )
-        
+
+
 class CPFL_SyncServiceIntegrationTestCase(TestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -195,22 +205,27 @@ class CPFL_SyncServiceIntegrationTestCase(TestCase, BaseTestHelper):
         self.settings = [self.create_integration()]
 
     def create_integration(self):
-        integration = Integration.objects.get(name_id="cpfl") #Already created in migrations
+        integration = Integration.objects.get(name_id="cpfl")  # Already created in migrations
         base_settings = IntegrationSettings.objects.create(integration=integration, user=self.user)
-        cpfl_settings = CPFL_Settings.objects.create(settings=base_settings, name="Home", documento="05717538847", imovel="4001647780")
+        cpfl_settings = CPFL_Settings.objects.create(
+            settings=base_settings,
+            name="Home",
+            documento="05717538847",
+            imovel="4001647780")
 
         return cpfl_settings
 
     @patch.object(CPFL, 'recuperar_contas_abertas', return_value=CONTAS_RECUPERADAS_MOCK)
     def test_create_transactions_from_cpfl(self, recuperar_contas_mock):
         service = CPFL_SyncService(self.user, self.settings)
-        
-        history_result, created = service.run(SyncHistory.AUTO)        
+
+        history_result, created = service.run(SyncHistory.AUTO)
 
         self.assertEqual(SyncHistory.objects.all().count(), 1)
         self.assertEqual(Transaction.objects.all().count(), 2)
         self.assertEqual(history_result.status, SyncHistory.SUCCESS)
         self.assertEqual(created, 2)
+
 
 class IntegrationsUrlsTestCase(TestCase, UrlsTestHelper):
 
@@ -229,6 +244,7 @@ class IntegrationsUrlsTestCase(TestCase, UrlsTestHelper):
 
         self.assertEqual(resolver.func.cls, views.ListIntegrationServiceHistoryAPIView)
 
+
 class IntegrationsViewsTestCase(TestCase):
 
     def test_list_integrations_allows_only_get(self):
@@ -237,8 +253,8 @@ class IntegrationsViewsTestCase(TestCase):
         self.assertEqual(['GET', 'OPTIONS'], view.allowed_methods)
 
     def test_list_integration_history_filters_by_user_and_service(self):
-        request_mock = MagicMock()        
-        view = views.ListIntegrationServiceHistoryAPIView(request=request_mock, kwargs={'name_id':"cpfl"})
+        request_mock = MagicMock()
+        view = views.ListIntegrationServiceHistoryAPIView(request=request_mock, kwargs={'name_id': "cpfl"})
 
         with patch('integrations.models.SyncHistory.objects.filter') as mock:
             view.get_queryset()
@@ -253,11 +269,14 @@ class IntegrationsViewsTestCase(TestCase):
 
         self.assertEqual(['GET', 'OPTIONS'], view.allowed_methods)
 
+
 class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
         self.client = self.create_authenticated_client(token)
-        self.settings = IntegrationSettings.objects.create(integration=Integration.objects.get(name_id='cpfl'), user=self.user)
+        self.settings = IntegrationSettings.objects.create(
+            integration=Integration.objects.get(
+                name_id='cpfl'), user=self.user)
 
     def test_retrieves_services_list(self):
         response = self.client.get(reverse('integrations'))
@@ -266,7 +285,12 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
         self.assertEqual('CPFL', response.data[0]['name'])
 
     def test_retrieves_service_history(self):
-        SyncHistory.objects.create(settings=self.settings, status=SyncHistory.SUCCESS, result='good', details="", trigger=SyncHistory.MANUAL)
+        SyncHistory.objects.create(
+            settings=self.settings,
+            status=SyncHistory.SUCCESS,
+            result='good',
+            details="",
+            trigger=SyncHistory.MANUAL)
 
         response = self.client.get(self.get_url('integrations-service-histories', name_id='cpfl'))
 
@@ -287,8 +311,11 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
         payload = {
             'enabled': True,
             'cpfl_settings': [
-                { 'id': cpfl_setting.id, 'name': cpfl_setting.name, 'documento': cpfl_setting.documento, 'imovel': cpfl_setting.imovel },
-                { 'name': 'new', 'documento': '2', 'imovel': 'im-novo' }
+                {'id': cpfl_setting.id,
+                 'name': cpfl_setting.name,
+                 'documento': cpfl_setting.documento,
+                 'imovel': cpfl_setting.imovel},
+                {'name': 'new', 'documento': '2', 'imovel': 'im-novo'}
             ]
         }
 
@@ -299,7 +326,12 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
         self.assertEqual(CPFL_Settings.objects.count(), 2)
 
     def test_post_integration_settings_runs_it(self):
-        history = SyncHistory.objects.create(settings=self.settings, status=SyncHistory.SUCCESS, result='good', details="", trigger=SyncHistory.MANUAL)
+        history = SyncHistory.objects.create(
+            settings=self.settings,
+            status=SyncHistory.SUCCESS,
+            result='good',
+            details="",
+            trigger=SyncHistory.MANUAL)
 
         with patch('integrations.services.CPFLSyncService.CPFL_SyncService.run', return_value=(history, 2)) as mock:
             response = self.client.post(self.get_url('integrations-service', name_id='cpfl'), format='json')
@@ -309,7 +341,12 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
             mock.assert_called_once_with(SyncHistory.MANUAL)
 
     def test_post_integration_settings_failed(self):
-        history = SyncHistory.objects.create(settings=self.settings, status=SyncHistory.FAIL, result='bad', details="", trigger=SyncHistory.MANUAL)
+        history = SyncHistory.objects.create(
+            settings=self.settings,
+            status=SyncHistory.FAIL,
+            result='bad',
+            details="",
+            trigger=SyncHistory.MANUAL)
 
         with patch('integrations.services.CPFLSyncService.CPFL_SyncService.run', return_value=(history, 2)) as mock:
             response = self.client.post(self.get_url('integrations-service', name_id='cpfl'), format='json')
@@ -319,7 +356,12 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
             mock.assert_called_once_with(SyncHistory.MANUAL)
 
     def test_post_integration_settings_no_creations(self):
-        history = SyncHistory.objects.create(settings=self.settings, status=SyncHistory.SUCCESS, result='good', details="", trigger=SyncHistory.MANUAL)
+        history = SyncHistory.objects.create(
+            settings=self.settings,
+            status=SyncHistory.SUCCESS,
+            result='good',
+            details="",
+            trigger=SyncHistory.MANUAL)
 
         with patch('integrations.services.CPFLSyncService.CPFL_SyncService.run', return_value=(history, 0)) as mock:
             response = self.client.post(self.get_url('integrations-service', name_id='cpfl'), format='json')
@@ -327,9 +369,10 @@ class IntegrationsAPITestCase(APITestCase, BaseTestHelper):
             self.assertEqual(status.HTTP_200_OK, response.status_code)
             self.assertEqual(history.id, response.data['id'])
             mock.assert_called_once_with(SyncHistory.MANUAL)
-        
+
     def get_url(self, name, **kwargs):
         return reverse(name, kwargs=kwargs)
+
 
 class IntegrationsSerializersTestCase(TestCase):
     def test_valid_cpfl_serializer_without_base_settings(self):
@@ -338,8 +381,8 @@ class IntegrationsSerializersTestCase(TestCase):
             'status': None,
             'enabled': False,
             'cpfl_settings': [
-                { 'name': 'place1', 'documento': '1', 'imovel': 'im1' },
-                { 'name': 'place2', 'documento': '2', 'imovel': 'im2' },
+                {'name': 'place1', 'documento': '1', 'imovel': 'im1'},
+                {'name': 'place2', 'documento': '2', 'imovel': 'im2'},
             ]
         }
 
@@ -352,8 +395,8 @@ class IntegrationsSerializersTestCase(TestCase):
             'status': IntegrationSettings.SUCCESS,
             'enabled': True,
             'cpfl_settings': [
-                { 'name': 'place1', 'documento': '1', 'imovel': 'im1' },
-                { 'name': 'place2', 'documento': '2', 'imovel': 'im2' },
+                {'name': 'place1', 'documento': '1', 'imovel': 'im1'},
+                {'name': 'place2', 'documento': '2', 'imovel': 'im2'},
             ]
         }
 

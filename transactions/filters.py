@@ -6,7 +6,7 @@ from transactions.models import HasKind
 class TransactionFilter:
     def get_query_params_filter(self):
         dic = {}
-        
+
         description = self.request.query_params.get('description', False)
         if description:
             dic['description__icontains'] = description
@@ -52,7 +52,7 @@ class TransactionFilter:
             range_until = datetime.strptime(due_date_until, '%Y-%m-%d')
 
             dic['due_date__range'] = [range_from, range_until]
-        elif self.request.method == 'GET' and not has_filter_by_payment_date:            
+        elif self.request.method == 'GET' and not has_filter_by_payment_date:
             today = datetime.today()
             dic['due_date__month'] = today.month
             dic['due_date__year'] = today.year

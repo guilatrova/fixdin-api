@@ -1,2 +1,2 @@
-#import signals
+"""imports signals """
 default_app_config = 'users.apps.UsersConfig'

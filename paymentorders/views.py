@@ -2,7 +2,6 @@ from datetime import date
 
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -27,7 +26,7 @@ class PaymentOrderAPIView(APIView):
     def _serialize_data(self, data):
         for group in data:
             for date_group in group:
-                group[date_group] = [ TransactionSerializer(x).data for x in group[date_group] ]
+                group[date_group] = [TransactionSerializer(x).data for x in group[date_group]]
 
         return data
 

@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
@@ -13,6 +12,7 @@ class ListIntegrationsAPIView(ListAPIView):
     queryset = Integration.objects.all()
     serializer_class = IntegrationSerializer
 
+
 class ListIntegrationServiceHistoryAPIView(ListAPIView):
     serializer_class = SyncHistorySerializer
 
@@ -22,7 +22,8 @@ class ListIntegrationServiceHistoryAPIView(ListAPIView):
             settings__integration__name_id=self.kwargs['name_id']
         )
 
-class IntegrationSettingsAPIView(APIView):    
+
+class IntegrationSettingsAPIView(APIView):
 
     def get(self, request, name_id, format='json'):
         factory = IntegrationSettingsHandler(name_id, request.user)
@@ -38,7 +39,7 @@ class IntegrationSettingsAPIView(APIView):
         serializer = serializer_cls(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(integration_instance)
-        
+
         return Response(serializer.data)
 
     def post(self, request, name_id, format='json'):
@@ -54,8 +55,9 @@ class IntegrationSettingsAPIView(APIView):
             status_response = status.HTTP_201_CREATED
         else:
             status_response = status.HTTP_200_OK
-            
+
         return Response(serializer.data, status=status_response)
+
 
 class IntegrationSettingsHandler:
     def __init__(self, name_id, user):
@@ -75,11 +77,11 @@ class IntegrationSettingsHandler:
         base, created = self.get_or_create_base_settings()
         cpfl = CPFL_Settings.objects.filter(settings=base)
 
-        return base, cpfl 
+        return base, cpfl
 
     def retrieve_data(self):
         raw_base, raw_cpfl = self._get_data()
-        
+
         cpfl = []
         for raw in raw_cpfl:
             cpfl.append({

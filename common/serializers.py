@@ -20,8 +20,8 @@ class SerializerMayReturnListMixin:
             elif hasattr(self, '_validated_data') and not getattr(self, '_errors', None):
                 self._data = self.to_representation(self.validated_data)
             else:
-                self._data = self.get_initial()        
-        
+                self._data = self.get_initial()
+
         if hasattr(self, '_validated_data') and self.is_return_data_list(self._validated_data):
             return ReturnList(self._data, serializer=self)
         return ReturnDict(self._data, serializer=self)

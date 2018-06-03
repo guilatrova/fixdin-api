@@ -1,10 +1,7 @@
 import datetime
-from unittest import mock, skip
 
-from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import User
-from django.core.urlresolvers import get_resolver, reverse
-from django.test import TestCase
+from django.core.urlresolvers import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
@@ -31,7 +28,7 @@ class UsersTests(APITestCase):
         self.assertEqual(User.objects.count(), 1)
 
     def test_successful_login_returns_token(self):
-        user = self.create_user(email='gui@latrova.com', password='abc123456')
+        self.create_user(email='gui@latrova.com', password='abc123456')
 
         login_dto = {
             'email': 'gui@latrova.com',
@@ -44,21 +41,21 @@ class UsersTests(APITestCase):
         self.assertTrue('token' in response.data)
 
     def test_token_expires_after_90(self):
-        user = self.create_user(email='guilhermelatrova@hotmail.com', password='abc123456')        
-        
+        user = self.create_user(email='guilhermelatrova@hotmail.com', password='abc123456')
+
         expired_token = ExpiringToken.objects.get(user=user)
         expired_token.created -= datetime.timedelta(days=91)
         expired_token.save()
-        
+
         self.assertTrue(expired_token.expired())
-    
+
     def test_should_deny_expired_tokens(self):
-        user = self.create_user(email='guilhermelatrova@hotmail.com', password='abc123456')        
-        
+        user = self.create_user(email='guilhermelatrova@hotmail.com', password='abc123456')
+
         expired_token = Token.objects.get(user=user)
         expired_token.created -= EXPIRING_TOKEN_LIFESPAN
         expired_token.save()
-        
+
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + expired_token.key)
 
@@ -66,8 +63,8 @@ class UsersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_should_block_create_user_with_duplicated_email(self):
-        user_email = self.create_user(email='rodriguzeh@gmail.com', password='123qwe')
-        
+        self.create_user(email='rodriguzeh@gmail.com', password='123qwe')
+
         user_same_email_dto = {
             'username': 'rodrigo',
             'password': '123qwe',

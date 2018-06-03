@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.shortcuts import render
 from rest_framework import status, views, viewsets
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny
@@ -22,6 +21,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return super(UserViewSet, self).get_permissions()
 
+
 class AuthAPIView(views.APIView):
     permission_classes = []
 
@@ -33,7 +33,7 @@ class AuthAPIView(views.APIView):
 
         try:
             user = User.objects.get(email=email)
-            
+
             if user.check_password(pwd):
                 token = self.get_token(user)
                 return Response({'token': token.key}, status.HTTP_200_OK)

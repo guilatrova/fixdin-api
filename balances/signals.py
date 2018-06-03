@@ -1,13 +1,10 @@
-import calendar
 import datetime
 
 from django.db import transaction as db_transaction
-from django.db.models import Sum
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from balances.factories import create_period_strategy
-from balances.services.periods import get_current_period, get_period_from
 from balances.strategies.periods import CREATED, DELETED, UPDATED
 from transactions.models import Transaction
 
@@ -24,14 +21,17 @@ def created_or_updated_transaction_updates_balance(sender, instance=None, create
 
     trigger_updates(instance, action)
 
+
 @receiver(post_delete, sender=Transaction)
 def deleted_transaction_updates_balance(sender, instance=None, **kwargs):
     trigger_updates(instance, DELETED)
+
 
 @db_transaction.atomic
 def trigger_updates(instance, action):
     strategy = create_period_strategy(action, instance)
     strategy.run()
+
 
 def requires_updates(transaction):
     attrs = ['value', 'due_date', 'payment_date']
@@ -41,6 +41,7 @@ def requires_updates(transaction):
 
     return False
 
+
 def _strip_time_from_dates(transaction):
     """
     Strip time of transaction dates.
@@ -49,7 +50,7 @@ def _strip_time_from_dates(transaction):
     def strip(attr):
         val = getattr(transaction, attr)
         if isinstance(val, datetime.datetime):
-            setattr(transaction, attr, val.date())    
+            setattr(transaction, attr, val.date())
 
     for attr in ['due_date', 'payment_date', 'initial_due_date', 'initial_payment_date']:
         strip(attr)

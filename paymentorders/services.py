@@ -36,11 +36,12 @@ class NextExpensesService:
 
         for key, group in groupby(data, lambda x: x.description + str(x.account_id)):
             groupped.append(list(group))
-        
+
         for group in groupped:
             group_date = {}
-            for date in dates:
-                group_date[date.strftime('%Y-%m-%d')] = [ transaction for transaction in group if transaction.date == date ]
+            for cur_date in dates:
+                group_date[cur_date.strftime('%Y-%m-%d')
+                           ] = [transaction for transaction in group if transaction.date == cur_date]
             result.append(group_date)
 
         return result
