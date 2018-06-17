@@ -6,7 +6,7 @@ from rest_framework.test import APIClient, APITestCase
 from common.tests_helpers import SerializerTestHelper
 from transactions.models import Category
 from transactions.serializers import CategorySerializer
-from transactions.tests.base_test import BaseTestHelper, UserDataTestSetupMixin
+from transactions.tests.base_test import BaseTestHelper, OtherUserDataTestSetupMixin, UserDataTestSetupMixin
 
 
 class CategoryApiTestCase(APITestCase, BaseTestHelper):
@@ -30,30 +30,6 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Category.objects.count(), 1)
-
-    def test_cant_create_category_repeated_name(self):
-        self.create_category('eating')
-
-        category_dto = {
-            'name': 'eating',
-            'kind': Category.EXPENSE_KIND
-        }
-
-        response = self.client.post(reverse('categories'), category_dto, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Category.objects.count(), 1)
-
-    def test_can_create_category_repeated_name_with_different_kind(self):
-        self.create_category('Other', kind=Category.EXPENSE_KIND)
-        category_dto = {
-            'name': 'Other',
-            'kind': Category.INCOME_KIND
-        }
-
-        response = self.client.post(reverse('categories'), category_dto, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Category.objects.count(), 2)
 
     def test_cant_create_category_repeated_name_regardless_character_casing(self):
         self.create_category('eating')
@@ -81,21 +57,6 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Category.objects.count(), 2)
-
-    def test_different_users_can_create_categories_with_same_name(self):
-        other_user, other_token = self.create_user('other_user', email='other_user@hotmail.com', password='pass')
-
-        other_client = APIClient()
-        other_client.credentials(HTTP_AUTHORIZATION='Token ' + other_token.key)
-
-        category_dto = {'name': 'eating', 'kind': Category.EXPENSE_KIND}
-        category_dto = {'name': 'eating', 'kind': Category.EXPENSE_KIND}
-
-        response = self.client.post(reverse('categories'), category_dto, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        response = other_client.post(reverse('categories'), category_dto, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_list_only_user_categories(self):
         self.create_category('eating')
@@ -147,12 +108,20 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class CategorySerializerTestCase(UserDataTestSetupMixin, TestCase, SerializerTestHelper):
+class CategorySerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, TestCase, SerializerTestHelper):
 
     def setUp(self):
+        self.serializer_data = {
+            'name': 'Category',
+            'kind': Category.EXPENSE_KIND
+        }
         self.context = {
             'user_id': self.user.id
         }
+
+    def test_serializer_validates(self):
+        serializer = CategorySerializer(data=self.serializer_data, context=self.context)
+        self.assertTrue(serializer.is_valid())
 
     def test_serializer_should_not_allow_update_kind(self):
         data = {
@@ -161,3 +130,22 @@ class CategorySerializerTestCase(UserDataTestSetupMixin, TestCase, SerializerTes
         }
         serializer = CategorySerializer(instance=self.income_category, data=data, context=self.context)
         self.assert_has_field_error(serializer, 'kind')
+
+    def test_serializer_should_not_allow_create_same_name(self):
+        data = {
+            'name': self.category.name,
+            'kind': self.category.kind
+        }
+        serializer = CategorySerializer(data=data, context=self.context)
+        self.assert_has_field_error(serializer)
+
+    def test_serializer_allows_same_name_for_different_users(self):
+        data = {
+            'name': self.category.name,
+            'kind': self.category.kind
+        }
+        context = {
+            'user_id': self.other_user.id
+        }
+        serializer = CategorySerializer(data=data, context=context)
+        self.assertTrue(serializer.is_valid())
