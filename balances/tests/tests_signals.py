@@ -42,7 +42,7 @@
 #         transaction = self.create_transaction(100)
 #         transaction.description = 'changed'
 
-#         self.assertFalse(requires_updates(transaction))    
+#         self.assertFalse(requires_updates(transaction))
 
 # class SignalsIntegrationTestCase(TestCase, BaseTestHelper):
 #     '''
@@ -57,10 +57,10 @@
 #     VALUE_INCREMENT_MULTIPLIER_PER_PERIOD = 10
 #     PERIOD_BALANCES = [ 50, 500, 5000, 50000 ]
 #     SUM_PERIODS = 55550
-    
-#     def setUp(self):        
+
+#     def setUp(self):
 #         self.user = self.create_user('testuser', email='testuser@test.com', password='testing')[0]
-#         self.category = self.create_category('default category')        
+#         self.category = self.create_category('default category')
 #         self.account = self.create_account()
 #         PeriodBalanceWithTransactionsFactory(self.category, self.account).create()
 
@@ -112,13 +112,13 @@
 #         transaction.save()
 
 #         self.assertFalse(mock.called)
-    
+
 #     def test_creates_period_when_non_existing(self):
 #         expected_start = date(2014, 8, 1)
 #         expected_end = date(2014, 8, 31)
 #         transaction = self.create_transaction(
 #             value=100,
-#             due_date=date(2014, 8, 22), 
+#             due_date=date(2014, 8, 22),
 #             payment_date=date(2014, 8, 22)
 #         )
 
@@ -147,7 +147,7 @@
 
 #     #TODO: TEST UPDATING BOTH DATES TO A UNEXISTENT PAST PERIOD
 #     #TODO: TEST UPDATING BOTH DATES TO A UNEXISTENT PAST DIFFERENT PERIODS
-#     #TODO: TEST UPDATING ONE DATE TO UNEXISTENT PAST PERIOD WHILE PRESERVING ANOTHER PERIOD    
+#     #TODO: TEST UPDATING ONE DATE TO UNEXISTENT PAST PERIOD WHILE PRESERVING ANOTHER PERIOD
 #     #TODO: CREATE TRANSACTION TO FUTURE DATE
 #     #TODO: SETUP PAYMENT TO FUTURE DATE
 #     #TODO: PAYED PAST DATE
