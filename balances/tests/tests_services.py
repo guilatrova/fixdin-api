@@ -1,16 +1,10 @@
 from datetime import date
-from unittest import skip
-from unittest.mock import patch
 
-from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 
-from balances.factories import create_period_balance_for
+
 from balances.models import PeriodBalance
 from balances.services import calculator
-from balances.signals import requires_updates
-from balances.tests.helpers import PeriodBalanceWithTransactionsFactory, balance_signals_disabled
-from transactions.models import Account, Transaction
 from transactions.tests.base_test import BaseTestHelper
 
 
@@ -40,12 +34,12 @@ class CalculatorTestCase(TestCase, BaseTestHelper):
 
         self.assertEqual(result['effective'], 450)
         self.assertEqual(result['real'], 440)
-        
+
     def create_period_balance(self, start, end, effective, real):
         PeriodBalance.objects.create(
             account=self.account,
             start_date=start,
             end_date=end,
             closed_effective_value=effective,
-            closed_real_value=real            
+            closed_real_value=real
         )

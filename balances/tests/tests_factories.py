@@ -1,15 +1,11 @@
 from datetime import date
-from unittest import skip
-from unittest.mock import patch
 
-from dateutil.relativedelta import relativedelta
 from django.test import TestCase
+
 
 from balances.factories import PeriodQueryBuilder, create_period_balance_for
 from balances.models import PeriodBalance
-from balances.signals import requires_updates
-from balances.tests.helpers import PeriodBalanceWithTransactionsFactory, balance_signals_disabled
-from transactions.models import Account, Category, Transaction
+from transactions.models import Category
 from transactions.tests.base_test import BaseTestHelper
 
 
@@ -73,14 +69,13 @@ class PeriodsFactoryTestCase(TestCase, BaseTestHelper):
             closed_effective_value=0,
             closed_real_value=100
         )
-        
+
     def create_transaction(self, value, due_date, payment_date=None):
-        with balance_signals_disabled():
-            return super().create_transaction(
-                value=value,
-                due_date=due_date,
-                payment_date=payment_date,
-            )
+        return super().create_transaction(
+            value=value,
+            due_date=due_date,
+            payment_date=payment_date,
+        )
 
     def assert_period(self, period, start, end, **kwargs):
         self.assertEqual(period.start_date, start)
@@ -89,7 +84,8 @@ class PeriodsFactoryTestCase(TestCase, BaseTestHelper):
         for key, val in kwargs.items():
             self.assertEqual(getattr(period, key), val)
 
-class PeriodQueryBuilderTestCase(TestCase, BaseTestHelper):    
+
+class PeriodQueryBuilderTestCase(TestCase, BaseTestHelper):
 
     def test_filters_by_user(self):
         user_id = self.create_user_with_transaction('user', 100)
@@ -97,7 +93,7 @@ class PeriodQueryBuilderTestCase(TestCase, BaseTestHelper):
 
         factory = PeriodQueryBuilder(user_id, date.today(), date.today())
         query = factory._get_query()
-        data = list(query)        
+        data = list(query)
 
         self.assertEqual(data[0]["effective_total"], 100)
 
@@ -107,7 +103,7 @@ class PeriodQueryBuilderTestCase(TestCase, BaseTestHelper):
         self.assertEqual(limits, (date(2018, 1, 1), date(2018, 2, 28)))
 
     def create_user_with_transaction(self, name, value):
-        user, token = self.create_user(name, email=name+'@test.com', password='pass')
+        user, token = self.create_user(name, email=name + '@test.com', password='pass')
         account = self.create_account(user)
         category = self.create_category('category', user=user, kind=Category.INCOME_KIND)
         self.create_transaction(value, account=account, category=category)

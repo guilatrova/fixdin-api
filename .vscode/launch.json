@@ -48,7 +48,6 @@
             "cwd": "${workspaceRoot}",
             "args": [
                 "test"
-                ,"balances"
             ],
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
