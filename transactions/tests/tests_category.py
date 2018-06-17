@@ -1,14 +1,12 @@
-from unittest import skip
-
-from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
+from common.tests_helpers import SerializerTestHelper
 from transactions.models import Category
-from transactions.tests.base_test import BaseTestHelper
+from transactions.serializers import CategorySerializer
+from transactions.tests.base_test import BaseTestHelper, UserDataTestSetupMixin
 
 
 class CategoryApiTestCase(APITestCase, BaseTestHelper):
@@ -75,10 +73,10 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
 
         category_dto = {
             'id': category.id,
-            'name': 'eating' #changed name
+            'name': 'eating'  # changed name
         }
 
-        url = reverse('category', kwargs={'pk':category_dto['id']})
+        url = reverse('category', kwargs={'pk': category_dto['id']})
         response = self.client.put(url, category_dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -90,8 +88,8 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
         other_client = APIClient()
         other_client.credentials(HTTP_AUTHORIZATION='Token ' + other_token.key)
 
-        category_dto = {'name': 'eating', 'kind': Category.EXPENSE_KIND }
-        category_dto = { 'name': 'eating', 'kind': Category.EXPENSE_KIND }
+        category_dto = {'name': 'eating', 'kind': Category.EXPENSE_KIND}
+        category_dto = {'name': 'eating', 'kind': Category.EXPENSE_KIND}
 
         response = self.client.post(reverse('categories'), category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -115,7 +113,7 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
         category = self.create_category('in_use')
         self.create_transaction(category=category)
 
-        url = reverse('category', kwargs={'pk':category.id})
+        url = reverse('category', kwargs={'pk': category.id})
         response = self.client.delete(url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -124,7 +122,7 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
     def test_can_delete_category_not_in_use(self):
         category = self.create_category('eating')
 
-        url = reverse('category', kwargs={'pk':category.id})
+        url = reverse('category', kwargs={'pk': category.id})
         response = self.client.delete(url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -132,18 +130,34 @@ class CategoryApiTestCase(APITestCase, BaseTestHelper):
 
     def test_user_cant_handle_category_it_doesnt_own(self):
         '''
-        User should get 404 because it can't access nor handle 
+        User should get 404 because it can't access nor handle
         categories that belongs to other user.
         '''
         other_user, other_token = self.create_user('other_user', email='other_user@hotmail.com', password='pass')
-        category_from_other_user = self.create_category('other users category', other_user)        
-        
+        category_from_other_user = self.create_category('other users category', other_user)
+
         category_dto = {'name': 'new name'}
 
-        url = reverse('category', kwargs={'pk':category_from_other_user.id})
-        
+        url = reverse('category', kwargs={'pk': category_from_other_user.id})
+
         response = self.client.put(url, category_dto, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         response = self.client.delete(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class CategorySerializerTestCase(UserDataTestSetupMixin, TestCase, SerializerTestHelper):
+
+    def setUp(self):
+        self.context = {
+            'user_id': self.user.id
+        }
+
+    def test_serializer_should_not_allow_update_kind(self):
+        data = {
+            'name': 'changed',
+            'kind': Category.EXPENSE_KIND
+        }
+        serializer = CategorySerializer(instance=self.income_category, data=data, context=self.context)
+        self.assert_has_field_error(serializer, 'kind')
