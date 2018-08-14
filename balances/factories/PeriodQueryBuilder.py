@@ -3,18 +3,17 @@ from collections import defaultdict
 from datetime import date, datetime
 from functools import reduce
 
+from common import dates_utils
 from dateutil.relativedelta import relativedelta
 from django.db.models import Case, CharField, F, Q, Sum, Value, When
 from django.db.models.functions import ExtractMonth, ExtractYear, TruncMonth
-
-from common import dates_utils
 from transactions.models import HasKind, Transaction
 from transactions.query_operations import sum_when
 
 
 class PeriodQueryBuilder:
     '''
-    Calculates balance split by periods over a lenght of time
+    Calculates balance split by periods over a length of time
     '''
 
     def __init__(self, user_id, from_date, until_date):
