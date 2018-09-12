@@ -1,12 +1,9 @@
 from datetime import date
-from unittest import skip
 
-from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APITestCase
 
 from common.tests_helpers import UrlsTestHelper
 from transactions.models import Account
@@ -39,10 +36,11 @@ class AccountUrlTestCase(TestCase, UrlsTestHelper):
         resolver = self.resolve_by_name('accounts')
         self.assert_has_actions(['get', 'post'], resolver.func.actions)
 
-    def test_single_url_allows_all_get_and_put(self):
+    def test_single_url_allows_actions(self):
         resolver = self.resolve_by_name('account', pk=1)
-        self.assert_has_actions(['get', 'put'], resolver.func.actions)
-    
+        self.assert_has_actions(['get', 'put', 'patch'], resolver.func.actions)
+
+
 class AccountSerializerTestCase(TestCase, BaseTestHelperFactory):
     @classmethod
     def setUpTestData(cls):
@@ -52,11 +50,19 @@ class AccountSerializerTestCase(TestCase, BaseTestHelperFactory):
 
     def setUp(self):
         self.serializer_data = {
-            'name': 'acc02'
+            'name': 'acc02',
+            'status': Account.ACTIVE,
         }
         self.serializer_context = {
             'user_id': self.user.id
         }
+
+    def test_serializer_has_fields(self):
+        expected_fields = ['id', 'name', 'current_effective_balance',
+            'current_real_balance', 'current_balance', 'status']
+        self.assertEqual(len(expected_fields), len(AccountSerializer.Meta.fields))
+        for field in expected_fields:
+            self.assertIn(field, AccountSerializer.Meta.fields)
 
     def test_serializer_validates(self):
         serializer = AccountSerializer(data=self.serializer_data, context=self.serializer_context)
@@ -71,17 +77,18 @@ class AccountSerializerTestCase(TestCase, BaseTestHelperFactory):
         self.assertFalse(serializer.is_valid())
         self.assertIn('name', serializer.errors)
 
-    def test_serializer_calculates_balance(self):        
-        self.create_transaction(100, payment_date=date.today())        
+    def test_serializer_calculates_balance(self):
+        self.create_transaction(100, payment_date=date.today())
         serializer = AccountSerializer(self.account)
         self.assertEqual(100, serializer.data['current_balance'])
+
 
 class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
 
     @classmethod
     def setUpTestData(cls):
         cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
-        cls.account = cls.create_account() #Now there are 2 accounts because signals creates a default account 
+        cls.account = cls.create_account()  # Now there are 2 accounts because signals creates a default account
 
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
@@ -99,7 +106,7 @@ class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
         self.assertEqual(response.data['id'], self.account.id)
 
     def test_api_creates(self):
-        dto = { 'name': 'acc01' }
+        dto = {'name': 'acc01'}
 
         response = self.client.post(reverse('accounts'), dto, format='json')
 
@@ -107,9 +114,17 @@ class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
         self.assertEqual(Account.objects.count(), 3)
 
     def test_api_updates(self):
-        data = { 'name': 'new_name' }
+        data = {'name': 'new_name'}
         response = self.client.put(reverse('account', kwargs={'pk': self.account.id}), data=data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        expense = Account.objects.get(pk=self.account.id)
-        self.assertEqual(expense.name, data['name'])
+        account = Account.objects.get(pk=self.account.id)
+        self.assertEqual(account.name, data['name'])
+
+    def test_api_patches(self):
+        data = {'status': Account.ARCHIVED}
+        response = self.client.patch(reverse('account', kwargs={'pk': self.account.id}), data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        account = Account.objects.get(pk=self.account.id)
+        self.assertEqual(account.status, data['status'])

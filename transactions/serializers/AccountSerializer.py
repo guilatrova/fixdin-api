@@ -7,7 +7,7 @@ from transactions.models import Account
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ('id', 'name', 'current_effective_balance', 'current_real_balance', 'current_balance')
+        fields = ('id', 'name', 'current_effective_balance', 'current_real_balance', 'current_balance', 'status')
         read_only_fields = ('id', 'current_effective_balance', 'current_real_balance', 'current_balance')
 
     current_balance = serializers.SerializerMethodField()
@@ -19,4 +19,4 @@ class AccountSerializer(serializers.ModelSerializer):
         if Account.objects.filter(name__iexact=value, user_id=self.context['user_id']).exists():
             raise serializers.ValidationError('Account with that name already exists')
 
-        return value    
+        return value

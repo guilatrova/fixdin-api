@@ -1,16 +1,21 @@
 from django.conf.urls import url
 
 from transactions import views
-from transactions.models import Account
 
 list_actions = {
-    'get': 'list', 
+    'get': 'list',
     'post': 'create'
 }
 
 single_action = {
     'get': 'retrieve',
     'put': 'update'
+}
+
+accounts_single_actions = {
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update'
 }
 
 transfer_single_actions = {
@@ -24,7 +29,7 @@ account_transfers_actions = {
 }
 
 account_list = views.AccountViewSet.as_view(list_actions)
-account_single = views.AccountViewSet.as_view(single_action)
+account_single = views.AccountViewSet.as_view(accounts_single_actions)
 account_transfers = views.TransferViewSet.as_view(account_transfers_actions)
 transfer_list = views.TransferViewSet.as_view(list_actions)
 transfer_single = views.TransferViewSet.as_view(transfer_single_actions)
