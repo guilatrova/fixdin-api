@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import MagicMock
 
 from django.test import TestCase
 from django.urls import reverse
@@ -6,6 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from common.tests_helpers import UrlsTestHelper
+from transactions.filters import AccountFilter
 from transactions.models import Account
 from transactions.serializers import AccountSerializer
 from transactions.tests.base_test import BaseTestHelperFactory
@@ -81,6 +83,24 @@ class AccountSerializerTestCase(TestCase, BaseTestHelperFactory):
         self.create_transaction(100, payment_date=date.today())
         serializer = AccountSerializer(self.account)
         self.assertEqual(100, serializer.data['current_balance'])
+
+
+class AccountFilterTest(TestCase):
+    def setUp(self):
+        self.filter = AccountFilter()
+        self.filter.request = MagicMock(query_params={})
+
+    def test_filters_activate_by_default(self):
+        filters = self.filter.get_query_params_filter()
+        self.assertEqual(1, len(filters))
+        self.assertIn('status', filters)
+        self.assertEqual(Account.ACTIVE, filters['status'])
+
+    def test_filters_archived_returns_all(self):
+        self.filter.request.query_params = {'status': Account.ARCHIVED}
+        filters = self.filter.get_query_params_filter()
+
+        self.assertEqual({}, filters)
 
 
 class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
