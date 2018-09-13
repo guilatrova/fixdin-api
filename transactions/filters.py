@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from transactions.models import Account, HasKind
+from transactions.models import HasKind
 
 
 class TransactionFilter:
@@ -64,8 +64,8 @@ class AccountFilter:
     def get_query_params_filter(self):
         dic = {}
 
-        status = self.request.query_params.get('status', Account.ACTIVE)
-        if status == Account.ACTIVE:
-            dic['status'] = Account.ACTIVE
+        status = self.request.query_params.get('status', False)
+        if status:
+            dic['status'] = status
 
         return dic

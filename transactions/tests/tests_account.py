@@ -90,17 +90,17 @@ class AccountFilterTest(TestCase):
         self.filter = AccountFilter()
         self.filter.request = MagicMock(query_params={})
 
-    def test_filters_activate_by_default(self):
+    def test_filters_none(self):
         filters = self.filter.get_query_params_filter()
-        self.assertEqual(1, len(filters))
-        self.assertIn('status', filters)
-        self.assertEqual(Account.ACTIVE, filters['status'])
+        self.assertEqual({}, filters)
 
-    def test_filters_archived_returns_all(self):
+    def test_filters_status(self):
         self.filter.request.query_params = {'status': Account.ARCHIVED}
         filters = self.filter.get_query_params_filter()
 
-        self.assertEqual({}, filters)
+        self.assertEqual(1, len(filters))
+        self.assertIn('status', filters)
+        self.assertEqual(Account.ARCHIVED, filters['status'])
 
 
 class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
