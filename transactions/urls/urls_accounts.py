@@ -15,7 +15,8 @@ single_action = {
 accounts_single_actions = {
     'get': 'retrieve',
     'put': 'update',
-    'patch': 'partial_update'
+    'patch': 'partial_update',
+    'delete': 'destroy'
 }
 
 transfer_single_actions = {

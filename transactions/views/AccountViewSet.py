@@ -1,7 +1,8 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.response import Response
 
 from transactions.filters import AccountFilter
-from transactions.models import Account
+from transactions.models import Account, Transaction
 from transactions.serializers import AccountSerializer
 
 
@@ -22,6 +23,13 @@ class AccountViewSet(viewsets.ModelViewSet, AccountFilter):
             "user_id": self.request.user.id,
             "request_method": self.request.method
         }
+
+    def destroy(self, request, *args, **kwargs):
+        if Transaction.objects.filter(account_id=kwargs['pk']).exists():
+            error_msg = 'Some transactions are bound to this account. Try archiving it instead.'
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail': error_msg})
+
+        return super(AccountViewSet, self).destroy(self, request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, current_effective_balance=0, current_real_balance=0)

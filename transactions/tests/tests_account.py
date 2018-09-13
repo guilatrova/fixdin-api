@@ -40,7 +40,7 @@ class AccountUrlTestCase(TestCase, UrlsTestHelper):
 
     def test_single_url_allows_actions(self):
         resolver = self.resolve_by_name('account', pk=1)
-        self.assert_has_actions(['get', 'put', 'patch'], resolver.func.actions)
+        self.assert_has_actions(['get', 'put', 'patch', 'delete'], resolver.func.actions)
 
 
 class AccountSerializerTestCase(TestCase, BaseTestHelperFactory):
@@ -148,3 +148,17 @@ class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         account = Account.objects.get(pk=self.account.id)
         self.assertEqual(account.status, data['status'])
+
+    def test_api_deletes(self):
+        response = self.client.delete(reverse('account', kwargs={'pk': self.account.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_api_cant_delete(self):
+        category = self.create_category(name='category')
+        self.create_transaction(account=self.account, value=10, category=category)
+
+        response = self.client.delete(reverse('account', kwargs={'pk': self.account.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('detail', response.data)
