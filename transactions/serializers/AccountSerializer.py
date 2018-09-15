@@ -7,7 +7,8 @@ from transactions.models import Account
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ('id', 'name', 'current_effective_balance', 'current_real_balance', 'current_balance', 'status')
+        fields = ('id', 'name', 'current_effective_balance', 'start_balance',
+                  'current_real_balance', 'current_balance', 'status')
         read_only_fields = ('id', 'current_effective_balance', 'current_real_balance', 'current_balance')
 
     current_balance = serializers.SerializerMethodField()

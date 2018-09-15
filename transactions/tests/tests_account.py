@@ -60,7 +60,7 @@ class AccountSerializerTestCase(TestCase, BaseTestHelperFactory):
         }
 
     def test_serializer_has_fields(self):
-        expected_fields = ['id', 'name', 'current_effective_balance',
+        expected_fields = ['id', 'name', 'current_effective_balance', 'start_balance',
             'current_real_balance', 'current_balance', 'status']
         self.assertEqual(len(expected_fields), len(AccountSerializer.Meta.fields))
         for field in expected_fields:
