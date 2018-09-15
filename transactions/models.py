@@ -26,6 +26,7 @@ class Account(models.Model):
 
     user = models.ForeignKey(User)
     name = models.CharField(max_length=30)
+    start_balance = models.DecimalField(max_digits=19, decimal_places=2, default=0)
     current_real_balance = models.DecimalField(max_digits=19, decimal_places=2)
     current_effective_balance = models.DecimalField(max_digits=19, decimal_places=2)
     status = models.PositiveIntegerField(default=ACTIVE, choices=STATUS_CHOICES)
