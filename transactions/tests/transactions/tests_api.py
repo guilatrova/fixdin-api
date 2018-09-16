@@ -8,12 +8,13 @@ from rest_framework.test import APITestCase
 from transactions import factories
 from transactions.models import HasKind, Transaction
 from transactions.serializers import TransactionSerializer
-from transactions.tests.base_test import BaseTestHelperFactory, OtherUserDataTestSetupMixin, UserDataTestSetupMixin
+from transactions.tests.base_test import (BaseTestHelperFactory, OtherUserDataTestSetupMixin, UserDataTestSetupMixin,
+                                          WithoutSignalsMixin)
 
 
-class ApiTestMixin(UserDataTestSetupMixin, 
-                    OtherUserDataTestSetupMixin, 
-                    BaseTestHelperFactory):
+class ApiTestMixin(UserDataTestSetupMixin,
+                   OtherUserDataTestSetupMixin,
+                   BaseTestHelperFactory):
 
     kind = HasKind.EXPENSE_KIND
     dto_value = -500
@@ -46,7 +47,7 @@ class ApiTestMixin(UserDataTestSetupMixin,
 
     def get_single_url(self, id):
         return reverse('transaction', kwargs={'pk': id})
-        
+
     def assert_count(self, count):
         self.assertEqual(
             Transaction.objects.owned_by(self.user).filter(kind=self.kind).count(),
@@ -70,16 +71,17 @@ class OldestTransactionApiTestCase(UserDataTestSetupMixin, APITestCase, BaseTest
         self.assertTrue(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['id'], self.oldest.id)
 
-class TransactionApiTestCase(ApiTestMixin, TestCase):
+
+class TransactionApiTestCase(WithoutSignalsMixin, ApiTestMixin, TestCase):
     expected_list_count = 2
-    expected_total_count = 2        
+    expected_total_count = 2
 
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
         cls.transaction = cls.create_transaction(-100)
         cls.create_transaction(-50)
-        #other user
+        # other user
         cls.create_transaction(-30, **cls.other_user_data)
         cls.create_transaction(100, **cls.other_user_data)
 
@@ -116,7 +118,7 @@ class TransactionApiTestCase(ApiTestMixin, TestCase):
         self.assert_count(self.expected_total_count - 1)
 
     def test_api_patches(self):
-        dto = { 'description': 'patched' }
+        dto = {'description': 'patched'}
         response = self.client.patch(self.single_url, dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -127,7 +129,7 @@ class TransactionApiTestCase(ApiTestMixin, TestCase):
         t1 = self.create_transaction(0, kind=self.kind, category=self.transaction.category)
         t2 = self.create_transaction(0, kind=self.kind, category=self.transaction.category)
         ids = ','.join([str(t1.id), str(t2.id)])
-        dto = { 'description': 'patched' }
+        dto = {'description': 'patched'}
         url = self.list_url + "?ids=" + ids
         response = self.client.patch(url, dto, format='json')
 
@@ -139,7 +141,8 @@ class TransactionApiTestCase(ApiTestMixin, TestCase):
 
     def test_api_cant_manage_transfer(self):
         account_to = self.create_account(name='account_to')
-        expense, income = factories.create_transfer_between_accounts(self.user.id, account_from=self.account.id, account_to=account_to.id, value=100)
+        expense, income = factories.create_transfer_between_accounts(
+            self.user.id, account_from=self.account.id, account_to=account_to.id, value=100)
         transaction = income if self.kind == HasKind.INCOME_KIND else expense
 
         response = self.client.put(self.get_single_url(transaction.id), format='json')
@@ -157,7 +160,8 @@ class TransactionApiTestCase(ApiTestMixin, TestCase):
         dto.update(kwargs)
         return dto
 
-class PeriodicTransactionApiTestCase(ApiTestMixin, TestCase):
+
+class PeriodicTransactionApiTestCase(WithoutSignalsMixin, ApiTestMixin, TestCase):
     expected_total_count = 6
 
     @classmethod
@@ -179,7 +183,7 @@ class PeriodicTransactionApiTestCase(ApiTestMixin, TestCase):
                 'how_many': 5,
                 'interval': 1
             }
-        })        
+        })
 
     def test_api_creates_periodics(self):
         dto = self.get_periodic_dto(2)
@@ -188,15 +192,15 @@ class PeriodicTransactionApiTestCase(ApiTestMixin, TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response.data), 2)
         self.assert_count(self.expected_total_count + 2)
-            
+
     def test_api_patches_all_periodics(self):
         url = self.list_url + "?periodic_transaction=" + str(self.periodics[0].id)
-        dto = { 'description': 'change it all' }
+        dto = {'description': 'change it all'}
         response = self.client.patch(url, dto, format='json')
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assert_changed_periodics(0, 'change it all')
-        
+
     def test_api_deletes_all_periodics(self):
         url = self.list_url + "?periodic_transaction=" + str(self.periodics[0].id)
         response = self.client.delete(url)

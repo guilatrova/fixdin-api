@@ -29,7 +29,6 @@
                 "runserver",
                 "--noreload"
             ],
-            "env": null,
             "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
@@ -56,6 +55,6 @@
                 "RedirectOutput",
                 "DjangoDebugging"
             ]
-        }        
+        }
     ]
 }

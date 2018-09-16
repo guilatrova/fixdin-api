@@ -8,9 +8,10 @@ from rest_framework.test import APITestCase
 
 from common.tests_helpers import UrlsTestHelper
 from transactions.filters import AccountFilter
-from transactions.models import Account
+from transactions.models import Account, Transaction
+from transactions.reserved_categories import StartupAccountCategory
 from transactions.serializers import AccountSerializer
-from transactions.tests.base_test import BaseTestHelperFactory
+from transactions.tests.base_test import BaseTestHelperFactory, WithoutSignalsMixin
 from transactions.views import AccountViewSet
 
 
@@ -162,3 +163,23 @@ class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('detail', response.data)
+
+
+class AccountSignalsTestCase(WithoutSignalsMixin, TestCase, BaseTestHelperFactory):
+    signals_except = [WithoutSignalsMixin.ACCOUNT_START_BALANCE]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
+
+    def test_creates_starting_balance_when_account_is_created(self):
+        account = self.create_account(user=self.user, start_balance=220)
+
+        transactions = Transaction.objects.owned_by(self.user)
+        first_transaction = transactions.first()
+
+        self.assertEqual(1, len(transactions))
+        self.assertEqual(account, first_transaction.account)
+        self.assertEqual(account.start_balance, first_transaction.value)
+        self.assertEqual(StartupAccountCategory.name, first_transaction.category.name)

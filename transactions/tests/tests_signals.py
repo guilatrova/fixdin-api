@@ -1,20 +1,21 @@
 import datetime
-from unittest import skip
 
-from django.contrib.auth.models import User
 from django.test import TestCase
-from django.urls import reverse
 
 from transactions.factories import create_periodic_transactions
-from transactions.models import *
-from transactions.tests.base_test import BaseTestHelper
+from transactions.models import Transaction
+from transactions.tests.base_test import BaseTestHelperFactory, WithoutSignalsMixin
 
 
-class TransactionSignalsTestCase(TestCase, BaseTestHelper):
-    def setUp(self):
-        self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
-        self.category = self.create_category('cat')
-        self.account = self.create_account(self.user)
+class TransactionSignalsTestCase(WithoutSignalsMixin, TestCase, BaseTestHelperFactory):
+    signals_except = [WithoutSignalsMixin.TRANSACTION_PERIODICS]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user, token = cls.create_user('testuser', email='testuser@test.com', password='testing')
+        cls.account = cls.create_account()
+        cls.category = cls.create_category('cat')
 
     def test_delete_parent_transaction_updates_all_children_to_next(self):
         transactions = self.create_periodic(4)
@@ -33,7 +34,7 @@ class TransactionSignalsTestCase(TestCase, BaseTestHelper):
         return create_periodic_transactions(
             account=self.account,
             category=self.category,
-            due_date=datetime.date(2017, 1, 1), 
+            due_date=datetime.date(2017, 1, 1),
             description='any',
             value=10,
             kind=Transaction.INCOME_KIND,

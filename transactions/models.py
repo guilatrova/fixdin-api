@@ -36,9 +36,12 @@ class Category(models.Model, HasKind):
     class Meta:
         unique_together = ('user', 'name', 'kind')
 
+    SYSTEM_KIND = 2
+
     CATEGORY_KINDS = (
         (HasKind.EXPENSE_KIND, 'Expense'),
-        (HasKind.INCOME_KIND, 'Income')
+        (HasKind.INCOME_KIND, 'Income'),
+        (SYSTEM_KIND, 'System')
     )
 
     name = models.CharField(max_length=70)

@@ -6,10 +6,11 @@ from rest_framework.test import APIClient, APITestCase
 from common.tests_helpers import SerializerTestHelper
 from transactions.models import Category
 from transactions.serializers import CategorySerializer
-from transactions.tests.base_test import BaseTestHelper, OtherUserDataTestSetupMixin, UserDataTestSetupMixin
+from transactions.tests.base_test import (BaseTestHelper, OtherUserDataTestSetupMixin, UserDataTestSetupMixin,
+                                          WithoutSignalsMixin)
 
 
-class CategoryApiTestCase(APITestCase, BaseTestHelper):
+class CategoryApiTestCase(WithoutSignalsMixin, APITestCase, BaseTestHelper):
 
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')

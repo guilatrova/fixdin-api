@@ -13,7 +13,7 @@ from integrations.models import CPFL_Settings, Integration, IntegrationSettings,
 from integrations.serializers import ServiceSettingsSerializer
 from integrations.services.CPFLSyncService import CPFL, CPFL_SyncService
 from transactions.models import Transaction
-from transactions.tests.base_test import BaseTestHelper
+from transactions.tests.base_test import BaseTestHelper, WithoutSignalsMixin
 
 CONTAS_RECUPERADAS_MOCK = [
     {
@@ -198,7 +198,9 @@ class CPFL_SyncServiceTestCase(TestCase):
         )
 
 
-class CPFL_SyncServiceIntegrationTestCase(TestCase, BaseTestHelper):
+class CPFL_SyncServiceIntegrationTestCase(WithoutSignalsMixin, TestCase, BaseTestHelper):
+    signals_except = [WithoutSignalsMixin.USERS_ACCOUNT]
+
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
         self.create_category(name="luz", kind=Transaction.EXPENSE_KIND)

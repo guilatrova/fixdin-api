@@ -1,18 +1,13 @@
-import datetime
-from unittest import skip
-from unittest.mock import MagicMock, patch
-
-from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APITestCase
 
 from common.tests_helpers import UrlsTestHelper
 from transactions.factories import create_transfer_between_accounts
 from transactions.models import BoundReasons, HasKind, Transaction
 from transactions.serializers import TransferSerializer
-from transactions.tests.base_test import BaseTestHelper
+from transactions.tests.base_test import BaseTestHelper, WithoutSignalsMixin
 from transactions.views import TransferViewSet
 
 
@@ -67,12 +62,13 @@ class TransferUrlTestCase(TestCase, BaseTestHelper, UrlsTestHelper):
 
         self.assert_has_actions(['get', ], resolver.func.actions)
 
+
 class TransferSerializerTestCase(TestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com')
         self.account_from = self.create_account(name='from')
         self.account_to = self.create_account(name='to')
-        
+
         other_user, other_token = self.create_user('other_testuser', email='other_testuser@test.com')
         self.not_owned_account = self.create_account(name='not_owned', user=other_user)
 
@@ -83,7 +79,7 @@ class TransferSerializerTestCase(TestCase, BaseTestHelper):
         }
         self.serializer_context = {
             'user_id': self.user.id,
-            "request_method": "POST" #By default, some cases may change this
+            "request_method": "POST"  # By default, some cases may change this
         }
 
     def test_serializer_validates(self):
@@ -99,7 +95,7 @@ class TransferSerializerTestCase(TestCase, BaseTestHelper):
     def test_serializer_should_not_allows_not_owned_account_from(self):
         self.assert_validation_account_not_owned('account_from', 'does not belongs to you')
 
-    def test_serializer_should_not_allows_not_owned_account_from(self):
+    def test_serializer_should_not_allows_not_owned_account_to(self):
         self.assert_validation_account_not_owned('account_to', 'does not belongs to you')
 
     def test_serializer_should_not_allows_same_from_and_to_accounts(self):
@@ -171,6 +167,7 @@ class TransferSerializerTestCase(TestCase, BaseTestHelper):
         self.assertIn(key, serializer.errors)
         self.assertIn(partial_message, serializer.errors[key][0])
 
+
 class TransferFactoryTestCase(TestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com', password='testing')
@@ -182,9 +179,9 @@ class TransferFactoryTestCase(TestCase, BaseTestHelper):
             'value': 100
         }
         self.same_properties_keys = ['description', 'due_date', 'payment_date', 'bound_reason']
-    
+
     def test_creates_transactions_correctly(self):
-        result = create_transfer_between_accounts(\
+        result = create_transfer_between_accounts(
             self.user.id,
             **self.factory_kwargs
         )
@@ -202,21 +199,23 @@ class TransferFactoryTestCase(TestCase, BaseTestHelper):
         self.assertEqual(expense.due_date, expense.payment_date)
         self.assertEqual(expense.bound_reason, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
         self.assertEqual(expense.description, BoundReasons.TRANSFER_BETWEEN_ACCOUNTS)
-        
+
         self.assertEqual(expense.value, -100)
         self.assertEqual(income.value, 100)
 
         for key in self.same_properties_keys:
             self.assertEqual(getattr(expense, key), getattr(income, key))
 
-class TransferApiTestCase(APITestCase, BaseTestHelper):
+
+class TransferApiTestCase(WithoutSignalsMixin, APITestCase, BaseTestHelper):
     def setUp(self):
         self.user, token = self.create_user('testuser', email='testuser@test.com')
         self.client = self.create_authenticated_client(token)
 
         self.account_from = self.create_account(name='from')
         self.account_to = self.create_account(name='to')
-        self.expense, self.income = create_transfer_between_accounts(self.user.id, account_from=self.account_from.id, account_to=self.account_to.id, value=100)
+        self.expense, self.income = create_transfer_between_accounts(
+            self.user.id, account_from=self.account_from.id, account_to=self.account_to.id, value=100)
 
     def test_api_lists(self):
         response = self.client.get(reverse('transfers'), format='json')
@@ -239,7 +238,7 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         response = self.client.post(reverse('transfers'), data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transaction.objects.count(), 4) #2 from setup + 2 now
+        self.assertEqual(Transaction.objects.count(), 4)  # 2 from setup + 2 now
 
     def test_api_deletes(self):
         response = self.client.delete(reverse('transfer', kwargs={'pk': self.expense.id}))
@@ -262,8 +261,10 @@ class TransferApiTestCase(APITestCase, BaseTestHelper):
         for i in range(1, 4):
             cur_account = self.create_account(name='from_{0}'.format(i))
             # Test both ways. (Acount receiving or sending)
-            last_origin_expense, last_origin_income = create_transfer_between_accounts(self.user.id, account_from=cur_account.id, account_to=self.account_to.id, value=100)
-            last_dest_expense, last_dest_income = create_transfer_between_accounts(self.user.id, account_from=self.account_to.id, account_to=cur_account.id, value=100)
+            last_origin_expense, last_origin_income = create_transfer_between_accounts(
+                self.user.id, account_from=cur_account.id, account_to=self.account_to.id, value=100)
+            last_dest_expense, last_dest_income = create_transfer_between_accounts(
+                self.user.id, account_from=self.account_to.id, account_to=cur_account.id, value=100)
 
         response = self.client.get(reverse('account-transfers', kwargs={'pk': last_origin_expense.account_id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)

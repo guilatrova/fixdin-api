@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from rest_framework_expiring_authtoken.models import ExpiringToken
 
 from transactions.models import Account
@@ -10,4 +11,9 @@ from transactions.models import Account
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         ExpiringToken.objects.create(user=instance)
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_account(sender, instance=None, created=False, **kwargs):
+    if created:
         Account.objects.create(user=instance, name='default', current_effective_balance=0, current_real_balance=0)

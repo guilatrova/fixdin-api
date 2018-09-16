@@ -1,19 +1,13 @@
-from datetime import datetime
-from unittest import mock, skip
-
-from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient, APITestCase
 
-from transactions.models import Category, Transaction
-from transactions.tests.base_test import BaseTestHelper
+from transactions.models import Category
+from transactions.tests.base_test import BaseTestHelper, WithoutSignalsMixin
 
 
-class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
-    
+class ValuesByCategoryAPITestCase(WithoutSignalsMixin, TestCase, BaseTestHelper):
+
     def setUp(self):
         self.user, token = self.create_user('testsuser', email='test@test.com', password='pass')
 
@@ -25,7 +19,7 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
         for i in range(1, 5):
             self.expense_categories.append(self.create_category('EC' + str(i)))
             self.income_categories.append(self.create_category('IC' + str(i), kind=Category.INCOME_KIND))
-    
+
     def test_gets_values_aggregated_by_expense_category(self):
         cumulative_value = 10
         for i in range(len(self.expense_categories)):
@@ -36,10 +30,10 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
         expense_id = [cat.id for cat in self.expense_categories]
 
         expected_list = [
-            { "category_id": expense_id[0], "total": 30 },
-            { "category_id": expense_id[1], "total": 60 }, #Skip incomes
-            { "category_id": expense_id[2], "total": 90 },
-            { "category_id": expense_id[3], "total": 120 },
+            {"category_id": expense_id[0], "total": 30},
+            {"category_id": expense_id[1], "total": 60},  # Skip incomes
+            {"category_id": expense_id[2], "total": 90},
+            {"category_id": expense_id[3], "total": 120},
         ]
 
         url = reverse('values-by-category', kwargs={'kind': 'expenses'})
@@ -61,10 +55,10 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
         income_id = [cat.id for cat in self.income_categories]
 
         expected_list = [
-            { "category_id": income_id[0], "total": 30 }, #Skip expenses
-            { "category_id": income_id[1], "total": 60 },
-            { "category_id": income_id[2], "total": 90 },
-            { "category_id": income_id[3], "total": 120 },
+            {"category_id": income_id[0], "total": 30},  # Skip expenses
+            {"category_id": income_id[1], "total": 60},
+            {"category_id": income_id[2], "total": 90},
+            {"category_id": income_id[3], "total": 120},
         ]
 
         url = reverse('values-by-category', kwargs={'kind': 'incomes'})
@@ -75,17 +69,13 @@ class ValuesByCategoryAPITestCase(TestCase, BaseTestHelper):
         for i in range(len(expected_list)):
             self.assertEqual(expected_list[i]["category_id"], response.data[i]["category_id"])
             self.assertEqual(float(expected_list[i]["total"]), float(response.data[i]["total"]))
-    
+
     def test_only_calculates_categories_from_authenticated_user(self):
         other_user, token = self.create_user('other', email='other@test.com', password='pass')
         other_account = self.create_account(other_user)
         other_user_category = self.create_category('NOT_RETRIEVED', user=other_user)
         self.create_transaction(10, category=other_user_category, account=other_account)
         self.create_transaction(20, category=self.income_categories[0])
-
-        expected_list = [
-            { "category_id": self.income_categories[0], "total": 20 }
-        ]
 
         url = reverse('values-by-category', kwargs={'kind': 'incomes'})
         response = self.client.get(url, format='json')
