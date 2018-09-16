@@ -1,5 +1,6 @@
 from datetime import date
-from unittest.mock import MagicMock, patch, skip
+from unittest import skip
+from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
 from django.urls import reverse
