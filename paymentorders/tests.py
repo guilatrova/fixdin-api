@@ -71,6 +71,7 @@ class NextExpensesServiceTestCase(WithoutSignalsMixin, TestCase, BaseTestHelperF
 
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
         cls.user, token = cls.create_user(email='testuser@test.com', password='testing')
         cls.category = cls.create_category('category')
         cls.account = cls.create_account()
