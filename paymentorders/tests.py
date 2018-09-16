@@ -8,7 +8,7 @@ from rest_framework import status
 from common.tests_helpers import UrlsTestHelper
 from paymentorders.services import NextExpensesService
 from paymentorders.views import PaymentOrderAPIView
-from transactions.tests.base_test import BaseTestHelperFactory
+from transactions.tests.base_test import BaseTestHelperFactory, WithoutSignalsMixin
 
 
 class PaymentOrderUrlTestCase(TestCase, UrlsTestHelper):
@@ -67,7 +67,7 @@ class PaymentOrderViewsTestCase(TestCase, BaseTestHelperFactory):
         return PaymentOrderAPIView(request=mock_request), mock_request
 
 
-class NextExpensesServiceTestCase(TestCase, BaseTestHelperFactory):
+class NextExpensesServiceTestCase(WithoutSignalsMixin, TestCase, BaseTestHelperFactory):
 
     @classmethod
     def setUpTestData(cls):
