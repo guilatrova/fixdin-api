@@ -8,8 +8,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
-import os
 import datetime
+import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,14 +22,16 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',    
+    'django.contrib.staticfiles',
     'rest_framework',
-    #Token
+    # Token
     'rest_framework.authtoken',
     'rest_framework_expiring_authtoken',
-    #CORS 
-    'corsheaders', 
-    #MY APPs
+    # CORS
+    'corsheaders',
+    # File Storage
+    'storages',
+    # MY APPs
     'users',
     'transactions',
     'balances',
@@ -40,7 +42,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware', 
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -56,7 +58,7 @@ REST_FRAMEWORK = {
         'rest_framework_expiring_authtoken.authentication.ExpiringTokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',        
+        'rest_framework.permissions.IsAuthenticated',
     )
 }
 
@@ -111,6 +113,13 @@ DATABASES = {}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
+
+# File Storage
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+AWS_S3_ACCESS_KEY_ID = os.environ.get('AWS_S3_ACCESS_KEY_ID', "")
+AWS_S3_SECRET_ACCESS_KEY = os.environ.get('AWS_S3_SECRET_ACCESS_KEY', "")
+
 
 LANGUAGE_CODE = 'en-us'
 
