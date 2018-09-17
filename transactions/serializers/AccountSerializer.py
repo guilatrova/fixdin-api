@@ -17,7 +17,8 @@ class AccountSerializer(serializers.ModelSerializer):
         return calculator.calculate_account_current_balance(obj.id)['real']
 
     def validate_name(self, value):
-        if Account.objects.filter(name__iexact=value, user_id=self.context['user_id']).exists():
+        ignores_itself = Account.objects.exclude(id=self.context.get("id", 0))
+        if ignores_itself.filter(name__iexact=value, user_id=self.context['user_id']).exists():
             raise serializers.ValidationError('Account with that name already exists')
 
         return value

@@ -20,6 +20,7 @@ class AccountViewSet(viewsets.ModelViewSet, AccountFilter):
 
     def get_serializer_context(self):
         return {
+            "id": self.kwargs.get('pk', None),
             "user_id": self.request.user.id,
             "request_method": self.request.method
         }
