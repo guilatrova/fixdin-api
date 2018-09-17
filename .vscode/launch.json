@@ -29,7 +29,7 @@
                 "runserver",
                 "--noreload"
             ],
-            "envFile": "${workspaceRoot}/.env",
+            "envFile": "${workspaceRoot}/.local.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",

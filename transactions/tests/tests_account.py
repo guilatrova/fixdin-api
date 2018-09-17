@@ -183,3 +183,4 @@ class AccountSignalsTestCase(WithoutSignalsMixin, TestCase, BaseTestHelperFactor
         self.assertEqual(account, first_transaction.account)
         self.assertEqual(account.start_balance, first_transaction.value)
         self.assertEqual(StartupAccountCategory.name, first_transaction.category.name)
+        self.assertEqual(StartupAccountCategory.name, first_transaction.description)

@@ -1,10 +1,8 @@
-import datetime
-
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
-from transactions.models import Account, HasKind, Transaction
-from transactions.reserved_categories import StartupAccountCategory
+from transactions.factories import startup_balance_factory
+from transactions.models import Account, Transaction
 
 
 @receiver(pre_delete, sender=Transaction)
@@ -25,17 +23,4 @@ def updates_periodics_parent(sender, instance=None, **kwargs):
 @receiver(post_save, sender=Account)
 def creates_start_balance(sender, instance=None, created=False, **kwargs):
     if created:
-        category, created = StartupAccountCategory.get_or_create(user_id=instance.user_id)
-        value = instance.start_balance
-        date = datetime.datetime.today()
-        kind = HasKind.EXPENSE_KIND if value <= 0 else HasKind.INCOME_KIND
-
-        Transaction.objects.create(
-            account=instance,
-            category=category,
-            kind=kind,
-            value=value,
-            due_date=date,
-            payment_date=date,
-            description="STARTUP_ACCOUNT",
-        )
+        startup_balance_factory.create_startup_transaction(instance)
