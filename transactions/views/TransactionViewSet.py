@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from common.views import PatchModelListMixin
 from transactions.filters import TransactionFilter
 from transactions.models import Transaction
-from transactions.permissions import IsNotTransferOrIsReadOnly
+from transactions.permissions import IsNotSystemTransactionOrIsReadOnly
 from transactions.serializers import TransactionSerializer
 
 
@@ -14,10 +14,12 @@ class PeriodicTransactionViewSetMixin:
     '''
     Mixin that injects handlers for PUT/PATCH/DELETE periodic transactions
     '''
+
     def update(self, request, *args, **kwargs):
         if request.query_params.get('next', False) == '1':
             instance = self.get_object()
-            next_periodics = Transaction.objects.filter(bound_transaction=instance.bound_transaction, due_date__gte=instance.due_date).order_by('id')
+            next_periodics = Transaction.objects.filter(
+                bound_transaction=instance.bound_transaction, due_date__gte=instance.due_date).order_by('id')
             to_return = self._patch_periodics(request.data, next_periodics)
 
             return Response(to_return)
@@ -26,7 +28,7 @@ class PeriodicTransactionViewSetMixin:
 
     def partial_update_list(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
-        if periodic: #TODO: CHECK FILTER WORKS CORRECTLY
+        if periodic:  # TODO: CHECK FILTER WORKS CORRECTLY
             queryset = self.filter_queryset(Transaction.objects.filter(bound_transaction=periodic)).order_by('due_date')
             to_return = self._patch_periodics(request.data, queryset)
 
@@ -36,7 +38,7 @@ class PeriodicTransactionViewSetMixin:
 
     @db_transaction.atomic
     def _patch_periodics(self, data, periodics):
-        to_return = []        
+        to_return = []
 
         is_first = True
         for instance in periodics:
@@ -45,7 +47,7 @@ class PeriodicTransactionViewSetMixin:
             self.perform_update(serializer)
             to_return.append(serializer.data)
 
-            if is_first: #TODO: Move it from here + Test it
+            if is_first:  # TODO: Move it from here + Test it
                 data.pop('due_date', None)
                 data.pop('payment_date', None)
                 is_first = False
@@ -55,7 +57,7 @@ class PeriodicTransactionViewSetMixin:
     def destroy_all_periodics(self, request, *args, **kwargs):
         periodic = self.request.query_params.get('periodic_transaction', False)
         if periodic:
-            #TODO: WARNING, IT WILL NOT TRIGGER SIGNALS
+            # TODO: WARNING, IT WILL NOT TRIGGER SIGNALS
             Transaction.objects.filter(bound_transaction=periodic).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -65,16 +67,19 @@ class PeriodicTransactionViewSetMixin:
         params = self.request.query_params
 
         if params.get('next', False) == '1':
-            Transaction.objects.filter(bound_transaction=instance.bound_transaction, due_date__gte=instance.due_date).delete()
+            Transaction.objects.filter(bound_transaction=instance.bound_transaction,
+                                       due_date__gte=instance.due_date).delete()
         else:
             return super(PeriodicTransactionViewSetMixin, self).perform_destroy(instance)
 
-class TransactionViewSet(PeriodicTransactionViewSetMixin, PatchModelListMixin, viewsets.ModelViewSet, TransactionFilter):
+
+class TransactionViewSet(PeriodicTransactionViewSetMixin, PatchModelListMixin,
+        viewsets.ModelViewSet, TransactionFilter):
     '''
     Handles CRUD on /transactions endpoints
     '''
     serializer_class = TransactionSerializer
-    permission_classes = (IsAuthenticated, IsNotTransferOrIsReadOnly)
+    permission_classes = (IsAuthenticated, IsNotSystemTransactionOrIsReadOnly)
 
     def get_serializer_context(self):
         return {
@@ -83,10 +88,10 @@ class TransactionViewSet(PeriodicTransactionViewSetMixin, PatchModelListMixin, v
         }
 
     def get_queryset(self):
-        query_filter = { 
+        query_filter = {
             'account__user_id': self.request.user.id,
         }
-        
-        url_query_params = self.get_query_params_filter()  
+
+        url_query_params = self.get_query_params_filter()
         query_filter.update(url_query_params)
         return Transaction.objects.filter(**query_filter)

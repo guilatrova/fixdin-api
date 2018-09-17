@@ -148,7 +148,7 @@ class TransactionApiTestCase(WithoutSignalsMixin, ApiTestMixin, TestCase):
         response = self.client.put(self.get_single_url(transaction.id), format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertIn('manage transfers', response.data['detail'])
+        self.assertIn('manage auto generated system', response.data['detail'])
 
     def get_dto(self, **kwargs):
         dto = self.dto
