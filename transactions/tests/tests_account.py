@@ -184,3 +184,15 @@ class AccountSignalsTestCase(WithoutSignalsMixin, TestCase, BaseTestHelperFactor
         self.assertEqual(account.start_balance, first_transaction.value)
         self.assertEqual(StartupAccountCategory.name, first_transaction.category.name)
         self.assertEqual(StartupAccountCategory.name, first_transaction.description)
+
+    def test_updates_balance_when_initial_balance_is_changed(self):
+        account = self.create_account(user=self.user, start_balance=220)
+        account.start_balance = 500
+        account.save()
+
+        transactions = Transaction.objects.owned_by(self.user)
+        first_transaction = transactions.first()
+
+        self.assertEqual(1, len(transactions))
+        self.assertEqual(account, first_transaction.account)
+        self.assertEqual(account.start_balance, first_transaction.value)

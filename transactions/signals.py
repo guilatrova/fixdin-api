@@ -3,6 +3,7 @@ from django.dispatch import receiver
 
 from transactions.factories import startup_balance_factory
 from transactions.models import Account, Transaction
+from transactions.reserved_categories import StartupAccountCategory
 
 
 @receiver(pre_delete, sender=Transaction)
@@ -24,3 +25,7 @@ def updates_periodics_parent(sender, instance=None, **kwargs):
 def creates_start_balance(sender, instance=None, created=False, **kwargs):
     if created:
         startup_balance_factory.create_startup_transaction(instance)
+    else:
+        startup = Transaction.objects.get(account=instance, category__name=StartupAccountCategory.name)
+        startup.value = instance.start_balance
+        startup.save()
