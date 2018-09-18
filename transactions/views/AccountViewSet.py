@@ -16,7 +16,7 @@ class AccountViewSet(viewsets.ModelViewSet, AccountFilter):
         filters = self.get_query_params_filter()
 
         query_filter.update(filters)
-        return Account.objects.filter(**filters)
+        return Account.objects.filter(**query_filter)
 
     def get_serializer_context(self):
         return {
