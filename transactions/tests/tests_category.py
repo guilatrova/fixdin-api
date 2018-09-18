@@ -108,6 +108,22 @@ class CategoryApiTestCase(WithoutSignalsMixin, APITestCase, BaseTestHelper):
         response = self.client.delete(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_api_changes_kinds_updates_transactions(self):
+        category = self.create_category('kind_changer', kind=Category.EXPENSE_KIND)
+        transaction = self.create_transaction(-100, category=category)
+        change_to = Category.INCOME_KIND
+
+        category_dto = {'name': 'kind_changer', 'kind': change_to}
+
+        url = reverse('category', kwargs={'pk': category.id})
+
+        response = self.client.put(url, category_dto, format='json')
+        transaction.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(transaction.kind, change_to)
+        self.assertEqual(transaction.value, 100)
+
 
 class CategorySerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupMixin, TestCase, SerializerTestHelper):
 
@@ -123,14 +139,6 @@ class CategorySerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupM
     def test_serializer_validates(self):
         serializer = CategorySerializer(data=self.serializer_data, context=self.context)
         self.assertTrue(serializer.is_valid())
-
-    def test_serializer_should_not_allow_update_kind(self):
-        data = {
-            'name': 'changed',
-            'kind': Category.EXPENSE_KIND
-        }
-        serializer = CategorySerializer(instance=self.income_category, data=data, context=self.context)
-        self.assert_has_field_error(serializer, 'kind')
 
     def test_serializer_should_not_allow_create_same_name(self):
         data = {

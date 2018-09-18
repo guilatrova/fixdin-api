@@ -10,11 +10,6 @@ class CategorySerializer(serializers.ModelSerializer, HasKindContextSerializer):
         model = Category
         fields = ('id', 'name', 'kind')
 
-    def validate_kind(self, value):
-        if self.instance and self.instance.kind != value:
-            raise serializers.ValidationError("Can't change kind")
-        return value
-
     def validate(self, data):
         filters = {
             'user_id': self.context['user_id'],
