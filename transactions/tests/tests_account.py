@@ -111,6 +111,9 @@ class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
         cls.user, cls.token = cls.create_user('testuser', email='testuser@test.com', password='testing')
         cls.account = cls.create_account()  # Now there are 2 accounts because signals creates a default account
 
+        other_user, other_token = cls.create_user('other', email='other@test.com', password='pass')
+        cls.create_account(user=other_user)
+
     def setUp(self):
         self.client = self.create_authenticated_client(self.token)
 
@@ -132,7 +135,7 @@ class AccountApiTestCase(APITestCase, BaseTestHelperFactory):
         response = self.client.post(reverse('accounts'), dto, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Account.objects.count(), 3)
+        self.assertEqual(Account.objects.filter(user=self.user).count(), 3)
 
     def test_api_updates(self):
         data = {'name': 'new_name'}
