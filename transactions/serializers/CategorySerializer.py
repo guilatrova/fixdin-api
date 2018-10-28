@@ -10,6 +10,11 @@ class CategorySerializer(serializers.ModelSerializer, HasKindContextSerializer):
         model = Category
         fields = ('id', 'name', 'kind')
 
+    def validate_name(self, name):
+        if name.endswith("_sys"):
+            raise serializers.ValidationError("You can't use that name")
+        return name
+
     def validate(self, data):
         filters = {
             'user_id': self.context['user_id'],

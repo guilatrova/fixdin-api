@@ -158,3 +158,11 @@ class CategorySerializerTestCase(UserDataTestSetupMixin, OtherUserDataTestSetupM
         }
         serializer = CategorySerializer(data=data, context=context)
         self.assertTrue(serializer.is_valid())
+
+    def test_block_names_ending_with_sys(self):
+        data = self.serializer_data
+        data["name"] = "anything_sys"
+
+        serializer = CategorySerializer(data=data, context=self.context)
+
+        self.assert_has_field_error(serializer, "name")
