@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source env/bin/activate
+export $(grep -v '^#' .local.env | xargs)
+python manage.py runserver
