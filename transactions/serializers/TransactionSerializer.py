@@ -11,7 +11,8 @@ from .PeriodicSerializer import PeriodicSerializer
 class TransactionSerializer(SerializerMayReturnListMixin, serializers.ModelSerializer, HasKindContextSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account', 'priority', 'deadline', 'payment_date', 'periodic', 'bound_transaction', 'bound_reason')
+        fields = ('id', 'due_date', 'description', 'category', 'value', 'kind', 'details', 'account',
+                  'priority', 'deadline', 'payment_date', 'periodic', 'bound_transaction', 'bound_reason')
         read_only_fields = ('bound_transaction', 'bound_reason')
         write_only_fields = ('periodic',)
 
@@ -29,14 +30,15 @@ class TransactionSerializer(SerializerMayReturnListMixin, serializers.ModelSeria
 
     def validate_periodic(self, periodic):
         if periodic is not None and self.context['request_method'] == 'PUT':
-            raise serializers.ValidationError("You can't update a transaction to be periodic. Create a new one instead.")
+            raise serializers.ValidationError(
+                "You can't update a transaction to be periodic. Create a new one instead.")
         return periodic
 
     def validate(self, data):
         """
         Validates if data is correctly set.
         Those checks about whether is key inside data or not, is due PATCH request.
-        """        
+        """
         if 'kind' in data and 'value' in data:
             if data['kind'] == Transaction.EXPENSE_KIND:
                 if data['value'] > 0:
@@ -53,10 +55,10 @@ class TransactionSerializer(SerializerMayReturnListMixin, serializers.ModelSeria
         return data
 
     def is_return_data_list(self, validated_data):
-        return 'periodic' in validated_data    
+        return 'periodic' in validated_data
 
     def create(self, validated_data):
-        if 'periodic' in validated_data:            
+        if 'periodic' in validated_data:
             return factories.create_periodic_transactions(**validated_data)
 
         return super(TransactionSerializer, self).create(validated_data)

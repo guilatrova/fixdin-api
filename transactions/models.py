@@ -81,7 +81,7 @@ class Transaction(models.Model, HasKind):
     value = models.DecimalField(max_digits=19, decimal_places=2)
     kind = models.PositiveIntegerField(choices=TRANSACTION_KINDS)
     details = models.CharField(max_length=500, blank=True)
-    priority = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    priority = models.PositiveIntegerField(default=1, validators=[MinValueValidator(0), MaxValueValidator(5)])
     deadline = models.PositiveIntegerField(default=0)
     payment_date = models.DateField(null=True, blank=True)  # TODO: Find out why both null and blank
     bound_transaction = models.ForeignKey("Transaction", null=True, on_delete=models.DO_NOTHING)
